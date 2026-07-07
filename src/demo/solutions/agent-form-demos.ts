@@ -74,6 +74,44 @@ export const chatAssistantWb: SolutionWorkbenchData = {
         ],
       },
     },
+    {
+      type: 'metrics',
+      title: '体验关键指标',
+      data: {
+        columns: 2,
+        items: [
+          { label: '首 Token 延迟', value: '380ms', delta: -12, invertDelta: true },
+          { label: '生成速率', value: '42 t/s', delta: 8 },
+          { label: '多轮保持率', value: '96%', delta: 2 },
+          { label: '停止响应', value: '<50ms' },
+        ],
+      },
+    },
+    {
+      type: 'comparison',
+      title: '上下文策略对比',
+      data: {
+        columns: [
+          { key: 'strategy', label: '策略' },
+          { key: 'cost', label: '成本' },
+          { key: 'coherence', label: '连贯性' },
+          { key: 'fit', label: '适用' },
+        ],
+        rows: [
+          { strategy: '全量历史', cost: '高', coherence: '最好', fit: '短会话' },
+          { strategy: '滑动窗口', cost: '中', coherence: '好', fit: '通用默认' },
+          { strategy: '摘要压缩', cost: '低', coherence: '中', fit: '超长会话' },
+        ],
+      },
+    },
+    {
+      type: 'code',
+      title: '最小接入（SDK）',
+      data: {
+        language: 'vue',
+        code: `<CopilotChat\n  :config="{\n    agentType: 'chat',\n    botName: '对话助手',\n    systemPrompt: '…',\n  }"\n/>`,
+      },
+    },
   ] as StructuredPayload[],
   tasks: [
     { id: 't1', title: '接收输入并组装上下文', status: 'done' },
@@ -148,6 +186,49 @@ export const ragAgentWb: SolutionWorkbenchData = {
           { title: '向量检索', description: 'Top-K 片段 + 相似度分数', time: '②' },
           { title: '重排与截断', description: 'Rerank 后按上下文窗口裁剪', time: '③' },
           { title: '带引用生成', description: '答案中标注引用编号可溯源', time: '④' },
+        ],
+      },
+    },
+    {
+      type: 'chart',
+      title: '召回质量分布（Top-5 相似度）',
+      data: {
+        kind: 'bar',
+        labels: ['#1', '#2', '#3', '#4', '#5'],
+        series: [{ name: '相似度', values: [0.94, 0.87, 0.81, 0.66, 0.52] }],
+      },
+    },
+    {
+      type: 'file_tree',
+      title: '已挂载文档集',
+      data: {
+        defaultExpanded: true,
+        root: [
+          {
+            name: 'knowledge-base', type: 'dir', children: [
+              { name: '架构设计文档-v3.2.md', type: 'file', badge: 'modified' },
+              { name: '部署手册-v3.2.md', type: 'file' },
+              { name: '运维规范-v2.0.md', type: 'file' },
+              { name: 'FAQ.md', type: 'file', badge: 'new' },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      type: 'comparison',
+      title: 'RAG vs 纯 LLM 问答',
+      data: {
+        columns: [
+          { key: 'dim', label: '维度' },
+          { key: 'llm', label: '纯 LLM' },
+          { key: 'rag', label: 'RAG' },
+        ],
+        rows: [
+          { dim: '知识时效', llm: '训练截止', rag: '随文档更新' },
+          { dim: '可溯源', llm: '否', rag: '引用编号回跳' },
+          { dim: '幻觉率', llm: '较高', rag: '显著降低' },
+          { dim: '私域知识', llm: '无', rag: '文档集注入' },
         ],
       },
     },
@@ -256,6 +337,18 @@ export const deepResearchWb: SolutionWorkbenchData = {
       },
     },
     {
+      type: 'plan',
+      title: '实时研究计划（计划驱动核心）',
+      data: {
+        steps: [
+          { title: '界定问题范围', description: '明确研究边界与关键子问题', status: 'done' },
+          { title: '多源检索', description: '论文 / 博客 / 开源实现交叉检索', status: 'doing' },
+          { title: '证据充分性反思', description: '不足则针对性补检索', status: 'todo' },
+          { title: '汇总报告', description: '结构化结论 + 开放问题', status: 'todo' },
+        ],
+      },
+    },
+    {
       type: 'timeline_events',
       title: '研究循环',
       data: {
@@ -265,6 +358,36 @@ export const deepResearchWb: SolutionWorkbenchData = {
           { title: '反思', description: '证据是否充分？不足则补检索', time: '③' },
           { title: '报告', description: '结构化汇总 + 开放问题', time: '④' },
         ],
+      },
+    },
+    {
+      type: 'metrics',
+      title: '本次研究统计',
+      data: {
+        columns: 2,
+        items: [
+          { label: '子问题', value: 4 },
+          { label: '检索轮次', value: 7 },
+          { label: '证据片段', value: 21 },
+          { label: '预计耗时', value: '3m40s' },
+        ],
+      },
+    },
+    {
+      type: 'chart',
+      title: '各子问题证据覆盖度',
+      data: {
+        kind: 'bar',
+        labels: ['范围界定', '技术路线', '工程实践', '开放问题'],
+        series: [{ name: '证据数', values: [6, 8, 5, 2] }],
+      },
+    },
+    {
+      type: 'document',
+      title: '报告骨架（最终产物）',
+      data: {
+        format: 'markdown',
+        content: '# 研究报告\n\n## 核心结论\n1. …\n2. …\n\n## 证据来源\n- 综述论文 / 博客 / 开源文档\n\n## 开放问题\n- …',
       },
     },
   ] as StructuredPayload[],
@@ -391,6 +514,46 @@ export const toolUseWb: SolutionWorkbenchData = {
           { title: 'Act', description: '发起工具调用（含参数）', time: '②' },
           { title: 'Observe', description: '读取工具结果注入上下文', time: '③' },
           { title: 'Repeat / Answer', description: '继续调用或给出最终回答', time: '④' },
+        ],
+      },
+    },
+    {
+      type: 'code',
+      title: '工具契约（Function Schema）',
+      data: {
+        language: 'json',
+        code: `{\n  "name": "query_records",\n  "description": "查询结构化记录",\n  "parameters": {\n    "type": "object",\n    "properties": {\n      "range": { "type": "string" }\n    },\n    "required": ["range"]\n  }\n}`,
+      },
+    },
+    {
+      type: 'terminal',
+      title: '工具调用轨迹（实时）',
+      data: {
+        cwd: 'react-loop',
+        lines: [
+          { kind: 'out', text: 'reason: 需要先查询记录再统计' },
+          { kind: 'cmd', text: 'call query_records({ range: "近四周" })' },
+          { kind: 'out', text: '4 rows returned (32ms)' },
+          { kind: 'cmd', text: 'call run_calculation({ values: "1240,1310,…" })' },
+          { kind: 'out', text: 'mean=1311.3 sd=66.9 (5ms)' },
+          { kind: 'cmd', text: 'call render_chart({ … })' },
+          { kind: 'out', text: 'rendering…' },
+        ],
+      },
+    },
+    {
+      type: 'table',
+      title: '已注册工具',
+      data: {
+        columns: [
+          { key: 'tool', label: '工具' },
+          { key: 'calls', label: '调用', align: 'right' },
+          { key: 'p95', label: 'P95', align: 'right' },
+        ],
+        rows: [
+          { tool: 'query_records', calls: 1, p95: '32ms' },
+          { tool: 'run_calculation', calls: 1, p95: '5ms' },
+          { tool: 'render_chart', calls: 1, p95: '48ms' },
         ],
       },
     },
