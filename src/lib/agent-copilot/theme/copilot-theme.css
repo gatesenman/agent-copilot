@@ -51,6 +51,48 @@
   --ac-info-soft: #103b30;
 }
 
+/* ============ 滚动条（库作用域，独立嵌入时也生效） ============ */
+.ac-root {
+  --ac-sb-thumb: rgba(95, 107, 102, 0.35);
+  --ac-sb-thumb-hover: rgba(95, 107, 102, 0.55);
+}
+.ac-root[data-theme='dark'],
+[data-ac-theme='dark'] .ac-root:not([data-theme='light']) {
+  --ac-sb-thumb: rgba(147, 162, 156, 0.3);
+  --ac-sb-thumb-hover: rgba(147, 162, 156, 0.5);
+}
+.ac-root,
+.ac-root * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ac-sb-thumb) transparent;
+}
+.ac-root ::-webkit-scrollbar,
+.ac-root::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.ac-root ::-webkit-scrollbar-track,
+.ac-root::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ac-root ::-webkit-scrollbar-thumb,
+.ac-root::-webkit-scrollbar-thumb {
+  background: var(--ac-sb-thumb);
+  border-radius: 8px;
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+.ac-root ::-webkit-scrollbar-thumb:hover,
+.ac-root::-webkit-scrollbar-thumb:hover {
+  background: var(--ac-sb-thumb-hover);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+.ac-root ::-webkit-scrollbar-corner,
+.ac-root::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .ac-root[data-radius='none'] { --ac-radius: 0px; }
 .ac-root[data-radius='sm'] { --ac-radius: 6px; }
 .ac-root[data-radius='md'] { --ac-radius: 10px; }

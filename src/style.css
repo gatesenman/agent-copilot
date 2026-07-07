@@ -15,6 +15,45 @@
   box-sizing: border-box;
 }
 
+/* ============ 自定义滚动条（覆盖浏览器默认样式） ============ */
+:root {
+  --sb-thumb: rgba(95, 107, 102, 0.35);
+  --sb-thumb-hover: rgba(95, 107, 102, 0.55);
+}
+[data-ac-theme='dark'] {
+  --sb-thumb: rgba(147, 162, 156, 0.3);
+  --sb-thumb-hover: rgba(147, 162, 156, 0.5);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sb-thumb) transparent;
+}
+
+/* WebKit（Chrome / Edge / Safari） */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb);
+  border-radius: 8px;
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sb-thumb-hover);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 html,
 body {
   margin: 0;
