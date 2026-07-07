@@ -30,7 +30,9 @@ const initialMessage = params.get('initialMessage') ?? ''
 
 function themeParam(): CopilotConfig['theme'] {
   const t = params.get('theme')
-  return t === 'dark' || t === 'light' ? t : 'auto'
+  if (t === 'dark' || t === 'auto') return t
+  // 默认亮色；显式传 theme=auto 才跟随系统
+  return 'light'
 }
 
 /** URL 参数推导的基础配置（浏览器直连为默认，endpoint 参数切 http 模式） */

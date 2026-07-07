@@ -47,8 +47,8 @@ function onNavigate(target: string) {
   }
 }
 
-// 主题切换：亮 / 暗 / 跟随系统，localStorage 持久化
-const { mode: themeMode } = useTheme()
+// 主题切换：亮 / 暗 / 跟随系统，localStorage 持久化；默认亮色
+const { mode: themeMode } = useTheme({ initial: 'light' })
 </script>
 
 <template>
