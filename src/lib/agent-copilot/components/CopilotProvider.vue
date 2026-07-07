@@ -79,3 +79,15 @@ const brandStyle = computed(() => {
 
 defineExpose({ store })
 </script>
+
+<style scoped>
+/*
+ * 高度继承：父容器有确定高度时（工作台/演示面板场景）ac-root 撑满，
+ * 让内部 height:100% 的子组件正确解析；父高度为 auto 时（文档内嵌场景）
+ * height:100% 按规范解析为 auto，行为不变。
+ */
+.ac-root {
+  height: 100%;
+  min-height: 0;
+}
+</style>
