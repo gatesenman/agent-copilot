@@ -3,7 +3,8 @@
  * Agentic 工作台组件页签 —— 模式选择 / 思考块 / 任务追踪 / 计划审批 /
  * 变更审查 / 工具动作卡 / 表单卡 / 澄清卡 / 工作区面板（静态演示数据）
  */
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
+import DemoKnobs, { type KnobDef } from './DemoKnobs.vue'
 import ModeSelector from '../../lib/agent-copilot/components/agentic/ModeSelector.vue'
 import ThinkingBlock from '../../lib/agent-copilot/components/agentic/ThinkingBlock.vue'
 import TaskTracker from '../../lib/agent-copilot/components/agentic/TaskTracker.vue'
@@ -44,6 +45,77 @@ const toolCalls: ToolCallState[] = [
 ]
 
 const mode = ref<AgentMode>('confirm_edits')
+
+// ============ 属性控制（DemoKnobs）：每个演示区一组可调 props ============
+const K = reactive({
+  mode: { size: 'md', disabled: false, showDescription: true },
+  thinking: { streaming: false, defaultExpanded: false, duration: 3200 },
+  tracker: { density: 'comfortable', showProgress: true, collapsible: false, streaming: false },
+  steps: { compact: false },
+  checkpoint: { revertable: true, defaultExpanded: false },
+  plan: { editable: true },
+  planMd: { editable: true, collapsedHeight: 300, defaultExpanded: false },
+  review: { readonly: false },
+  workSummary: { running: true },
+  reviewBar: { readonly: false, defaultExpanded: false },
+  toolCard: { defaultExpanded: false },
+  form: { disabled: false, reviewing: false },
+  clarify: { disabled: false },
+  filePanel: { filterable: true, treeWidth: '200px' },
+  terminal: { interactive: true, autoScroll: true },
+  artifact: { exportable: true },
+})
+
+const C: Record<keyof typeof K, KnobDef[]> = {
+  mode: [
+    { key: 'size', label: 'size', type: 'select', options: [{ value: 'sm', label: 'sm' }, { value: 'md', label: 'md' }] },
+    { key: 'disabled', label: 'disabled', type: 'boolean' },
+    { key: 'showDescription', label: 'showDescription', type: 'boolean' },
+  ],
+  thinking: [
+    { key: 'streaming', label: 'streaming', type: 'boolean' },
+    { key: 'defaultExpanded', label: 'defaultExpanded', type: 'boolean' },
+    { key: 'duration', label: 'duration(ms)', type: 'number', min: 0, max: 60000, step: 100 },
+  ],
+  tracker: [
+    { key: 'density', label: 'density', type: 'select', options: [{ value: 'comfortable', label: 'comfortable' }, { value: 'compact', label: 'compact' }] },
+    { key: 'showProgress', label: 'showProgress', type: 'boolean' },
+    { key: 'collapsible', label: 'collapsible', type: 'boolean' },
+    { key: 'streaming', label: 'streaming', type: 'boolean' },
+  ],
+  steps: [{ key: 'compact', label: 'compact', type: 'boolean' }],
+  checkpoint: [
+    { key: 'revertable', label: 'revertable', type: 'boolean' },
+    { key: 'defaultExpanded', label: 'defaultExpanded', type: 'boolean' },
+  ],
+  plan: [{ key: 'editable', label: 'editable', type: 'boolean' }],
+  planMd: [
+    { key: 'editable', label: 'editable', type: 'boolean' },
+    { key: 'collapsedHeight', label: 'collapsedHeight', type: 'number', min: 100, max: 800, step: 20 },
+    { key: 'defaultExpanded', label: 'defaultExpanded', type: 'boolean' },
+  ],
+  review: [{ key: 'readonly', label: 'readonly', type: 'boolean' }],
+  workSummary: [{ key: 'running', label: 'running', type: 'boolean' }],
+  reviewBar: [
+    { key: 'readonly', label: 'readonly', type: 'boolean' },
+    { key: 'defaultExpanded', label: 'defaultExpanded', type: 'boolean' },
+  ],
+  toolCard: [{ key: 'defaultExpanded', label: 'defaultExpanded', type: 'boolean' }],
+  form: [
+    { key: 'disabled', label: 'disabled', type: 'boolean' },
+    { key: 'reviewing', label: 'reviewing', type: 'boolean' },
+  ],
+  clarify: [{ key: 'disabled', label: 'disabled', type: 'boolean' }],
+  filePanel: [
+    { key: 'filterable', label: 'filterable', type: 'boolean' },
+    { key: 'treeWidth', label: 'treeWidth', type: 'select', options: [{ value: '160px', label: '160px' }, { value: '200px', label: '200px' }, { value: '260px', label: '260px' }] },
+  ],
+  terminal: [
+    { key: 'interactive', label: 'interactive', type: 'boolean' },
+    { key: 'autoScroll', label: 'autoScroll', type: 'boolean' },
+  ],
+  artifact: [{ key: 'exportable', label: 'exportable', type: 'boolean' }],
+}
 
 const tasks = ref<AgentTask[]>([
   { id: 't1', title: '分析登录表单现状', status: 'done' },
@@ -289,23 +361,35 @@ const artifactMessages: ChatMessage[] = [
     <section class="agp__section">
       <h2>ModeSelector — 运行模式选择</h2>
       <p class="agp__desc">四种权限模式：变更前确认 / 自动编辑 / 计划模式 / 完全访问。当前：{{ mode }}</p>
-      <ModeSelector v-model:mode="mode" />
+      <DemoKnobs :controls="C.mode" :state="K.mode" />
+      <ModeSelector v-model:mode="mode" :size="K.mode.size as 'sm' | 'md'" :disabled="K.mode.disabled" :show-description="K.mode.showDescription" />
     </section>
 
     <div class="agp__grid">
       <section class="agp__section">
         <h2>ThinkingBlock — 思考块</h2>
         <p class="agp__desc">折叠的模型推理内容，支持流式追加与耗时显示。</p>
+        <DemoKnobs :controls="C.thinking" :state="K.thinking" />
         <ThinkingBlock
+          :key="`th-${K.thinking.defaultExpanded}`"
           content="用户要求给登录表单添加校验。首先需要读取现有实现确认表单结构，然后决定校验逻辑放在独立的 validators 模块中以便复用与测试，最后接入错误提示。"
-          :duration="3200"
+          :duration="K.thinking.duration"
+          :streaming="K.thinking.streaming"
+          :default-expanded="K.thinking.defaultExpanded"
         />
       </section>
 
       <section class="agp__section">
         <h2>TaskTracker — 任务追踪</h2>
         <p class="agp__desc">TodoList 式任务进度：完成 / 进行中 / 待处理。</p>
-        <TaskTracker :tasks="tasks" />
+        <DemoKnobs :controls="C.tracker" :state="K.tracker" />
+        <TaskTracker
+          :tasks="tasks"
+          :density="K.tracker.density as 'comfortable' | 'compact'"
+          :show-progress="K.tracker.showProgress"
+          :collapsible="K.tracker.collapsible"
+          :streaming="K.tracker.streaming"
+        />
       </section>
     </div>
 
@@ -313,16 +397,21 @@ const artifactMessages: ChatMessage[] = [
       <section class="agp__section">
         <h2>AgentStepList — 执行步骤时间流</h2>
         <p class="agp__desc">思考 / 检索 / 终端 / 文件 / 工具动作按时间线排成可折叠日志（点击带箭头的步骤展开详情）。</p>
-        <AgentStepList :steps="agentSteps" />
+        <DemoKnobs :controls="C.steps" :state="K.steps" />
+        <AgentStepList :steps="agentSteps" :compact="K.steps.compact" />
       </section>
 
       <section class="agp__section">
         <h2>CheckpointCard — 版本快照卡</h2>
         <p class="agp__desc">一次变更的快照摘要：版本标签、聚合差异统计、逐文件增删行数与一键回滚。{{ checkpointMsg }}</p>
+        <DemoKnobs :controls="C.checkpoint" :state="K.checkpoint" />
         <CheckpointCard
+          :key="`cp-${K.checkpoint.defaultExpanded}`"
           title="登录表单校验改造"
           version="v14"
           :files="checkpointFiles"
+          :revertable="K.checkpoint.revertable"
+          :default-expanded="K.checkpoint.defaultExpanded"
           @revert="checkpointMsg = '（已触发 revert 事件）'"
           @select-file="(f) => (checkpointMsg = `（点击了 ${f.path}）`)"
         />
@@ -332,7 +421,8 @@ const artifactMessages: ChatMessage[] = [
     <section class="agp__section">
       <h2>PlanPanel — 计划预览 / 编辑 / 审批</h2>
       <p class="agp__desc">计划模式下 Agent 产出执行计划，用户可编辑步骤后批准或驳回。</p>
-      <PlanPanel :plan="plan" editable @approve="(s) => { if (Array.isArray(s)) plan = { ...plan, status: 'approved', steps: s } }" @reject="plan = { ...plan, status: 'rejected' }" @update:plan="(p) => (plan = p)" />
+      <DemoKnobs :controls="C.plan" :state="K.plan" />
+      <PlanPanel :plan="plan" :editable="K.plan.editable" @approve="(s) => { if (Array.isArray(s)) plan = { ...plan, status: 'approved', steps: s } }" @reject="plan = { ...plan, status: 'rejected' }" @update:plan="(p) => (plan = p)" />
     </section>
 
     <section class="agp__section">
@@ -340,9 +430,14 @@ const artifactMessages: ChatMessage[] = [
       <p class="agp__desc">
         同一个 PlanPanel 组件：传 content（Markdown 字符串）即切换为长文审查形态——折叠预览（渐隐 + 居中"展开计划"按钮）→ 展开阅读 → 手动编辑全文 → 确认 / 驳回。
       </p>
+      <DemoKnobs :controls="C.planMd" :state="K.planMd" />
       <PlanPanel
+        :key="`pm-${K.planMd.defaultExpanded}-${K.planMd.collapsedHeight}`"
         v-model:content="reviewPlanContent"
         :status="reviewPlanStatus"
+        :editable="K.planMd.editable"
+        :collapsed-height="K.planMd.collapsedHeight"
+        :default-expanded="K.planMd.defaultExpanded"
         @approve="reviewPlanStatus = 'approved'"
         @reject="reviewPlanStatus = 'rejected'"
       />
@@ -351,21 +446,31 @@ const artifactMessages: ChatMessage[] = [
     <section class="agp__section">
       <h2>ChangeReviewPanel — 变更审查</h2>
       <p class="agp__desc">逐文件 Diff 审查，支持单个与全部接受/拒绝。</p>
-      <ChangeReviewPanel :changes="changes" @review="onReview" />
+      <DemoKnobs :controls="C.review" :state="K.review" />
+      <ChangeReviewPanel :changes="changes" :readonly="K.review.readonly" @review="onReview" />
     </section>
 
     <div class="agp__grid">
       <section class="agp__section">
         <h2>WorkSummary — 工作耗时摘要行</h2>
         <p class="agp__desc">Agent 回合的耗时分隔条：运行中实时走秒，结束后定格总耗时。</p>
-        <WorkSummary :started-at="workStartedAt" running />
-        <WorkSummary :duration-ms="125_000" />
+        <DemoKnobs :controls="C.workSummary" :state="K.workSummary" />
+        <WorkSummary v-if="K.workSummary.running" :started-at="workStartedAt" running />
+        <WorkSummary v-else :duration-ms="125_000" />
       </section>
 
       <section class="agp__section">
         <h2>ChangeReviewPanel — 折叠汇总条形态</h2>
         <p class="agp__desc">collapsible 时折叠为"N 个文件已更改 +x -y [撤销]"汇总条，点击展开文件列表。</p>
-        <ChangeReviewPanel :changes="barChanges" collapsible @review="onBarReview" />
+        <DemoKnobs :controls="C.reviewBar" :state="K.reviewBar" />
+        <ChangeReviewPanel
+          :key="`rb-${K.reviewBar.defaultExpanded}`"
+          :changes="barChanges"
+          collapsible
+          :readonly="K.reviewBar.readonly"
+          :default-expanded="K.reviewBar.defaultExpanded"
+          @review="onBarReview"
+        />
       </section>
     </div>
 
@@ -374,8 +479,14 @@ const artifactMessages: ChatMessage[] = [
       <p class="agp__desc">
         按动作类型特化图标与摘要；结果特化渲染：run_command 终端样式输出 + 退出码、edit_file 检测 diff 文本按 +/- 着色、browse 链接可点击打开；renderers 注册表（工具名 → 组件）可完全接管单个工具渲染（对标 AG-UI toolRenderers / CopilotKit useRenderTool）。展开卡片查看效果。
       </p>
+      <DemoKnobs :controls="C.toolCard" :state="K.toolCard" />
       <div class="agp__cards">
-        <ToolActionCard v-for="tc in toolCalls" :key="tc.id" :tool-call="tc" />
+        <ToolActionCard
+          v-for="tc in toolCalls"
+          :key="`${tc.id}-${K.toolCard.defaultExpanded}`"
+          :tool-call="tc"
+          :default-expanded="K.toolCard.defaultExpanded"
+        />
       </div>
     </section>
 
@@ -383,7 +494,10 @@ const artifactMessages: ChatMessage[] = [
       <section class="agp__section">
         <h2>AgentFormCard — Agent 请求表单</h2>
         <p class="agp__desc">Agent 需要结构化输入时向用户发起表单。{{ formResult }}</p>
+        <DemoKnobs :controls="C.form" :state="K.form" />
         <AgentFormCard
+          :disabled="K.form.disabled"
+          :reviewing="K.form.reviewing"
           :form="{
             formId: 'f_demo',
             title: '部署配置确认',
@@ -399,7 +513,9 @@ const artifactMessages: ChatMessage[] = [
       <section class="agp__section">
         <h2>ClarifyCard — 澄清选择</h2>
         <p class="agp__desc">Agent 对模糊需求发起澄清。{{ clarifyResult }}</p>
+        <DemoKnobs :controls="C.clarify" :state="K.clarify" />
         <ClarifyCard
+          :disabled="K.clarify.disabled"
           :questions="[
             {
               id: 'q1',
@@ -420,8 +536,9 @@ const artifactMessages: ChatMessage[] = [
       <section class="agp__section">
         <h2>FilePanel — 文件树 + 预览</h2>
         <p class="agp__desc">工作区文件浏览，点击文件查看内容。</p>
+        <DemoKnobs :controls="C.filePanel" :state="K.filePanel" />
         <div class="agp__panel-box">
-          <FilePanel :files="files" />
+          <FilePanel :files="files" :filterable="K.filePanel.filterable" :tree-width="K.filePanel.treeWidth" />
         </div>
       </section>
 
@@ -431,10 +548,12 @@ const artifactMessages: ChatMessage[] = [
           真实终端能力：ANSI 颜色解析、命令历史（↑/↓）、Ctrl+C 中断、Ctrl+L 清屏、退出码标记、
           上翻锁定滚动。试试输入 <code>help</code> / <code>pnpm build</code>。
         </p>
+        <DemoKnobs :controls="C.terminal" :state="K.terminal" />
         <div class="agp__panel-box">
           <TerminalPanel
             :entries="terminal"
-            interactive
+            :interactive="K.terminal.interactive"
+            :auto-scroll="K.terminal.autoScroll"
             :busy="termBusy"
             cwd="~/agent-copilot"
             @command="onTermCommand"
@@ -451,7 +570,8 @@ const artifactMessages: ChatMessage[] = [
         自动从消息流收集代码 / 表格 / 图表 / 图片等产出型载荷，支持点击预览、单个下载与整段会话导出
         （Markdown / JSON）。传入 <code>:messages</code> 即可，无需手动维护清单。
       </p>
-      <ArtifactPanel :messages="artifactMessages" />
+      <DemoKnobs :controls="C.artifact" :state="K.artifact" />
+      <ArtifactPanel :messages="artifactMessages" :exportable="K.artifact.exportable" />
     </section>
 
     <p class="agp__note">

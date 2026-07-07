@@ -3,7 +3,8 @@
  * 通用企业组件演示：会话列表 / 模板库 / 模型切换 / 用量 / 对比 / 反馈 /
  * 安全拦截 / 文件上传 / 语音波形 / 引用溯源。
  */
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
+import DemoKnobs, { type KnobDef } from './DemoKnobs.vue'
 import SessionList from '../../lib/agent-copilot/components/general/SessionList.vue'
 import PromptLibrary from '../../lib/agent-copilot/components/general/PromptLibrary.vue'
 import ModelSelector from '../../lib/agent-copilot/components/general/ModelSelector.vue'
@@ -17,6 +18,40 @@ import type { SessionItem } from '../../lib/agent-copilot/components/general/Ses
 import type { PromptTemplate } from '../../lib/agent-copilot/components/general/PromptLibrary.vue'
 import type { UploadingFile } from '../../lib/agent-copilot/components/general/FileDropzone.vue'
 import type { SourceChunk } from '../../lib/agent-copilot/components/general/SourcePanel.vue'
+
+// ============ 属性控制（DemoKnobs） ============
+const K = reactive({
+  sessions: { searchable: true, creatable: true },
+  usage: { compact: false, quota: 128000 },
+  compare: { votable: true },
+  safety: { level: 'blocked', appealable: true },
+  dropzone: { disabled: false, maxFiles: 6, maxSizeMb: 20 },
+  prompts: { emptyText: '没有匹配的模板' },
+  sources: { title: '引用来源' },
+})
+
+const C: Record<keyof typeof K, KnobDef[]> = {
+  sessions: [
+    { key: 'searchable', label: 'searchable', type: 'boolean' },
+    { key: 'creatable', label: 'creatable', type: 'boolean' },
+  ],
+  usage: [
+    { key: 'compact', label: 'compact', type: 'boolean' },
+    { key: 'quota', label: 'quota', type: 'number', min: 0, max: 512000, step: 1000 },
+  ],
+  compare: [{ key: 'votable', label: 'votable', type: 'boolean' }],
+  safety: [
+    { key: 'level', label: 'level', type: 'select', options: [{ value: 'info', label: 'info' }, { value: 'warning', label: 'warning' }, { value: 'blocked', label: 'blocked' }] },
+    { key: 'appealable', label: 'appealable', type: 'boolean' },
+  ],
+  dropzone: [
+    { key: 'disabled', label: 'disabled', type: 'boolean' },
+    { key: 'maxFiles', label: 'maxFiles', type: 'number', min: 1, max: 20 },
+    { key: 'maxSizeMb', label: 'maxSizeMb', type: 'number', min: 1, max: 100 },
+  ],
+  prompts: [{ key: 'emptyText', label: 'emptyText', type: 'text' }],
+  sources: [{ key: 'title', label: 'title', type: 'text' }],
+}
 
 // ---- 会话列表 ----
 const now = Date.now()
@@ -78,10 +113,13 @@ function onUpload(list: File[]) {
       <section class="g-section">
         <h2>SessionList — 会话历史</h2>
         <p class="g-desc">按 今天/本周/更早 分组，支持置顶、重命名、删除、未读角标与搜索。</p>
+        <DemoKnobs :controls="C.sessions" :state="K.sessions" />
         <div class="ent-frame ent-frame--tall">
           <SessionList
             :sessions="sessions"
             :active-id="activeSession"
+            :searchable="K.sessions.searchable"
+            :creatable="K.sessions.creatable"
             @select="(id: string) => (activeSession = id)"
             @create="sessions.unshift({ id: `s_${Date.now()}`, title: '新会话', updatedAt: Date.now() })"
             @delete="(id: string) => (sessions = sessions.filter((s) => s.id !== id))"
@@ -94,8 +132,9 @@ function onUpload(list: File[]) {
       <section class="g-section">
         <h2>PromptLibrary — 提示模板库</h2>
         <p class="g-desc">分类浏览 + 搜索，选择后由宿主把模板填入输入框（{变量} 占位）。</p>
+        <DemoKnobs :controls="C.prompts" :state="K.prompts" />
         <div class="ent-frame ent-frame--tall">
-          <PromptLibrary :templates="templates" />
+          <PromptLibrary :templates="templates" :empty-text="K.prompts.emptyText" />
         </div>
       </section>
     </div>
@@ -104,12 +143,14 @@ function onUpload(list: File[]) {
       <section class="g-section">
         <h2>ModelSelector + UsageMeter</h2>
         <p class="g-desc">厂商/模型切换（读协议预设）与 Token 用量、成本估算。</p>
+        <DemoKnobs :controls="C.usage" :state="K.usage" />
         <div class="ent-stack">
           <ModelSelector v-model="model" />
           <UsageMeter
             :prompt-tokens="48200"
             :completion-tokens="12600"
-            :quota="128000"
+            :quota="K.usage.quota"
+            :compact="K.usage.compact"
             :prompt-price-per-k="0.004"
             :completion-price-per-k="0.016"
           />
@@ -121,8 +162,10 @@ function onUpload(list: File[]) {
     <section class="g-section">
       <h2>CompareView — 双模型对比</h2>
       <p class="g-desc">同一问题两路回答并排渲染，支持投票（用于模型评估 / A-B 测试）。</p>
+      <DemoKnobs :controls="C.compare" :state="K.compare" />
       <CompareView
         question="总结一下季度经营报告的三个关键风险"
+        :votable="K.compare.votable"
         :left="{ label: 'DeepSeek-V3', content: '1. **进度风险**：关键路径依赖集中\n2. **资源风险**：核心人员负载过高\n3. **质量风险**：测试覆盖不足', latencyMs: 1840, tokens: 96 }"
         :right="{ label: 'Qwen2.5-72B', content: '关键风险包括：\n- 单点依赖，建议冗余备份策略\n- 需求变更频繁导致返工\n- 上线窗口与假期冲突', latencyMs: 2210, tokens: 88 }"
         :voted="voted"
@@ -134,18 +177,19 @@ function onUpload(list: File[]) {
       <section class="g-section">
         <h2>SafetyBanner + FeedbackDialog</h2>
         <p class="g-desc">安全拦截提示（合规拒答样式）与点踩反馈弹窗。</p>
+        <DemoKnobs :controls="C.safety" :state="K.safety" />
         <div class="ent-stack">
           <SafetyBanner
-            level="blocked"
+            :level="K.safety.level as 'info' | 'warning' | 'blocked'"
             title="该请求已被安全策略拦截"
             detail="检测到请求中包含未脱敏的员工银行账号，请移除敏感信息后重试。"
             policy="PII 检测"
-            appealable
+            :appealable="K.safety.appealable"
           />
           <SafetyBanner
             level="warning"
             title="回答可能包含过时信息"
-            detail="引用的制度文件版本为 2024 版，最新版本请以 OA 公告为准。"
+            detail="引用的制度文件版本为 2024 版，最新版本请以 OA ��告为准。"
             policy="时效性检查"
           />
           <button type="button" class="ent-btn" @click="feedbackOpen = true">打开反馈弹窗</button>
@@ -161,11 +205,13 @@ function onUpload(list: File[]) {
       <section class="g-section">
         <h2>FileDropzone — 拖拽上传</h2>
         <p class="g-desc">多文件、类型/大小校验、上传进度，由宿主接管实际上传。</p>
+        <DemoKnobs :controls="C.dropzone" :state="K.dropzone" />
         <FileDropzone
           :files="files"
           accept=".pdf,.docx,.xlsx,image/*"
-          :max-size-mb="20"
-          :max-files="6"
+          :max-size-mb="K.dropzone.maxSizeMb"
+          :max-files="K.dropzone.maxFiles"
+          :disabled="K.dropzone.disabled"
           @add="onUpload"
           @remove="(id: string) => (files = files.filter((f) => f.id !== id))"
         />
@@ -175,7 +221,8 @@ function onUpload(list: File[]) {
     <section class="g-section">
       <h2>SourcePanel — 引用溯源</h2>
       <p class="g-desc">RAG 场景的引用片段面板：相关度评分、来源定位、点击展开原文。</p>
-      <SourcePanel :sources="sources" />
+      <DemoKnobs :controls="C.sources" :state="K.sources" />
+      <SourcePanel :sources="sources" :title="K.sources.title" />
     </section>
   </div>
 </template>
