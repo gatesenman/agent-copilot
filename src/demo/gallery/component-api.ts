@@ -247,33 +247,21 @@ export const COMPONENT_API_GROUPS: ApiGroup[] = [
       },
       {
         name: 'PlanPanel',
-        brief: '执行计划审批（draft 可编辑步骤 → 批准 / 拒绝 → 执行进度）',
-        when: 'Plan 模式下让用户审阅并修改 Agent 的执行方案。',
+        brief: '统一计划审查：传 plan 为结构化步骤形态（可编辑步骤 → 批准 → 执行进度）；传 content 为 Markdown 长文形态（折叠预览渐隐 + 全文编辑 + 确认 / 驳回）',
+        when: 'Plan 模式下让用户审阅 Agent 的执行方案。行业内（Claude Code / Cursor Plan Review）计划审查为一个组件，两形态在此合一。原 PlanReviewCard 为本组件兼容别名。',
         props: [
-          { name: 'plan', type: 'PlanSpec', desc: '计划（status: draft/approved/executing/done/rejected）' },
-          { name: 'editable', type: 'boolean', default: 'true', desc: 'draft 态允许增删改步骤' },
+          { name: 'plan', type: 'PlanSpec', desc: '结构化计划（status: draft/approved/executing/done/rejected）；与 content 二选一' },
+          { name: 'content', type: 'string', desc: 'Markdown 计划全文（长文形态，支持 v-model:content）' },
+          { name: 'status', type: "'draft' | 'approved' | 'rejected'", default: "'draft'", desc: '长文形态审查状态' },
+          { name: 'editable', type: 'boolean', default: 'true', desc: 'draft 态允许编辑（步骤增删改 / 全文 textarea）' },
+          { name: 'collapsedHeight', type: 'number', default: '300', desc: '长文形态折叠预览高度（px）' },
+          { name: 'defaultExpanded', type: 'boolean', default: 'false', desc: '长文形态初始是否展开' },
         ],
         events: [
-          { name: 'approve', payload: 'steps: PlanStep[]', desc: '批准（含用户编辑后的步骤）' },
-          { name: 'reject', payload: '—', desc: '拒绝' },
-          { name: 'update:plan', payload: 'PlanSpec', desc: '步骤编辑' },
-        ],
-      },
-      {
-        name: 'PlanReviewCard',
-        brief: 'Markdown 长文计划审查卡（折叠预览渐隐 + 展开 / 收起 + 手动编辑全文 + 确认 / 驳回）',
-        when: 'Agent 产出整篇 Markdown 计划时的审查闭环（类 Claude Code / Cursor Plan Review）；与 PlanPanel（结构化步骤）互补。',
-        props: [
-          { name: 'content', type: 'string', desc: 'Markdown 计划全文' },
-          { name: 'status', type: "'draft' | 'approved' | 'rejected'", default: "'draft'", desc: 'draft 显示操作区，其余显示结果徽章' },
-          { name: 'editable', type: 'boolean', default: 'true', desc: 'draft 态允许切换 textarea 编辑原文' },
-          { name: 'collapsedHeight', type: 'number', default: '300', desc: '折叠预览高度（px），内容不超高则不折叠' },
-          { name: 'defaultExpanded', type: 'boolean', default: 'false', desc: '初始是否展开' },
-        ],
-        events: [
-          { name: 'approve', payload: 'content: string', desc: '确认（携带可能已被手动修改的最终文本）' },
+          { name: 'approve', payload: 'PlanStep[] | string', desc: '批准：结构化形态携带编辑后步骤；长文形态携带最终文本' },
           { name: 'reject', payload: '—', desc: '驳回' },
-          { name: 'update:content', payload: 'string', desc: '手动编辑保存' },
+          { name: 'update:plan', payload: 'PlanSpec', desc: '步骤编辑' },
+          { name: 'update:content', payload: 'string', desc: '全文编辑保存' },
         ],
       },
       {
@@ -580,7 +568,7 @@ export const COMPONENT_API_GROUPS: ApiGroup[] = [
         brief: '协议能力徽标（流式 / 工具 / HITL / 共享状态 / 流水线）',
         props: [
           { name: 'protocol', type: 'string', desc: '协议 ID（如 a2a / ag-ui / langgraph）' },
-          { name: 'capabilities', type: '{ streaming?, tools?, hitl?, ... }', desc: '能力覆盖（缺省查预设）' },
+          { name: 'capabilities', type: '{ streaming?, tools?, hitl?, ... }', desc: '能力覆盖（缺省查预设���' },
         ],
         when: '标注当前接入协议及其能力矩阵。',
       },

@@ -133,8 +133,8 @@ const AUGMENTS: Record<string, Augment> = {
   ThinkingBlock: { path: 'components/agentic/ThinkingBlock.vue', category: 'agentic', role: 'display', consumesEvents: THINKING_EVENTS },
   AgentStepList: { path: 'components/agentic/AgentStepList.vue', category: 'agentic', role: 'display', consumesEvents: ['REACT_STEP'] },
   TaskTracker: { path: 'components/agentic/TaskTracker.vue', category: 'agentic', role: 'display', consumesEvents: ['TASK_UPDATE'] },
+  // PlanPanel 双形态：传 plan 为结构化步骤，传 content 为 Markdown 长文审查（原 PlanReviewCard 已并入）
   PlanPanel: { path: 'components/agentic/PlanPanel.vue', category: 'agentic', role: 'interaction', consumesEvents: ['PLAN_UPDATE'] },
-  PlanReviewCard: { path: 'components/agentic/PlanReviewCard.vue', category: 'agentic', role: 'interaction' },
   ChangeReviewPanel: { path: 'components/agentic/ChangeReviewPanel.vue', category: 'agentic', role: 'interaction', consumesEvents: ['FILE_CHANGE'] },
   AgentFormCard: { path: 'components/agentic/AgentFormCard.vue', category: 'agentic', role: 'interaction', consumesEvents: ['FORM_REQUEST'] },
   ClarifyCard: { path: 'components/agentic/ClarifyCard.vue', category: 'agentic', role: 'interaction', consumesEvents: ['INTERRUPT'] },

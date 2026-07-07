@@ -562,7 +562,7 @@ const store = useCopilot() // 在 <CopilotProvider> 内调用
               <PlanPanel
                 v-if="planView"
                 :plan="planView"
-                @approve="(steps) => decidePlanLocal('approved', steps)"
+                @approve="(steps) => decidePlanLocal('approved', Array.isArray(steps) ? steps : undefined)"
                 @reject="() => decidePlanLocal('rejected')"
               />
             </div>

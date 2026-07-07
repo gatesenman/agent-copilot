@@ -29,7 +29,12 @@ const config = computed<CopilotConfig>(() => ({
     radius: state.radius,
     fontSize: state.fontSize,
   },
-  suggestions: { items: ['这是一条建议问题', '主题色随配置实时变化'] },
+  suggestions: {
+    static: [
+      { title: '建议问题', message: '这是一条建议问题' },
+      { title: '主题预览', message: '主题色随配置实时变化' },
+    ],
+  },
 }))
 
 function presetSwatch(id: ThemePresetId) {

@@ -138,7 +138,7 @@ function clearTerminal() {
               v-if="store.plan.value"
               :plan="store.plan.value"
               editable
-              @approve="(steps) => store.decidePlan('approved', steps)"
+              @approve="(steps) => store.decidePlan('approved', Array.isArray(steps) ? steps : undefined)"
               @reject="store.decidePlan('rejected')"
             />
             <p v-else class="ac-workspace__empty">暂无计划</p>

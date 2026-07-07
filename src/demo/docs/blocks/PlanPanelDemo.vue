@@ -18,7 +18,8 @@ const plan = ref<PlanSpec>({
 
 const lastDecision = ref('')
 
-function onApprove(steps: PlanStep[]) {
+function onApprove(steps: PlanStep[] | string) {
+  if (!Array.isArray(steps)) return
   plan.value = { ...plan.value, status: 'approved', steps }
   lastDecision.value = '已批准'
 }

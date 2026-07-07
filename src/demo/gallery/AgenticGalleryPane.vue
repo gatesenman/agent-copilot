@@ -8,7 +8,7 @@ import ModeSelector from '../../lib/agent-copilot/components/agentic/ModeSelecto
 import ThinkingBlock from '../../lib/agent-copilot/components/agentic/ThinkingBlock.vue'
 import TaskTracker from '../../lib/agent-copilot/components/agentic/TaskTracker.vue'
 import PlanPanel from '../../lib/agent-copilot/components/agentic/PlanPanel.vue'
-import PlanReviewCard from '../../lib/agent-copilot/components/agentic/PlanReviewCard.vue'
+
 import ChangeReviewPanel from '../../lib/agent-copilot/components/agentic/ChangeReviewPanel.vue'
 import ToolActionCard from '../../lib/agent-copilot/components/agentic/ToolActionCard.vue'
 import AgentFormCard from '../../lib/agent-copilot/components/agentic/AgentFormCard.vue'
@@ -320,15 +320,15 @@ const artifactMessages: ChatMessage[] = [
     <section class="agp__section">
       <h2>PlanPanel — 计划预览 / 编辑 / 审批</h2>
       <p class="agp__desc">计划模式下 Agent 产出执行计划，用户可编辑步骤后批准或驳回。</p>
-      <PlanPanel :plan="plan" editable @approve="(s) => (plan = { ...plan, status: 'approved', steps: s })" @reject="plan = { ...plan, status: 'rejected' }" @update:plan="(p) => (plan = p)" />
+      <PlanPanel :plan="plan" editable @approve="(s) => { if (Array.isArray(s)) plan = { ...plan, status: 'approved', steps: s } }" @reject="plan = { ...plan, status: 'rejected' }" @update:plan="(p) => (plan = p)" />
     </section>
 
     <section class="agp__section">
-      <h2>PlanReviewCard — Markdown 长文计划审查</h2>
+      <h2>PlanPanel（Markdown 长文形态）— 整篇计划审查</h2>
       <p class="agp__desc">
-        整篇 Markdown 计划的审查闭环：折叠预览（渐隐 + 居中"展开计划"按钮）→ 展开阅读 → 手动编辑全文 → 确认 / 驳回。与 PlanPanel（结构化步骤）互补。
+        同一个 PlanPanel 组件：传 content（Markdown 字符串）即切换为长文审查形态——折叠预览（渐隐 + 居中"展开计划"按钮）→ 展开阅读 → 手动编辑全文 → 确认 / 驳回。
       </p>
-      <PlanReviewCard
+      <PlanPanel
         v-model:content="reviewPlanContent"
         :status="reviewPlanStatus"
         @approve="reviewPlanStatus = 'approved'"
