@@ -568,7 +568,7 @@ export interface CopilotActionDef {
   parameters?: ActionParameter[]
   /** 直接执行 */
   handler?: (args: Record<string, unknown>) => Promise<unknown> | unknown
-  /** HITL：渲染并等待��户确认后再执行（renderAndWait 语义） */
+  /** HITL：渲染并等待���户确认后再执行（renderAndWait 语义） */
   requiresApproval?: boolean
   /** 自定义渲染组件名（generative UI 注册表 key） */
   render?: string
@@ -869,7 +869,8 @@ export interface CopilotConfig {
   themeTokens?: import('../theme/theme-tokens').ThemeTokensConfig
   radius?: 'none' | 'sm' | 'md' | 'lg'
   density?: 'compact' | 'comfortable'
-  locale?: 'zh' | 'en'
+  /** 界面语言：'zh'/'zh-CN' 中文（默认）、'en'/'en-US' 英文；registerLocale 可扩展其他语言 */
+  locale?: 'zh' | 'en' | 'zh-CN' | 'en-US' | (string & {})
   botName?: string
   botAvatar?: string
   userAvatar?: string

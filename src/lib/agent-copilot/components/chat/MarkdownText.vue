@@ -32,12 +32,22 @@ import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import { highlightCode } from '../generative-ui/highlight'
 import { copyText } from '../../utils/clipboard'
+import { useI18n, type TranslateFn } from '../../i18n'
 
 const props = defineProps<{
   content: string
   /** 流式中：跳过 mermaid 渲染、只渲染完整数学定界对，避免闪烁 */
   streaming?: boolean
 }>()
+
+const { t } = useI18n()
+
+/**
+ * 模块级渲染函数（marked renderer / TOC 生成）无法直接访问组件实例，
+ * html computed 求值前把当前实例的 t 写入 activeT。computed 同步执行，
+ * 多实例不同 locale 也不会串。
+ */
+let activeT: TranslateFn = (key) => key
 
 marked.setOptions({ gfm: true, breaks: true })
 
@@ -153,7 +163,8 @@ function transformToc(src: string): string {
     .filter((h) => !/^\[TOC\]/.test(h.text))
     .map((h) => `<li class="ac-md__toc-l${h.depth}"><a href="#${slugify(h.text)}">${escapeHtml(h.text)}</a></li>`)
     .join('')
-  const toc = items ? `<nav class="ac-md__toc" aria-label="目录"><p class="ac-md__toc-title">目录</p><ul>${items}</ul></nav>` : ''
+  const tocLabel = activeT('md.toc')
+  const toc = items ? `<nav class="ac-md__toc" aria-label="${tocLabel}"><p class="ac-md__toc-title">${tocLabel}</p><ul>${items}</ul></nav>` : ''
   return src.replace(/^\[TOC\]\s*$/m, toc)
 }
 
@@ -162,7 +173,7 @@ const ADMONITION_META: Record<string, { label: string; cls: string }> = {
   NOTE: { label: '说明', cls: 'note' },
   TIP: { label: '提示', cls: 'tip' },
   IMPORTANT: { label: '重要', cls: 'important' },
-  WARNING: { label: '警告', cls: 'warning' },
+  WARNING: { label: '���告', cls: 'warning' },
   CAUTION: { label: '注意', cls: 'caution' },
 }
 
@@ -247,15 +258,15 @@ function renderCodeBlock(code: string, info: string, streaming: boolean): string
   // 超长代码折叠（流式期间不折叠，避免高度跳动）
   const collapsed = !streaming && lineCount > 24
   const expandBtn = collapsed
-    ? `<button type="button" class="ac-md__code-expand" data-expand-code>展开全部 ${lineCount} 行</button>`
+    ? `<button type="button" class="ac-md__code-expand" data-expand-code>${activeT('md.expandAll', { n: lineCount })}</button>`
     : ''
   return (
     `<div class="ac-md__code${collapsed ? ' ac-md__code--collapsed' : ''}" data-filename="${escapeHtml(title ?? (lang ? `snippet.${lang}` : 'snippet.txt'))}">` +
     `<div class="ac-md__code-head"><span>${escapeHtml(label)}</span>` +
     `<span class="ac-md__code-acts">` +
-    `<button type="button" class="ac-md__copy" data-wrap-code title="切换自动换行">折行</button>` +
-    `<button type="button" class="ac-md__copy" data-download-code title="下载代码文件">下载</button>` +
-    `<button type="button" class="ac-md__copy" data-copy-code>复制</button>` +
+    `<button type="button" class="ac-md__copy" data-wrap-code>${activeT('md.wrap')}</button>` +
+    `<button type="button" class="ac-md__copy" data-download-code>${activeT('md.download')}</button>` +
+    `<button type="button" class="ac-md__copy" data-copy-code>${activeT('md.copy')}</button>` +
     `</span></div>` +
     `<pre><code>${body}</code></pre>${expandBtn}</div>`
   )
@@ -274,6 +285,7 @@ function sanitize(html: string): string {
 
 // ---------- 主渲染���线 ----------
 const html = computed(() => {
+  activeT = t // 渲染前绑定本实例翻译函数（模块级渲染器使用）
   let src = props.content ?? ''
   if (!src) return ''
 
@@ -298,8 +310,8 @@ const html = computed(() => {
   renderer.table = function (token: any) {
     const inner = marked.Renderer.prototype.table.call(this, token)
     return `<div class="ac-md__table-wrap">${inner}<span class="ac-md__table-acts">` +
-      `<button type="button" class="ac-md__copy" data-download-table>CSV</button>` +
-      `<button type="button" class="ac-md__copy" data-copy-table>复制表格</button></span></div>`
+      `<button type="button" class="ac-md__copy" data-download-table>${activeT('md.csv')}</button>` +
+      `<button type="button" class="ac-md__copy" data-copy-table>${activeT('md.copyTable')}</button></span></div>`
   }
   // 标题：生成锚点 id + hover 显示 # 链接
   renderer.heading = function (token: any) {
@@ -445,7 +457,7 @@ function openLightbox(src: string, alt: string) {
   const overlay = document.createElement('div')
   overlay.className = 'ac-md__lightbox'
   overlay.setAttribute('role', 'dialog')
-  overlay.setAttribute('aria-label', alt || '图片预览')
+  overlay.setAttribute('aria-label', alt || t('md.imagePreview'))
   const image = document.createElement('img')
   image.src = src
   image.alt = alt
@@ -464,7 +476,7 @@ function copyWithFeedback(btn: HTMLElement, text: string) {
   copyText(text).then((ok) => {
     if (!ok) return
     const orig = btn.textContent
-    btn.textContent = '已复制'
+    btn.textContent = t('md.copied')
     setTimeout(() => { btn.textContent = orig }, 1500)
   })
 }

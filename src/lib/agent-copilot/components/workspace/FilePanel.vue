@@ -15,6 +15,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import type { WorkspaceFile } from '../../types'
 import { copyText } from '../../utils/clipboard'
+import { useI18n } from '../../i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -35,13 +36,18 @@ const props = withDefaults(
   }>(),
   {
     selectedPath: undefined,
-    title: '文件',
+    title: undefined,
     treeWidth: '200px',
-    emptyText: '暂无文件',
+    emptyText: undefined,
     height: '100%',
     filterable: true,
   },
 )
+
+const { t } = useI18n()
+/** 未显式传入时使用本地化默认值 */
+const panelTitle = computed(() => props.title ?? t('workspace.files'))
+const emptyLabel = computed(() => props.emptyText ?? t('files.empty'))
 
 const emit = defineEmits<{
   (e: 'update:selectedPath', path: string): void
@@ -221,15 +227,15 @@ function fileName(path: string): string {
           v-model="filter"
           type="text"
           class="ac-fpanel__filter-input"
-          placeholder="筛选文件…"
-          aria-label="筛选文件"
+          :placeholder="t('files.filter')"
+          :aria-label="t('files.filter')"
         />
-        <button v-if="filter" type="button" class="ac-fpanel__filter-clear" aria-label="清除筛选" @click="filter = ''">×</button>
+        <button v-if="filter" type="button" class="ac-fpanel__filter-clear" :aria-label="t('files.clearFilter')" @click="filter = ''">×</button>
       </div>
 
-      <div ref="treeEl" class="ac-fpanel__tree" role="tree" :aria-label="title" @keydown="onTreeKeydown">
+      <div ref="treeEl" class="ac-fpanel__tree" role="tree" :aria-label="panelTitle" @keydown="onTreeKeydown">
         <div v-if="flatNodes.length === 0" class="ac-fpanel__empty">
-          {{ filter ? '无匹配文件' : emptyText }}
+          {{ filter ? t('files.noMatch') : emptyLabel }}
         </div>
         <button
           v-for="(node, idx) in flatNodes"
@@ -282,10 +288,10 @@ function fileName(path: string): string {
             </template>
           </span>
           <span class="ac-fpanel__preview-meta">
-            <span v-if="activeMeta" class="ac-fpanel__meta-item">{{ activeMeta.lines }} 行</span>
+            <span v-if="activeMeta" class="ac-fpanel__meta-item">{{ t('files.lines', { n: activeMeta.lines }) }}</span>
             <span v-if="activeFile.language" class="ac-badge">{{ activeFile.language }}</span>
             <button type="button" class="ac-fpanel__copy" :class="{ 'is-copied': copied }" @click="copyContent">
-              {{ copied ? '已复制' : '复制' }}
+              {{ copied ? t('chat.copied') : t('chat.copy') }}
             </button>
           </span>
         </div>
@@ -298,7 +304,7 @@ function fileName(path: string): string {
         </slot>
       </template>
       <div v-else class="ac-fpanel__placeholder">
-        <slot name="placeholder">选择文件查看内容</slot>
+        <slot name="placeholder">{{ t('files.selectFile') }}</slot>
       </div>
     </div>
   </div>

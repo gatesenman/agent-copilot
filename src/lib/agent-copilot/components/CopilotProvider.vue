@@ -19,12 +19,29 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import type { CopilotConfig, StructuredPayload } from '../types'
 import { provideCopilot } from '../composables/useCopilot'
+import { labelsFromLocale, normalizeLocale, provideI18n } from '../i18n'
 import { resolveThemeVars } from '../theme/theme-tokens'
 import '../theme/copilot-theme.css'
 
 const props = defineProps<{ config: CopilotConfig }>()
 
 const store = provideCopilot(props.config)
+
+// ============ 多语言 ============
+// locale 归一化：'zh' → 'zh-CN'，'en' → 'en-US'；默认中文
+const localeCode = computed(() => normalizeLocale(props.config.locale))
+const { t } = provideI18n(localeCode)
+
+// store.labels 随 locale 响应式派生（用户 config.labels 覆盖仍最高优先），
+// 旧组件读 store.labels.send 无需改造即获得本地化文案
+const localizedLabels = computed(() => ({ ...labelsFromLocale(t), ...props.config.labels }))
+for (const key of Object.keys(store.labels)) {
+  Object.defineProperty(store.labels, key, {
+    get: () => (localizedLabels.value as Record<string, string>)[key],
+    enumerable: true,
+    configurable: true,
+  })
+}
 
 /** 演示/调试通道：window 事件注入结构化载荷（如演练场的 AI 表单演示） */
 function onInjectPayload(e: Event) {

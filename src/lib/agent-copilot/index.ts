@@ -160,6 +160,11 @@ export type {
   ProtocolCapabilities, ProviderPreset,
 } from './protocols'
 
+// ============ 多语言 ============
+// 内置 zh-CN / en-US；registerLocale 注册扩展语言；useI18n 在组件内取翻译函数
+export { enUS, normalizeLocale, registerLocale, useI18n, zhCN } from './i18n'
+export type { I18nContext, LocaleCode, LocaleMessages, TranslateFn } from './i18n'
+
 // ============ 主题定制 ============
 // Design Tokens：预设主题、品牌色派生、细粒度 token 覆盖
 export { THEME_PRESETS, deriveBrandTokens, resolveThemeVars, tokensToVars } from './theme/theme-tokens'

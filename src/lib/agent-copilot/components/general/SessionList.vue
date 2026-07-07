@@ -4,6 +4,7 @@
  * 纯展示组件：数据与操作由外部传入，支持置顶、重命名、删除、搜索。
  */
 import { computed, ref } from 'vue'
+import { useI18n } from '../../i18n'
 
 export interface SessionItem {
   id: string
@@ -36,6 +37,8 @@ const emit = defineEmits<{
   (e: 'pin', id: string, pinned: boolean): void
 }>()
 
+const { t, locale } = useI18n()
+
 const query = ref('')
 const renamingId = ref<string | null>(null)
 const renameText = ref('')
@@ -58,8 +61,8 @@ function timeText(ts?: number) {
   const now = new Date()
   const sameDay = d.toDateString() === now.toDateString()
   return sameDay
-    ? d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-    : d.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })
+    ? d.toLocaleTimeString(locale.value, { hour: '2-digit', minute: '2-digit' })
+    : d.toLocaleDateString(locale.value, { month: 'numeric', day: 'numeric' })
 }
 
 function startRename(s: SessionItem) {
@@ -83,17 +86,17 @@ function commitRename() {
         v-model="query"
         type="search"
         class="ac-sessions__search"
-        placeholder="搜索会话…"
-        aria-label="搜索会话"
+        :placeholder="t('session.search')"
+        :aria-label="t('session.search')"
       />
-      <button v-if="creatable" type="button" class="ac-sessions__new" aria-label="新建会话" @click="emit('create')">
+      <button v-if="creatable" type="button" class="ac-sessions__new" :aria-label="t('session.newChat')" @click="emit('create')">
         <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
           <path d="M8 3v10M3 8h10" stroke-linecap="round" />
         </svg>
       </button>
     </div>
 
-    <ul class="ac-sessions__list" role="listbox" aria-label="会话列表">
+    <ul class="ac-sessions__list" role="listbox" :aria-label="t('session.list')">
       <li v-for="s in filtered" :key="s.id">
         <div
           class="ac-sessions__item"
@@ -109,7 +112,7 @@ function commitRename() {
               <input
                 v-model="renameText"
                 class="ac-sessions__rename"
-                aria-label="重命名会话"
+                :aria-label="t('session.rename')"
                 @click.stop
                 @keydown.enter.stop="commitRename"
                 @keydown.esc.stop="renamingId = null"
@@ -122,7 +125,7 @@ function commitRename() {
                   <path d="M9.5 1.5 14.5 6.5 12 7l-2 4-1.5-1.5L4 14l-2-2 4.5-4.5L5 6l4-2 .5-2.5Z" />
                 </svg>
                 <span class="ac-sessions__title">{{ s.title }}</span>
-                <span v-if="s.unread" class="ac-sessions__unread" :aria-label="`${s.unread} 条未读`">{{ s.unread > 99 ? '99+' : s.unread }}</span>
+                <span v-if="s.unread" class="ac-sessions__unread" :aria-label="t('session.unread', { n: s.unread })">{{ s.unread > 99 ? '99+' : s.unread }}</span>
               </div>
               <p v-if="s.preview" class="ac-sessions__preview">{{ s.preview }}</p>
             </template>
@@ -130,17 +133,17 @@ function commitRename() {
           <div class="ac-sessions__side">
             <time class="ac-sessions__time">{{ timeText(s.updatedAt) }}</time>
             <div class="ac-sessions__actions">
-              <button type="button" class="ac-sessions__act" :aria-label="s.pinned ? '取消置顶' : '置顶'" :title="s.pinned ? '取消置顶' : '置顶'" @click.stop="emit('pin', s.id, !s.pinned)">
+              <button type="button" class="ac-sessions__act" :aria-label="s.pinned ? t('session.unpin') : t('session.pin')" :title="s.pinned ? t('session.unpin') : t('session.pin')" @click.stop="emit('pin', s.id, !s.pinned)">
                 <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
                   <path d="M9.5 1.5 14.5 6.5 12 7l-2 4-1.5-1.5L4 14l-2-2 4.5-4.5L5 6l4-2 .5-2.5Z" stroke-linejoin="round" />
                 </svg>
               </button>
-              <button type="button" class="ac-sessions__act" aria-label="重命名" title="重命名" @click.stop="startRename(s)">
+              <button type="button" class="ac-sessions__act" :aria-label="t('session.rename')" :title="t('session.rename')" @click.stop="startRename(s)">
                 <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
                   <path d="m11 2 3 3-8 8-4 1 1-4 8-8Z" stroke-linejoin="round" />
                 </svg>
               </button>
-              <button type="button" class="ac-sessions__act ac-sessions__act--danger" aria-label="删除会话" title="删除" @click.stop="emit('delete', s.id)">
+              <button type="button" class="ac-sessions__act ac-sessions__act--danger" :aria-label="t('session.delete')" :title="t('session.delete')" @click.stop="emit('delete', s.id)">
                 <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
                   <path d="M3 4h10M6 4V3h4v1M5 4l.5 9h5L11 4" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
@@ -149,7 +152,7 @@ function commitRename() {
           </div>
         </div>
       </li>
-      <li v-if="filtered.length === 0" class="ac-sessions__empty">暂无会话</li>
+      <li v-if="filtered.length === 0" class="ac-sessions__empty">{{ t('session.empty') }}</li>
     </ul>
   </div>
 </template>
