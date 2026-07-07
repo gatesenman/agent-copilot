@@ -1,10 +1,12 @@
 <script setup lang="ts">
 /**
  * TaskTracker —— Agent 任务清单追踪（TodoList 式）。
- * active 转圈 / done 打勾 / pending 灰点 / error 红叉；支持折叠与进度统计。
+ * 六态图标 / 子任务层级 / activeForm 进行时文案 / 耗时统计 / 错误重试跳过 /
+ * 产物跳转 / 已完成自动折叠 / 当前任务自动定位 / 流式占位 / 紧凑密度。
  */
-import { computed, ref } from 'vue'
-import type { AgentTask } from '../../types'
+import { computed, nextTick, ref, watch } from 'vue'
+import type { AgentTask, AgentTaskArtifact } from '../../types'
+import TaskTrackerItem from './TaskTrackerItem.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -17,18 +19,70 @@ const props = withDefaults(
     defaultCollapsed?: boolean
     /** 显示进度统计，默认 true */
     showProgress?: boolean
-    labels?: { empty?: string }
+    /** 密度：comfortable 显示详情/产物，compact 紧凑单行 */
+    density?: 'comfortable' | 'compact'
+    /** 已完成任务超过该数量时自动收起为一行摘要；0 表示不收起 */
+    collapseDoneAfter?: number
+    /** Agent 仍在规划中：列表尾部显示"计划中…"占位骨架 */
+    streaming?: boolean
+    /** active 任务变化时自动滚动到可见位置，默认 true */
+    autoScroll?: boolean
+    labels?: { empty?: string; retry?: string; skip?: string; doneCollapsed?: string; planning?: string }
   }>(),
-  { title: '任务', collapsible: true, showProgress: true },
+  { title: '任务', collapsible: true, showProgress: true, density: 'comfortable', collapseDoneAfter: 0, autoScroll: true },
 )
 
 const emit = defineEmits<{
   (e: 'taskClick', task: AgentTask): void
+  (e: 'retry', task: AgentTask): void
+  (e: 'skip', task: AgentTask): void
+  (e: 'artifactClick', artifact: AgentTaskArtifact, task: AgentTask): void
 }>()
 
 const collapsed = ref(props.defaultCollapsed ?? false)
-const doneCount = computed(() => props.tasks.filter((t) => t.status === 'done').length)
+const doneExpanded = ref(false)
+const listEl = ref<HTMLElement | null>(null)
+
+/** 统计含子任务在内的完成度 */
+function flatten(tasks: AgentTask[]): AgentTask[] {
+  return tasks.flatMap((t) => [t, ...(t.subtasks ? flatten(t.subtasks) : [])])
+}
+const allTasks = computed(() => flatten(props.tasks))
+const doneCount = computed(() => allTasks.value.filter((t) => t.status === 'done' || t.status === 'skipped').length)
+const totalCount = computed(() => allTasks.value.length)
+const activeTask = computed(() => allTasks.value.find((t) => t.status === 'active'))
+
+/** 已完成折叠：顶层连续已完成(done/skipped)前缀超过阈值时收起 */
+const collapsedDonePrefix = computed(() => {
+  if (!props.collapseDoneAfter || doneExpanded.value) return 0
+  let n = 0
+  for (const t of props.tasks) {
+    if (t.status === 'done' || t.status === 'skipped') n++
+    else break
+  }
+  return n > props.collapseDoneAfter ? n : 0
+})
+const visibleTasks = computed(() => props.tasks.slice(collapsedDonePrefix.value))
+
 const emptyText = computed(() => props.labels?.empty ?? '暂无任务')
+const planningText = computed(() => props.labels?.planning ?? '计划中…')
+
+/** aria-live 播报：当前任务变化时向读屏器通报 */
+const liveText = computed(() => {
+  if (!activeTask.value) return ''
+  return `${activeTask.value.activeForm ?? activeTask.value.title}（${doneCount.value}/${totalCount.value}）`
+})
+
+/** active 任务变化时自动滚动定位 */
+watch(
+  () => activeTask.value?.id,
+  async (id) => {
+    if (!id || !props.autoScroll || collapsed.value) return
+    await nextTick()
+    const el = listEl.value?.querySelector('[data-task-status="active"]')
+    el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  },
+)
 </script>
 
 <template>
@@ -41,9 +95,17 @@ const emptyText = computed(() => props.labels?.empty ?? '暂无任务')
       @click="collapsed = !collapsed"
     >
       <span class="ac-tasks__title">{{ title }}</span>
-      <span v-if="showProgress && tasks.length" class="ac-tasks__progress">{{ doneCount }}/{{ tasks.length }}</span>
-      <span v-if="showProgress && tasks.length" class="ac-tasks__bar" aria-hidden="true">
-        <span class="ac-tasks__bar-fill" :style="{ width: `${(doneCount / tasks.length) * 100}%` }" />
+      <span v-if="showProgress && totalCount" class="ac-tasks__progress">{{ doneCount }}/{{ totalCount }}</span>
+      <span
+        v-if="showProgress && totalCount"
+        class="ac-tasks__bar"
+        role="progressbar"
+        :aria-valuenow="doneCount"
+        :aria-valuemin="0"
+        :aria-valuemax="totalCount"
+        :aria-label="`任务进度 ${doneCount}/${totalCount}`"
+      >
+        <span class="ac-tasks__bar-fill" :style="{ width: `${(doneCount / totalCount) * 100}%` }" />
       </span>
       <svg class="ac-tasks__chevron" :class="{ 'ac-tasks__chevron--closed': collapsed }" viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
         <path d="m4 6 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
@@ -51,29 +113,44 @@ const emptyText = computed(() => props.labels?.empty ?? '暂无任务')
     </button>
     <div v-else class="ac-tasks__head ac-tasks__head--static">
       <span class="ac-tasks__title">{{ title }}</span>
-      <span v-if="showProgress && tasks.length" class="ac-tasks__progress">{{ doneCount }}/{{ tasks.length }}</span>
+      <span v-if="showProgress && totalCount" class="ac-tasks__progress">{{ doneCount }}/{{ totalCount }}</span>
     </div>
 
-    <ul v-if="!collapsed" class="ac-tasks__list" role="list">
-      <li v-if="tasks.length === 0" class="ac-tasks__empty">{{ emptyText }}</li>
-      <li
-        v-for="task in tasks"
-        :key="task.id"
-        class="ac-tasks__item"
-        :class="`ac-tasks__item--${task.status}`"
+    <span class="ac-sr-only" aria-live="polite">{{ liveText }}</span>
+
+    <div v-if="!collapsed" ref="listEl" class="ac-tasks__body">
+      <button
+        v-if="collapsedDonePrefix > 0"
+        type="button"
+        class="ac-tasks__done-fold"
+        @click="doneExpanded = true"
       >
-        <button type="button" class="ac-tasks__item-btn" @click="emit('taskClick', task)">
-          <span class="ac-tasks__status" aria-hidden="true">
-            <svg v-if="task.status === 'done'" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 8.5 3.5 3.5L13 5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-            <svg v-else-if="task.status === 'active'" class="ac-tasks__spinner" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6" opacity="0.25" /><path d="M8 2a6 6 0 0 1 6 6" stroke-linecap="round" /></svg>
-            <svg v-else-if="task.status === 'error'" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 4 8 8M12 4l-8 8" stroke-linecap="round" /></svg>
-            <span v-else class="ac-tasks__dot" />
-          </span>
-          <span class="ac-tasks__item-title">{{ task.title }}</span>
-        </button>
-        <p v-if="task.detail" class="ac-tasks__detail">{{ task.detail }}</p>
-      </li>
-    </ul>
+        <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m3 8.5 3.5 3.5L13 5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        {{ labels?.doneCollapsed ?? `已完成 ${collapsedDonePrefix} 项` }}
+        <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+
+      <TransitionGroup tag="ul" name="ac-task" class="ac-tasks__list" role="list">
+        <li v-if="totalCount === 0 && !streaming" key="__empty" class="ac-tasks__empty">{{ emptyText }}</li>
+        <TaskTrackerItem
+          v-for="task in visibleTasks"
+          :key="task.id"
+          :task="task"
+          :compact="density === 'compact'"
+          :labels="labels"
+          @task-click="(t) => emit('taskClick', t)"
+          @retry="(t) => emit('retry', t)"
+          @skip="(t) => emit('skip', t)"
+          @artifact-click="(a, t) => emit('artifactClick', a, t)"
+        />
+        <li v-if="streaming" key="__planning" class="ac-tasks__planning" aria-hidden="true">
+          <span class="ac-tasks__planning-dot" />
+          <span class="ac-tasks__planning-dot" />
+          <span class="ac-tasks__planning-dot" />
+          <span class="ac-tasks__planning-text">{{ planningText }}</span>
+        </li>
+      </TransitionGroup>
+    </div>
   </div>
 </template>
 
@@ -98,7 +175,7 @@ const emptyText = computed(() => props.labels?.empty ?? '暂无任务')
 }
 .ac-tasks__head--static { cursor: default; }
 .ac-tasks__title { font-size: 0.8rem; font-weight: 700; }
-.ac-tasks__progress { font-size: 0.72rem; color: var(--ac-muted); }
+.ac-tasks__progress { font-size: 0.72rem; color: var(--ac-muted); font-variant-numeric: tabular-nums; }
 .ac-tasks__bar {
   flex: 1;
   height: 4px;
@@ -110,35 +187,64 @@ const emptyText = computed(() => props.labels?.empty ?? '暂无任务')
 .ac-tasks__bar-fill { display: block; height: 100%; background: var(--ac-success); transition: width 0.3s; }
 .ac-tasks__chevron { margin-left: auto; color: var(--ac-muted); transition: transform 0.15s; }
 .ac-tasks__chevron--closed { transform: rotate(-90deg); }
+.ac-tasks__body { max-height: 320px; overflow-y: auto; }
 .ac-tasks__list { list-style: none; margin: 0; padding: 4px 0; }
 .ac-tasks__empty { padding: 12px; font-size: 0.78rem; color: var(--ac-muted); text-align: center; }
-.ac-tasks__item { padding: 0 8px; }
-.ac-tasks__item-btn {
+.ac-tasks__done-fold {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
+  gap: 6px;
+  width: calc(100% - 16px);
+  margin: 4px 8px 0;
   padding: 5px 6px;
   border: none;
+  border-radius: 6px;
   background: transparent;
+  color: var(--ac-success);
+  font-size: 0.76rem;
   cursor: pointer;
   text-align: left;
-  color: var(--ac-fg);
-  border-radius: 6px;
-  font-size: 0.8rem;
 }
-.ac-tasks__item-btn:hover { background: var(--ac-surface); }
-.ac-tasks__status { display: flex; align-items: center; width: 15px; flex-shrink: 0; }
-.ac-tasks__item--done .ac-tasks__status { color: var(--ac-success); }
-.ac-tasks__item--active .ac-tasks__status { color: var(--ac-primary); }
-.ac-tasks__item--error .ac-tasks__status { color: var(--ac-danger); }
-.ac-tasks__item--done .ac-tasks__item-title { color: var(--ac-muted); text-decoration: line-through; }
-.ac-tasks__item--active .ac-tasks__item-title { font-weight: 600; }
-.ac-tasks__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ac-border); margin-left: 3px; }
-.ac-tasks__spinner { animation: ac-task-spin 0.9s linear infinite; }
-@keyframes ac-task-spin { to { transform: rotate(360deg); } }
+.ac-tasks__done-fold:hover { background: var(--ac-surface); }
+.ac-tasks__done-fold svg:last-child { color: var(--ac-muted); }
+.ac-tasks__planning {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+}
+.ac-tasks__planning-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ac-muted);
+  animation: ac-task-pulse 1.2s ease-in-out infinite;
+}
+.ac-tasks__planning-dot:nth-child(2) { animation-delay: 0.2s; }
+.ac-tasks__planning-dot:nth-child(3) { animation-delay: 0.4s; }
+.ac-tasks__planning-text { margin-left: 4px; font-size: 0.72rem; color: var(--ac-muted); }
+@keyframes ac-task-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+/* 状态/插入过渡动画 */
+.ac-task-enter-active, .ac-task-leave-active { transition: opacity 0.25s, transform 0.25s; }
+.ac-task-enter-from { opacity: 0; transform: translateY(4px); }
+.ac-task-leave-to { opacity: 0; }
+.ac-task-move { transition: transform 0.25s; }
 @media (prefers-reduced-motion: reduce) {
-  .ac-tasks__spinner { animation-duration: 2.5s; }
+  .ac-task-enter-active, .ac-task-leave-active, .ac-task-move { transition: none; }
+  .ac-tasks__planning-dot { animation: none; opacity: 0.6; }
 }
-.ac-tasks__detail { margin: 0 0 4px 29px; font-size: 0.72rem; color: var(--ac-muted); line-height: 1.5; }
+.ac-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 </style>

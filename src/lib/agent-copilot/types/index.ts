@@ -424,12 +424,41 @@ export interface FileChange {
   status: 'pending' | 'accepted' | 'rejected'
 }
 
+/** 任务状态（对齐行业标准：Claude Code TodoWrite / Devin 计划面板） */
+export type AgentTaskStatus = 'pending' | 'active' | 'done' | 'error' | 'skipped' | 'cancelled'
+
+/** 任务关联产物（完成后可跳转的文件 / 链接 / 预览） */
+export interface AgentTaskArtifact {
+  /** 产物类型 */
+  type: 'file' | 'link' | 'preview'
+  /** 显示名 */
+  label: string
+  /** 文件路径或 URL */
+  uri: string
+}
+
 /** Agent 任务（TodoList 式追踪） */
 export interface AgentTask {
   id: string
   title: string
-  status: 'pending' | 'active' | 'done' | 'error'
+  status: AgentTaskStatus
   detail?: string
+  /** 进行时文案（active 态优先显示，如"正在构建首页…"） */
+  activeForm?: string
+  /** 子任务（树形层级，支持递归嵌套） */
+  subtasks?: AgentTask[]
+  /** 开始时间戳 ms */
+  startedAt?: number
+  /** 耗时 ms（done/error 时展示） */
+  durationMs?: number
+  /** 失败原因（error 态展示，可配合 retry 操作） */
+  errorReason?: string
+  /** 是否允许重试（error 态显示重试按钮） */
+  retryable?: boolean
+  /** 是否允许跳过（pending/error 态显示跳过按钮） */
+  skippable?: boolean
+  /** 任务产物（完成后可跳转） */
+  artifacts?: AgentTaskArtifact[]
 }
 
 /** 计划步骤 */

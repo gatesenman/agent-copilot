@@ -226,15 +226,24 @@ export const COMPONENT_API_GROUPS: ApiGroup[] = [
       },
       {
         name: 'TaskTracker',
-        brief: '任务清单（pending / in_progress / done，带进度统计）',
+        brief: '任务清单（六态 + 子任务层级 + 耗时 + 重试/跳过 + 产物跳转）',
         when: '多步长任务的进度跟踪。由 TASKS_UPDATE 事件驱动。',
         props: [
-          { name: 'tasks', type: 'AgentTask[]', desc: '任务数组' },
+          { name: 'tasks', type: 'AgentTask[]', desc: '任务数组（支持 subtasks 树形嵌套、activeForm 进行时文案、durationMs、errorReason、artifacts）' },
           { name: 'title', type: 'string', desc: '标题' },
           { name: 'collapsible / defaultCollapsed', type: 'boolean', desc: '折叠行为' },
-          { name: 'showProgress', type: 'boolean', default: 'true', desc: '进度统计条' },
+          { name: 'showProgress', type: 'boolean', default: 'true', desc: '进度统计条（role=progressbar）' },
+          { name: 'density', type: "'comfortable' | 'compact'", default: "'comfortable'", desc: '密度；compact 为紧凑单行（适合消息流内嵌）' },
+          { name: 'collapseDoneAfter', type: 'number', default: '0', desc: '连续已完成任务超过 N 项时收起为"已完成 N 项"摘要' },
+          { name: 'streaming', type: 'boolean', default: 'false', desc: '规划中：尾部显示"计划中…"占位骨架' },
+          { name: 'autoScroll', type: 'boolean', default: 'true', desc: 'active 任务变化时自动滚动定位' },
         ],
-        events: [{ name: 'taskClick', payload: 'AgentTask', desc: '点击任务行' }],
+        events: [
+          { name: 'taskClick', payload: 'AgentTask', desc: '点击任务行' },
+          { name: 'retry', payload: 'AgentTask', desc: '点击重试（error 且 retryable）' },
+          { name: 'skip', payload: 'AgentTask', desc: '点击跳过（skippable）' },
+          { name: 'artifactClick', payload: '(AgentTaskArtifact, AgentTask)', desc: '点击任务产物' },
+        ],
       },
       {
         name: 'PlanPanel',
