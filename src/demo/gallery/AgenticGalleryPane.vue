@@ -25,10 +25,22 @@ import type {
 } from '../../lib/agent-copilot/types'
 
 const toolCalls: ToolCallState[] = [
-  { id: 'tc1', name: 'read_file', args: { path: 'src/components/LoginForm.tsx' }, status: 'succeeded', result: '86 行 · 表单无校验逻辑', origin: 'backend' },
-  { id: 'tc2', name: 'write_file', args: { path: 'src/lib/validators.ts' }, status: 'succeeded', result: '+15 行', origin: 'backend' },
-  { id: 'tc3', name: 'edit_file', args: { path: 'src/components/LoginForm.tsx' }, status: 'succeeded', result: '+12 -2', origin: 'backend' },
-  { id: 'tc4', name: 'run_command', args: { command: 'pnpm test -- validators' }, status: 'succeeded', result: 'PASS · 2 个测试通过', origin: 'backend' },
+  { id: 'tc1', name: 'read_file', args: { path: 'src/components/LoginForm.tsx' }, status: 'succeeded', result: '86 行 · 表单无校验逻辑', origin: 'backend', startedAt: 1000, finishedAt: 1300 },
+  {
+    id: 'tc3', name: 'edit_file', args: { path: 'src/components/LoginForm.tsx' }, status: 'succeeded', origin: 'backend', startedAt: 1000, finishedAt: 2400,
+    result: ' function LoginForm() {\n+  const { errors, validate } = useValidators(schema)\n   const onSubmit = (e: FormEvent) => {\n-    submit(form)\n+    if (validate(form)) submit(form)\n   }',
+  },
+  {
+    id: 'tc4', name: 'run_command', args: { command: 'pnpm test -- validators' }, status: 'succeeded', origin: 'backend', startedAt: 1000, finishedAt: 4200,
+    result: { stdout: 'PASS src/lib/validators.test.ts\n  ✓ rejects empty email (3 ms)\n  ✓ rejects weak password (1 ms)\n\nTests: 2 passed, 2 total', exitCode: 0 },
+  },
+  {
+    id: 'tc5', name: 'browse_web', args: { url: 'https://vuejs.org/guide/reusability/composables' }, status: 'running', origin: 'backend',
+  },
+  {
+    id: 'tc6', name: 'delete_file', args: { path: 'src/legacy/oldValidator.js' }, status: 'failed', origin: 'backend', startedAt: 1000, finishedAt: 1100,
+    error: 'EACCES: permission denied',
+  },
 ]
 
 const mode = ref<AgentMode>('confirm_edits')
@@ -359,7 +371,9 @@ const artifactMessages: ChatMessage[] = [
 
     <section class="agp__section">
       <h2>ToolActionCard — 工具动作特化卡</h2>
-      <p class="agp__desc">按动作类型（读/写/编辑文件、执行命令、搜索、浏览）特化图标与摘要。</p>
+      <p class="agp__desc">
+        按动作类型特化图标与摘要；结果特化渲染：run_command 终端样式输出 + 退出码、edit_file 检测 diff 文本按 +/- 着色、browse 链接可点击打开；renderers 注册表（工具名 → 组件）可完全接管单个工具渲染（对标 AG-UI toolRenderers / CopilotKit useRenderTool）。展开卡片查看效果。
+      </p>
       <div class="agp__cards">
         <ToolActionCard v-for="tc in toolCalls" :key="tc.id" :tool-call="tc" />
       </div>

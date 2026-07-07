@@ -111,6 +111,21 @@ export const zhCN: LocaleMessages = {
   'workspace.changes': '变更',
   'workspace.tasks': '任务',
 
+  // ---- 工具动作卡 ----
+  'tool.readFile': '读取文件',
+  'tool.writeFile': '写入文件',
+  'tool.editFile': '编辑文件',
+  'tool.deleteFile': '删除文件',
+  'tool.runCommand': '执行命令',
+  'tool.search': '搜索',
+  'tool.browse': '浏览网页',
+  'tool.generic': '工具调用',
+  'tool.args': '参数',
+  'tool.result': '结果',
+  'tool.output': '输出',
+  'tool.exitCode': '退出码 {n}',
+  'tool.openLink': '打开链接',
+
   // ---- 计划审查 ----
   'plan.title': '执行计划',
   'plan.confirm': '确认计划',
@@ -255,6 +270,20 @@ export const enUS: LocaleMessages = {
   'workspace.browser': 'Browser',
   'workspace.changes': 'Changes',
   'workspace.tasks': 'Tasks',
+
+  'tool.readFile': 'Read file',
+  'tool.writeFile': 'Write file',
+  'tool.editFile': 'Edit file',
+  'tool.deleteFile': 'Delete file',
+  'tool.runCommand': 'Run command',
+  'tool.search': 'Search',
+  'tool.browse': 'Browse web',
+  'tool.generic': 'Tool call',
+  'tool.args': 'Arguments',
+  'tool.result': 'Result',
+  'tool.output': 'Output',
+  'tool.exitCode': 'Exit code {n}',
+  'tool.openLink': 'Open link',
 
   'plan.title': 'Execution plan',
   'plan.confirm': 'Confirm plan',

@@ -306,12 +306,13 @@ export const COMPONENT_API_GROUPS: ApiGroup[] = [
       },
       {
         name: 'ToolActionCard',
-        brief: '工具调用卡：按工具名推断种类图标 + 参数摘要 + 耗时 + 可展开详情',
-        when: '消息内展示 TOOL_CALL_* 事件，MessageBubble 已内置。',
+        brief: '工具调用卡：种类图标 + 参数摘要 + 耗时 + 特化结果渲染（终端输出/diff 着色/可点链接）+ 自定义渲染器注册表',
+        when: '消息内展示 TOOL_CALL_* 事件，MessageBubble 已内置。行业对标 AG-UI toolRenderers / CopilotKit useRenderTool：renderers 按工具名注册组件可完全接管渲染。',
         props: [
           { name: 'toolCall', type: 'ToolCallState', desc: '调用状态（args/result/status）' },
           { name: 'kind', type: 'ToolActionKind', desc: '显式种类（file/terminal/search/browser…）' },
           { name: 'defaultExpanded', type: 'boolean', desc: '初始展开详情' },
+          { name: 'renderers', type: 'Record<string, Component>', desc: "工具名 → 组件注册表，'default' 为兜底；也可经 config.toolDisplay.renderers 全局注入" },
         ],
       },
     ],
@@ -583,7 +584,7 @@ export const COMPONENT_API_GROUPS: ApiGroup[] = [
       },
       {
         name: 'AgentCardView',
-        brief: 'A2A AgentCard 名片（能力 / 技能 / 端点）',
+        brief: 'A2A AgentCard 名片（能力 / 技能 / 端点���',
         props: [
           { name: 'card', type: 'A2AAgentCard', desc: '.well-known/agent.json 内容' },
           { name: 'status', type: "'online' | 'offline' | 'unknown'", desc: '在线状态' },

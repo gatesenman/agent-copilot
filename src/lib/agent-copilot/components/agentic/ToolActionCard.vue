@@ -1,11 +1,18 @@
 <script setup lang="ts">
 /**
  * ToolActionCard —— 按工具种类特化的执行卡。
- * read_file / write_file / edit_file / delete_file / run_command / search / browse / generic
- * 自动从 ToolCallState 推断种类（可显式指定），展示摘要 + 展开详情。
+ *
+ * 行业对标（AG-UI Controlled Generative UI / CopilotKit useRenderTool / assistant-ui defineToolkit）：
+ * 1. 内置特化：read_file / write_file / edit_file / delete_file / run_command / search / browse / generic
+ *    自动从 ToolCallState 推断种类（可显式指定），展示语义图标 + 参数摘要 + 状态耗时 + 展开详情。
+ * 2. 自定义渲染器注册表：renderers 按「工具名 → 组件」完全接管单个工具的渲染
+ *    （等价 AG-UI toolRenderers 字典 / CopilotKit useRenderTool），default 键为兜底。
+ * 3. 特化结果渲染：run_command 结果按终端样式展示 stdout/exitCode；
+ *    检测到 diff 文本按 +/- 着色；browse 的 url 可点击打开。
  */
-import { computed, ref } from 'vue'
+import { computed, ref, type Component } from 'vue'
 import type { ToolActionKind, ToolCallState } from '../../types'
+import { useI18n } from '../../i18n'
 
 const props = defineProps<{
   toolCall: ToolCallState
@@ -13,7 +20,19 @@ const props = defineProps<{
   kind?: ToolActionKind
   /** 初始展开详情 */
   defaultExpanded?: boolean
+  /**
+   * 自定义渲染器注册表：工具名 → 组件（AG-UI toolRenderers 模式）。
+   * 命中后完全接管渲染，组件收到 props: { toolCall }；'default' 键为兜底。
+   */
+  renderers?: Record<string, Component>
 }>()
+
+const { t } = useI18n()
+
+/** 命中注册表则用自定义组件（精确工具名 > default） */
+const customRenderer = computed<Component | null>(
+  () => props.renderers?.[props.toolCall.name] ?? props.renderers?.default ?? null,
+)
 
 /** 工具名 → 种类推断规则（可通过 kind prop 覆盖） */
 const KIND_RULES: [RegExp, ToolActionKind][] = [
@@ -34,15 +53,15 @@ const resolvedKind = computed<ToolActionKind>(() => {
   return 'generic'
 })
 
-const META: Record<ToolActionKind, { label: string; icon: string }> = {
-  read_file: { label: '读取文件', icon: 'M3 2.5h6.5L13 6v7.5H3z M9.5 2.5V6H13' },
-  write_file: { label: '写入文件', icon: 'M3 2.5h6.5L13 6v7.5H3z M6 9.5l1.5 1.5L10.5 8' },
-  edit_file: { label: '编辑文件', icon: 'M11 2.5l2.5 2.5L6 12.5H3.5V10z' },
-  delete_file: { label: '删除文件', icon: 'M4 4.5h8M6.5 4.5V3h3v1.5M5 4.5l.5 8h5l.5-8' },
-  run_command: { label: '执行命令', icon: 'M3 4l4 4-4 4M8.5 12H13' },
-  search: { label: '搜索', icon: 'M7 11.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM10.5 10.5 14 14' },
-  browse: { label: '浏览网页', icon: 'M8 14A6 6 0 1 0 8 2a6 6 0 0 0 0 12ZM2 8h12M8 2c2 2.2 2 9.8 0 12M8 2c-2 2.2-2 9.8 0 12' },
-  generic: { label: '工具调用', icon: 'M9.5 3.5a3 3 0 0 0-4 4L2 11l3 3 3.5-3.5a3 3 0 0 0 4-4L10 9 7 6z' },
+const META: Record<ToolActionKind, { labelKey: string; icon: string }> = {
+  read_file: { labelKey: 'tool.readFile', icon: 'M3 2.5h6.5L13 6v7.5H3z M9.5 2.5V6H13' },
+  write_file: { labelKey: 'tool.writeFile', icon: 'M3 2.5h6.5L13 6v7.5H3z M6 9.5l1.5 1.5L10.5 8' },
+  edit_file: { labelKey: 'tool.editFile', icon: 'M11 2.5l2.5 2.5L6 12.5H3.5V10z' },
+  delete_file: { labelKey: 'tool.deleteFile', icon: 'M4 4.5h8M6.5 4.5V3h3v1.5M5 4.5l.5 8h5l.5-8' },
+  run_command: { labelKey: 'tool.runCommand', icon: 'M3 4l4 4-4 4M8.5 12H13' },
+  search: { labelKey: 'tool.search', icon: 'M7 11.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM10.5 10.5 14 14' },
+  browse: { labelKey: 'tool.browse', icon: 'M8 14A6 6 0 1 0 8 2a6 6 0 0 0 0 12ZM2 8h12M8 2c2 2.2 2 9.8 0 12M8 2c-2 2.2-2 9.8 0 12' },
+  generic: { labelKey: 'tool.generic', icon: 'M9.5 3.5a3 3 0 0 0-4 4L2 11l3 3 3.5-3.5a3 3 0 0 0 4-4L10 9 7 6z' },
 }
 
 const meta = computed(() => META[resolvedKind.value])
@@ -56,6 +75,13 @@ const summary = computed(() => {
   if (typeof cand === 'string') return cand
   const first = Object.values(args)[0]
   return typeof first === 'string' ? first : ''
+})
+
+/** browse 类：url 参数可点击 */
+const linkUrl = computed(() => {
+  if (resolvedKind.value !== 'browse') return ''
+  const u = (props.toolCall.args as Record<string, unknown> | undefined)?.url
+  return typeof u === 'string' && /^https?:\/\//.test(u) ? u : ''
 })
 
 const expanded = ref(props.defaultExpanded ?? false)
@@ -73,10 +99,52 @@ function fmt(v: unknown): string {
   if (typeof v === 'string') return v
   try { return JSON.stringify(v, null, 2) } catch { return String(v) }
 }
+
+// ============ 特化结果渲染 ============
+
+/** run_command：结果对象里提取 stdout / output / exitCode */
+const cmdResult = computed(() => {
+  if (resolvedKind.value !== 'run_command' || props.toolCall.result == null) return null
+  const r = props.toolCall.result
+  if (typeof r === 'string') return { output: r, exitCode: undefined as number | undefined }
+  if (typeof r === 'object') {
+    const o = r as Record<string, unknown>
+    const output = o.stdout ?? o.output ?? o.text
+    if (typeof output === 'string') {
+      return { output, exitCode: typeof o.exitCode === 'number' ? o.exitCode : undefined }
+    }
+  }
+  return null
+})
+
+/** diff 检测：文本含 +/- 前缀行（编辑/写入类结果或 diff 参数），按行着色 */
+const diffLines = computed(() => {
+  if (!['edit_file', 'write_file'].includes(resolvedKind.value)) return null
+  const cand = [
+    props.toolCall.result,
+    (props.toolCall.args as Record<string, unknown> | undefined)?.diff,
+  ].find((v) => typeof v === 'string') as string | undefined
+  if (!cand) return null
+  const lines = cand.split('\n')
+  // 至少要有一行 +/- 才当作 diff
+  if (!lines.some((l) => /^[+-](?![+-])/.test(l))) return null
+  return lines.map((text) => ({
+    text,
+    type: text.startsWith('+') ? 'add' : text.startsWith('-') ? 'del' : 'ctx',
+  }))
+})
+
+/** 通用详情是否还需要展示结果块（特化渲染接管后不再重复） */
+const showRawResult = computed(
+  () => props.toolCall.result != null && !cmdResult.value && !diffLines.value,
+)
 </script>
 
 <template>
-  <div class="ac-action" :data-status="toolCall.status" :data-kind="resolvedKind">
+  <!-- 注册表命中：完全交给自定义组件（AG-UI toolRenderers 模式） -->
+  <component :is="customRenderer" v-if="customRenderer" :tool-call="toolCall" />
+
+  <div v-else class="ac-action" :data-status="toolCall.status" :data-kind="resolvedKind">
     <button
       type="button"
       class="ac-action__head"
@@ -89,7 +157,7 @@ function fmt(v: unknown): string {
           <path :d="meta.icon" />
         </svg>
       </span>
-      <span class="ac-action__label">{{ toolCall.label || meta.label }}</span>
+      <span class="ac-action__label">{{ toolCall.label || t(meta.labelKey) }}</span>
       <code v-if="summary" class="ac-action__summary">{{ summary }}</code>
       <span class="ac-action__right">
         <span v-if="durationText" class="ac-action__duration">{{ durationText }}</span>
@@ -103,13 +171,39 @@ function fmt(v: unknown): string {
 
     <div v-if="expanded" class="ac-action__detail">
       <template v-if="toolCall.args && Object.keys(toolCall.args).length">
-        <p class="ac-action__section">参数</p>
+        <p class="ac-action__section">{{ t('tool.args') }}</p>
         <pre class="ac-action__pre"><code>{{ fmt(toolCall.args) }}</code></pre>
       </template>
-      <template v-if="toolCall.result != null">
-        <p class="ac-action__section">结果</p>
+
+      <!-- 特化：终端样式命令输出 -->
+      <template v-if="cmdResult">
+        <p class="ac-action__section">
+          {{ t('tool.output') }}
+          <span v-if="cmdResult.exitCode !== undefined" class="ac-action__exit" :data-ok="cmdResult.exitCode === 0">
+            {{ t('tool.exitCode', { n: cmdResult.exitCode }) }}
+          </span>
+        </p>
+        <pre class="ac-action__pre ac-action__pre--term"><code>{{ cmdResult.output }}</code></pre>
+      </template>
+
+      <!-- 特化：diff 着色 -->
+      <template v-else-if="diffLines">
+        <p class="ac-action__section">{{ t('tool.result') }}</p>
+        <pre class="ac-action__pre ac-action__pre--diff"><code><span
+          v-for="(l, i) in diffLines" :key="i" class="ac-action__dline" :data-t="l.type"
+        >{{ l.text }}
+</span></code></pre>
+      </template>
+
+      <!-- 通用 JSON 结果 -->
+      <template v-else-if="showRawResult">
+        <p class="ac-action__section">{{ t('tool.result') }}</p>
         <pre class="ac-action__pre"><code>{{ fmt(toolCall.result) }}</code></pre>
       </template>
+
+      <a v-if="linkUrl" class="ac-action__link" :href="linkUrl" target="_blank" rel="noopener noreferrer">
+        {{ t('tool.openLink') }} ↗
+      </a>
       <p v-if="toolCall.error" class="ac-action__error">{{ toolCall.error }}</p>
     </div>
   </div>
@@ -172,7 +266,24 @@ function fmt(v: unknown): string {
 @keyframes ac-action-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .ac-action__spin { animation-duration: 2.5s; } }
 .ac-action__detail { border-top: 1px dashed var(--ac-border); padding: 8px 11px; }
-.ac-action__section { margin: 0 0 3px; font-size: 0.68rem; font-weight: 700; color: var(--ac-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.ac-action__section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 3px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--ac-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ac-action__exit {
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ac-danger);
+}
+.ac-action__exit[data-ok='true'] { color: var(--ac-success); }
 .ac-action__pre {
   margin: 0 0 8px;
   padding: 7px 9px;
@@ -184,5 +295,22 @@ function fmt(v: unknown): string {
   max-height: 200px;
   overflow-y: auto;
 }
+/* 终端样式：深底浅字，与 TerminalPanel 视觉一致 */
+.ac-action__pre--term {
+  background: #16181d;
+  color: #d4d8de;
+}
+.ac-action__pre--diff { padding: 7px 0; }
+.ac-action__dline { display: block; padding: 0 9px; white-space: pre; }
+.ac-action__dline[data-t='add'] { background: color-mix(in srgb, var(--ac-success) 12%, transparent); color: var(--ac-success); }
+.ac-action__dline[data-t='del'] { background: color-mix(in srgb, var(--ac-danger) 10%, transparent); color: var(--ac-danger); }
+.ac-action__link {
+  display: inline-block;
+  margin: 0 0 6px;
+  font-size: 0.74rem;
+  color: var(--ac-primary);
+  text-decoration: none;
+}
+.ac-action__link:hover { text-decoration: underline; }
 .ac-action__error { margin: 0; color: var(--ac-danger); font-size: 0.75rem; }
 </style>

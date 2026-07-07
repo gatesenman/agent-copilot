@@ -28,7 +28,7 @@
         />
 
         <!-- 工具调用卡片（按工具名推断种类：读/写/执行/搜索/浏览，语义化图标与摘要） -->
-        <ToolActionCard v-for="tc in visibleToolCalls" :key="tc.id" :tool-call="tc" />
+        <ToolActionCard v-for="tc in visibleToolCalls" :key="tc.id" :tool-call="tc" :renderers="toolDisplay?.renderers" />
 
         <!-- 结构化载荷（16 种 AG-UI 载荷） -->
         <PayloadCard v-for="(p, i) in message.payloads ?? []" :key="i" :payload="p" />
