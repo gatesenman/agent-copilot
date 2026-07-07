@@ -131,7 +131,7 @@
                   <option value="openai">openai（OpenAI 兼容）</option>
                   <option value="deepseek">deepseek</option>
                   <option value="qwen">qwen（通义千问）</option>
-                  <option value="vllm">vllm（自托管）</option>
+                  <option value="vllm">vllm（自托��）</option>
                 </select>
               </label>
               <label class="pg__field">
@@ -305,7 +305,7 @@
             </label>
             <label class="pg__field pg__field--row">
               <input v-model="cfg.actionRegenerate" type="checkbox" />
-              <span>重新生成</span>
+              <span>重新���成</span>
             </label>
             <label class="pg__field pg__field--row">
               <input v-model="cfg.actionEdit" type="checkbox" />
@@ -506,6 +506,7 @@
 import { computed, reactive, ref } from 'vue'
 import type { CopilotActionDef, CopilotConfig, MentionItem, SlashCommand } from '../../lib/agent-copilot'
 import CopilotProvider from '../../lib/agent-copilot/components/CopilotProvider.vue'
+import { copyText } from '../../lib/agent-copilot/utils/clipboard'
 import CopilotChat from '../../lib/agent-copilot/components/chat/CopilotChat.vue'
 import ActionRegistrar from '../gallery/ActionRegistrar.vue'
 import OmniComposedSurface from '../gallery/OmniComposedSurface.vue'
@@ -1018,12 +1019,9 @@ function reset() {
 }
 
 async function copyCode() {
-  try {
-    await navigator.clipboard.writeText(generatedCode.value)
+  if (await copyText(generatedCode.value)) {
     copied.value = true
     setTimeout(() => (copied.value = false), 1500)
-  } catch {
-    /* 剪贴板不可用时静默失败 */
   }
 }
 </script>

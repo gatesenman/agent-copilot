@@ -25,6 +25,7 @@ import { marked } from 'marked'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import { highlightCode } from '../generative-ui/highlight'
+import { copyText } from '../../utils/clipboard'
 
 const props = defineProps<{
   content: string
@@ -290,7 +291,8 @@ function onDelegatedClick(e: MouseEvent) {
 }
 
 function copyWithFeedback(btn: HTMLElement, text: string) {
-  navigator.clipboard?.writeText(text).then(() => {
+  copyText(text).then((ok) => {
+    if (!ok) return
     const orig = btn.textContent
     btn.textContent = '已复制'
     setTimeout(() => { btn.textContent = orig }, 1500)

@@ -6,6 +6,7 @@
  * number → 数字输入。改动即时反映到预览，同时生成对应 props 代码。
  */
 import { computed, reactive, ref } from 'vue'
+import { copyText } from '../../lib/agent-copilot/utils/clipboard'
 
 export interface DemoControl {
   /** 绑定的 prop 名 */
@@ -73,7 +74,7 @@ function kebab(s: string) {
 }
 
 async function copyCode() {
-  try { await navigator.clipboard.writeText(code.value) } catch { /* 忽略 */ }
+  await copyText(code.value)
 }
 </script>
 

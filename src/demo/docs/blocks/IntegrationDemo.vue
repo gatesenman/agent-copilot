@@ -4,6 +4,7 @@
  * 左侧切换集成方式，右侧展示可复制代码片段；iframe 方式内嵌真实 /embed.html 预览。
  */
 import { computed, ref } from 'vue'
+import { copyText } from '../../../lib/agent-copilot/utils/clipboard'
 
 const origin = window.location.origin
 
@@ -48,11 +49,10 @@ const snippet = computed(() => SNIPPETS[active.value])
 
 const copied = ref(false)
 async function copy() {
-  try {
-    await navigator.clipboard.writeText(snippet.value)
+  if (await copyText(snippet.value)) {
     copied.value = true
     setTimeout(() => (copied.value = false), 1600)
-  } catch { /* 剪贴板不可用时静默 */ }
+  }
 }
 
 function openShare() {

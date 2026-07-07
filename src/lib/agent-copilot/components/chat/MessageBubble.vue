@@ -155,6 +155,7 @@ import MarkdownText from './MarkdownText.vue'
 import ToolActionCard from '../agentic/ToolActionCard.vue'
 import PayloadCard from '../generative-ui/PayloadCard.vue'
 import ThinkingBlock from '../agentic/ThinkingBlock.vue'
+import { copyText } from '../../utils/clipboard'
 
 const props = withDefaults(
   defineProps<{
@@ -223,11 +224,10 @@ const visibleToolCalls = computed(() => {
 
 const copied = ref(false)
 async function copyContent() {
-  try {
-    await navigator.clipboard.writeText(props.message.content)
+  if (await copyText(props.message.content)) {
     copied.value = true
     setTimeout(() => { copied.value = false }, 1500)
-  } catch { /* 剪贴板不可用 */ }
+  }
 }
 </script>
 

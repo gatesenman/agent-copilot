@@ -8,6 +8,7 @@ import { computed, ref } from 'vue'
 import { generateLlmsDoc } from '../ai-docs/llms-doc'
 import { buildAguiManifest, validateAguiManifest } from '../ai-docs/agui-manifest'
 import { downloadText } from '../../lib/agent-copilot/utils/session-export'
+import { copyText } from '../../lib/agent-copilot/utils/clipboard'
 
 const doc = generateLlmsDoc()
 const stats = computed(() => ({
@@ -28,9 +29,10 @@ const manifestStats = computed(() => ({
 
 const copied = ref(false)
 async function copyAll() {
-  await navigator.clipboard.writeText(doc)
-  copied.value = true
-  setTimeout(() => (copied.value = false), 1600)
+  if (await copyText(doc)) {
+    copied.value = true
+    setTimeout(() => (copied.value = false), 1600)
+  }
 }
 
 function download() {
@@ -39,9 +41,10 @@ function download() {
 
 const copiedJson = ref(false)
 async function copyManifest() {
-  await navigator.clipboard.writeText(JSON.stringify(manifest, null, 2))
-  copiedJson.value = true
-  setTimeout(() => (copiedJson.value = false), 1600)
+  if (await copyText(JSON.stringify(manifest, null, 2))) {
+    copiedJson.value = true
+    setTimeout(() => (copiedJson.value = false), 1600)
+  }
 }
 
 function downloadManifest() {

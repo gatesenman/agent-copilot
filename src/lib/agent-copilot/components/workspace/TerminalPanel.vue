@@ -15,6 +15,7 @@
  */
 import { computed, nextTick, ref, watch } from 'vue'
 import type { TerminalEntry } from '../../types'
+import { copyText } from '../../utils/clipboard'
 
 const props = withDefaults(
   defineProps<{
@@ -228,11 +229,10 @@ async function copyAll() {
   const text = props.entries
     .map((en) => (en.kind === 'cmd' ? `${props.prompt} ${en.text}` : en.text.replace(ANSI_STRIP_RE, '')))
     .join('\n')
-  try {
-    await navigator.clipboard.writeText(text)
+  if (await copyText(text)) {
     copied.value = true
     setTimeout(() => (copied.value = false), 1500)
-  } catch { /* 剪贴板不可用时静默 */ }
+  }
 }
 </script>
 

@@ -28,6 +28,7 @@
 import { computed, ref } from 'vue'
 import type { CodePayload, StructuredPayload } from '../../types'
 import { highlightCode } from './highlight'
+import { copyText } from '../../utils/clipboard'
 
 const props = defineProps<{ payload: StructuredPayload }>()
 const data = computed<CodePayload>(() => (props.payload.data ?? { language: 'text', code: '' }) as CodePayload)
@@ -37,11 +38,10 @@ const highlightSet = computed(() => new Set(data.value.highlightLines ?? []))
 
 const copied = ref(false)
 async function copy() {
-  try {
-    await navigator.clipboard.writeText(data.value.code ?? '')
+  if (await copyText(data.value.code ?? '')) {
     copied.value = true
     setTimeout(() => { copied.value = false }, 1500)
-  } catch { /* 剪贴板不可用 */ }
+  }
 }
 </script>
 
