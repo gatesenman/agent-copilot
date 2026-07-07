@@ -18,7 +18,13 @@
  * - 表格：横向滚动容器 + 复制为 TSV
  * - ==文本== 高亮标记（<mark>）；标题自动生成锚点 id + hover 链接
  * - 外部链接自动加 target="_blank" rel="noopener noreferrer" + 外链图标
- * - 图片：懒加载 + title 渲染为图注（figure/figcaption）
+ * - 图片：懒加载 + title 渲染为图注（figure/figcaption）+ 点击灯箱放大
+ * - 行内扩展：^上标^ / ~下标~ / [[Kbd]] 键盘键 / :rocket: emoji 短代码
+ * - [TOC] 目录自动生成；定义列表（Term / : 定义）
+ * - 媒体嵌入：图片语法指向 .mp4/.webm → video，.mp3/.wav/.ogg → audio
+ * - 代码块：折行切换、下载文件、超长自动折叠（>24 行）
+ * - 表格：复制 TSV + 导出 CSV
+ * - 流式光标：streaming 时末尾显示闪烁竖线
  */
 import { computed, nextTick, ref, watch } from 'vue'
 import { marked } from 'marked'
@@ -80,6 +86,75 @@ function renderMathTokens(html: string, tokens: MathToken[]): string {
     html = html.replaceAll(t.id, rendered)
   }
   return html
+}
+
+// ---------- 1.5 预处理：行内扩展语法（sup/sub/kbd/emoji） ----------
+/** 常用 emoji 短代码（:rocket: 风格，覆盖 AI 对话高频场景） */
+const EMOJI_MAP: Record<string, string> = {
+  smile: '😄', rocket: '🚀', warning: '⚠️', white_check_mark: '✅', x: '❌',
+  bulb: '💡', fire: '🔥', star: '⭐', tada: '🎉', eyes: '👀',
+  thumbsup: '👍', '+1': '👍', heart: '❤️', zap: '⚡', bug: '🐛',
+  memo: '📝', lock: '🔒', gear: '⚙️', sparkles: '✨', question: '❓',
+  info: 'ℹ️', check: '✔️', point_right: '👉', link: '🔗', package: '📦',
+}
+
+function transformInlineExtras(seg: string): string {
+  return seg
+    // [[Ctrl]] → <kbd>Ctrl</kbd>
+    .replace(/\[\[([^\[\]\n]{1,24})\]\]/g, (_m, k) => `<kbd class="ac-md__kbd">${k.trim()}</kbd>`)
+    // ^上标^（两侧贴合、不跨行）
+    .replace(/\^([^\^\s][^\^\n]*?)\^/g, (_m, t) => `<sup>${t}</sup>`)
+    // ~下标~（排除 ~~删除线~~）
+    .replace(/(^|[^~])~([^~\s][^~\n]*?)~(?!~)/g, (_m, lead, t) => `${lead}<sub>${t}</sub>`)
+    // :emoji: 短代码
+    .replace(/:([a-z0-9_+]+):/g, (m, name) => EMOJI_MAP[name] ?? m)
+}
+
+// ---------- 1.6 预处理：定义列表 ----------
+/** Term\n: 定义 → <dl>（PHP Markdown Extra 风格，连续多组合并） */
+function transformDefinitionLists(src: string): string {
+  return src.replace(
+    /(^|\n)((?:[^\n:>#\-*][^\n]*\n(?::\s+[^\n]+\n?)+)+)/g,
+    (_m, lead, block: string) => {
+      const items: string[] = []
+      const lines = block.split('\n').filter((l) => l.trim())
+      let term = ''
+      for (const line of lines) {
+        if (/^:\s+/.test(line)) {
+          if (term) { items.push(`<dt>${marked.parseInline(term, { async: false })}</dt>`); term = '' }
+          items.push(`<dd>${marked.parseInline(line.replace(/^:\s+/, ''), { async: false })}</dd>`)
+        } else {
+          term = line
+        }
+      }
+      if (items.length === 0) return _m
+      return `${lead}<dl class="ac-md__dl">${items.join('')}</dl>\n`
+    },
+  )
+}
+
+// ---------- 1.7 预处理：[TOC] 目录 ----------
+function slugify(plain: string): string {
+  return 'h-' + plain.trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').slice(0, 48)
+}
+
+/** [TOC] 单独成行时，替换为从源文标题生成的目录树 */
+function transformToc(src: string): string {
+  if (!/^\[TOC\]\s*$/m.test(src)) return src
+  const headings: { depth: number; text: string }[] = []
+  // 仅收集代码区之外的 ATX 标题
+  transformOutsideCode(src, (seg) => {
+    for (const m of seg.matchAll(/^(#{1,4})\s+(.+)$/gm)) {
+      headings.push({ depth: m[1].length, text: m[2].replace(/[*_`~]/g, '').trim() })
+    }
+    return seg
+  })
+  const items = headings
+    .filter((h) => !/^\[TOC\]/.test(h.text))
+    .map((h) => `<li class="ac-md__toc-l${h.depth}"><a href="#${slugify(h.text)}">${escapeHtml(h.text)}</a></li>`)
+    .join('')
+  const toc = items ? `<nav class="ac-md__toc" aria-label="目录"><p class="ac-md__toc-title">目录</p><ul>${items}</ul></nav>` : ''
+  return src.replace(/^\[TOC\]\s*$/m, toc)
 }
 
 // ---------- 2. 预处理：GitHub 警告块 ----------
@@ -168,11 +243,21 @@ function renderCodeBlock(code: string, info: string, streaming: boolean): string
   }
 
   const label = title ?? (lang || 'text')
+  const lineCount = code.split('\n').length
+  // 超长代码折叠（流式期间不折叠，避免高度跳动）
+  const collapsed = !streaming && lineCount > 24
+  const expandBtn = collapsed
+    ? `<button type="button" class="ac-md__code-expand" data-expand-code>展开全部 ${lineCount} 行</button>`
+    : ''
   return (
-    `<div class="ac-md__code">` +
+    `<div class="ac-md__code${collapsed ? ' ac-md__code--collapsed' : ''}" data-filename="${escapeHtml(title ?? (lang ? `snippet.${lang}` : 'snippet.txt'))}">` +
     `<div class="ac-md__code-head"><span>${escapeHtml(label)}</span>` +
-    `<button type="button" class="ac-md__copy" data-copy-code>复制</button></div>` +
-    `<pre><code>${body}</code></pre></div>`
+    `<span class="ac-md__code-acts">` +
+    `<button type="button" class="ac-md__copy" data-wrap-code title="切换自动换行">折行</button>` +
+    `<button type="button" class="ac-md__copy" data-download-code title="下载代码文件">下载</button>` +
+    `<button type="button" class="ac-md__copy" data-copy-code>复制</button>` +
+    `</span></div>` +
+    `<pre><code>${body}</code></pre>${expandBtn}</div>`
   )
 }
 
@@ -187,19 +272,22 @@ function sanitize(html: string): string {
     .replace(/<(iframe|object|embed|form)[\s\S]*?>/gi, '')
 }
 
-// ---------- 主渲染管线 ----------
+// ---------- 主渲染���线 ----------
 const html = computed(() => {
   let src = props.content ?? ''
   if (!src) return ''
 
   // 数学提取 / ==标记== 均只作用于代码区之外，避免污染代码内容
   let tokens: MathToken[] = []
+  src = transformToc(src)
   src = transformOutsideCode(src, (seg) => {
     const r = extractMath(seg)
     tokens = tokens.concat(r.tokens)
     // ==文本== → <mark>（要求两侧无空格贴合，避免误判赋值语句）
-    return r.text.replace(/==([^=\n][^=\n]*?)==/g, (_m, t) => `<mark class="ac-md__mark">${t}</mark>`)
+    const marked2 = r.text.replace(/==([^=\n][^=\n]*?)==/g, (_m, t) => `<mark class="ac-md__mark">${t}</mark>`)
+    return transformInlineExtras(marked2)
   })
+  src = transformOutsideCode(src, transformDefinitionLists)
   src = transformAdmonitions(src)
   src = transformFootnotes(src)
 
@@ -209,7 +297,9 @@ const html = computed(() => {
     renderCodeBlock(text, lang ?? '', !!props.streaming)
   renderer.table = function (token: any) {
     const inner = marked.Renderer.prototype.table.call(this, token)
-    return `<div class="ac-md__table-wrap">${inner}<button type="button" class="ac-md__copy ac-md__copy--table" data-copy-table>复制表格</button></div>`
+    return `<div class="ac-md__table-wrap">${inner}<span class="ac-md__table-acts">` +
+      `<button type="button" class="ac-md__copy" data-download-table>CSV</button>` +
+      `<button type="button" class="ac-md__copy" data-copy-table>复制表格</button></span></div>`
   }
   // 标题：生成锚点 id + hover 显示 # 链接
   renderer.heading = function (token: any) {
@@ -227,18 +317,31 @@ const html = computed(() => {
     if (!external) return `<a href="${escapeHtml(href)}"${titleAttr}>${inner}</a>`
     return `<a href="${escapeHtml(href)}"${titleAttr} target="_blank" rel="noopener noreferrer" class="ac-md__extlink">${inner}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg></a>`
   }
-  // 图片：懒加载 + title 渲染为图注
+  // 图片：懒加载 + title 图注 + 点击灯箱；.mp4/.webm → video，.mp3/.wav/.ogg → audio
   renderer.image = function (token: any) {
     const src2 = escapeHtml(token.href ?? '')
     const alt = escapeHtml(token.text ?? '')
-    const img = `<img src="${src2}" alt="${alt}" loading="lazy" class="ac-md__img" />`
+    if (/\.(mp4|webm)(\?|#|$)/i.test(token.href ?? '')) {
+      return `<video src="${src2}" controls preload="metadata" class="ac-md__video" aria-label="${alt}"></video>`
+    }
+    if (/\.(mp3|wav|ogg|m4a)(\?|#|$)/i.test(token.href ?? '')) {
+      return `<audio src="${src2}" controls preload="metadata" class="ac-md__audio" aria-label="${alt}"></audio>`
+    }
+    const img = `<img src="${src2}" alt="${alt}" loading="lazy" class="ac-md__img" data-lightbox />`
     if (token.title) return `<figure class="ac-md__figure">${img}<figcaption>${escapeHtml(token.title)}</figcaption></figure>`
     return img
   }
 
   let out = marked.parse(src, { async: false, renderer }) as string
   out = renderMathTokens(out, tokens)
-  return sanitize(out)
+  out = sanitize(out)
+  // 流式光标：追加到最后一个块级元素内部（ChatGPT 风格闪烁竖线）
+  if (props.streaming) {
+    const m = /<\/(p|li|h[1-6]|td)>\s*$/.exec(out)
+    if (m) out = out.slice(0, m.index) + '<span class="ac-md__cursor" aria-hidden="true"></span>' + out.slice(m.index)
+    else out += '<span class="ac-md__cursor" aria-hidden="true"></span>'
+  }
+  return out
 })
 
 // ---------- Mermaid 异步渲染（流结束后） ----------
@@ -287,7 +390,74 @@ function onDelegatedClick(e: MouseEvent) {
         .join('\n')
       copyWithFeedback(tableBtn as HTMLElement, tsv)
     }
+    return
   }
+  // 表格导出 CSV
+  const csvBtn = target.closest('[data-download-table]')
+  if (csvBtn) {
+    const table = csvBtn.closest('.ac-md__table-wrap')?.querySelector('table')
+    if (table) {
+      const csv = [...table.querySelectorAll('tr')]
+        .map((tr) => [...tr.querySelectorAll('th,td')]
+          .map((c) => `"${(c.textContent?.trim() ?? '').replace(/"/g, '""')}"`).join(','))
+        .join('\n')
+      downloadBlob(csv, 'table.csv', 'text/csv;charset=utf-8')
+    }
+    return
+  }
+  // 代码折行切换
+  const wrapBtn = target.closest('[data-wrap-code]')
+  if (wrapBtn) {
+    wrapBtn.closest('.ac-md__code')?.classList.toggle('ac-md__code--wrap')
+    return
+  }
+  // 代码下载
+  const dlBtn = target.closest('[data-download-code]')
+  if (dlBtn) {
+    const wrap = dlBtn.closest('.ac-md__code') as HTMLElement | null
+    const pre = wrap?.querySelector('pre')
+    if (wrap && pre) downloadBlob(pre.textContent ?? '', wrap.dataset.filename || 'snippet.txt', 'text/plain;charset=utf-8')
+    return
+  }
+  // 超长代码展开
+  const expandBtn = target.closest('[data-expand-code]')
+  if (expandBtn) {
+    expandBtn.closest('.ac-md__code')?.classList.remove('ac-md__code--collapsed')
+    ;(expandBtn as HTMLElement).remove()
+    return
+  }
+  // 图片灯箱
+  const img = target.closest('img[data-lightbox]') as HTMLImageElement | null
+  if (img) openLightbox(img.src, img.alt)
+}
+
+function downloadBlob(content: string, filename: string, mime: string) {
+  const url = URL.createObjectURL(new Blob([content], { type: mime }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+/** 图片灯箱：全屏遮罩预览，点击或 Esc 关闭 */
+function openLightbox(src: string, alt: string) {
+  const overlay = document.createElement('div')
+  overlay.className = 'ac-md__lightbox'
+  overlay.setAttribute('role', 'dialog')
+  overlay.setAttribute('aria-label', alt || '图片预览')
+  const image = document.createElement('img')
+  image.src = src
+  image.alt = alt
+  overlay.appendChild(image)
+  const close = () => {
+    overlay.remove()
+    document.removeEventListener('keydown', onKey)
+  }
+  const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape') close() }
+  overlay.addEventListener('click', close)
+  document.addEventListener('keydown', onKey)
+  document.body.appendChild(overlay)
 }
 
 function copyWithFeedback(btn: HTMLElement, text: string) {

@@ -313,6 +313,107 @@
 }
 .ac-md summary { cursor: pointer; font-weight: 600; user-select: none; }
 
+/* 键盘键 */
+.ac-md__kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid var(--ac-border);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--ac-surface);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82em;
+  line-height: 1.5;
+}
+
+/* 定义列表 */
+.ac-md__dl { margin: 0.6em 0; }
+.ac-md__dl dt { font-weight: 600; margin-top: 0.5em; }
+.ac-md__dl dd { margin: 2px 0 0 1.2em; color: var(--ac-muted); }
+
+/* 目录 */
+.ac-md__toc {
+  margin: 0.6em 0;
+  padding: 10px 14px;
+  border: 1px solid var(--ac-border);
+  border-radius: calc(var(--ac-radius) * 0.6);
+  background: var(--ac-surface);
+}
+.ac-md__toc-title { margin: 0 0 4px; font-weight: 700; font-size: 0.85em; color: var(--ac-muted); }
+.ac-md__toc ul { margin: 0; padding: 0; list-style: none; }
+.ac-md__toc li { margin: 2px 0; }
+.ac-md__toc a { text-decoration: none; }
+.ac-md__toc a:hover { text-decoration: underline; }
+.ac-md__toc-l2 { padding-left: 14px; }
+.ac-md__toc-l3 { padding-left: 28px; }
+.ac-md__toc-l4 { padding-left: 42px; }
+
+/* 代码块操作组 / 折行 / 折叠 */
+.ac-md__code-acts { display: inline-flex; gap: 4px; }
+.ac-md__code--wrap pre { white-space: pre-wrap; word-break: break-word; }
+.ac-md__code--collapsed pre { max-height: 320px; overflow: hidden; }
+.ac-md__code--collapsed { position: relative; }
+.ac-md__code-expand {
+  display: block;
+  width: 100%;
+  padding: 6px;
+  border: none;
+  border-top: 1px solid var(--ac-border);
+  background: var(--ac-surface);
+  color: var(--ac-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ac-md__code-expand:hover { background: var(--ac-hover, rgba(0, 0, 0, 0.04)); }
+
+/* 表格操作组 */
+.ac-md__table-acts {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.ac-md__table-wrap:hover .ac-md__table-acts { opacity: 1; }
+
+/* 媒体嵌入 */
+.ac-md__video { max-width: 100%; border-radius: 8px; border: 1px solid var(--ac-border); }
+.ac-md__audio { width: 100%; max-width: 420px; }
+
+/* 图片灯箱 */
+.ac-md__img[data-lightbox] { cursor: zoom-in; }
+.ac-md__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.82);
+  cursor: zoom-out;
+}
+.ac-md__lightbox img {
+  max-width: 92vw;
+  max-height: 92vh;
+  border-radius: 8px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* 流式光标 */
+.ac-md__cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--ac-primary);
+  animation: ac-md-blink 0.9s steps(2, start) infinite;
+}
+@keyframes ac-md-blink { 50% { opacity: 0; } }
+
 /* ============ 输入增强：命令面板 / 上下文 / 队列 ============ */
 
 .ac-palette {

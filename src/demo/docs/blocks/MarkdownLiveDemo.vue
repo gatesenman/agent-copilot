@@ -5,23 +5,30 @@ import MarkdownText from '../../../lib/agent-copilot/components/chat/MarkdownTex
 import DocDemo from '../DocDemo.vue'
 
 const source = ref(`## 渲染能力
-质能方程 $$E = mc^2$$ 内联渲染。
+质能方程 $$E = mc^2$$ 内联渲染，水分子 H~2~O，面积 x^2^。
 
 > [!TIP]
-> 支持 GitHub 风格警告块。
+> 支持 GitHub 风格警告块。按 [[Ctrl]] + [[K]] 打开命令面板 :rocket:
 
 \`\`\`ts
 const answer: number = 42
 \`\`\`
 
 - [x] 任务列表
-- [ ] 待办项`)
+- [ ] 待办项
+
+术语
+: 定义列表：术语加冒号缩进定义
+
+| 功能 | 状态 |
+| --- | --- |
+| 表格导出 CSV | ==已支持== |`)
 </script>
 
 <template>
   <DocDemo
     title="Markdown 渲染"
-    description="左侧编辑源文本，右侧实时渲染。支持 KaTeX 公式、Mermaid、警告块、任务列表。"
+    description="左侧编辑源文本，右侧实时渲染。支持 KaTeX 公式、Mermaid、警告块、任务列表、上下标、键盘键、emoji 短代码、定义列表、[TOC] 目录、代码折行/下载/折叠、表格导出 CSV、图片灯箱、音视频嵌入、流式光标。"
     component-name="MarkdownText"
     usage="消息气泡内部的 Markdown 渲染器，CopilotChat 自动使用。单独引入可渲染任意 Markdown（文档预览、评论渲染）。流式期间置 streaming=true 会跳过 Mermaid 编译避免闪烁，结束后再完整渲染。"
     :props-table="[
