@@ -6,11 +6,14 @@
  */
 import { ref } from 'vue'
 import {
-  AgentWorkspace, CopilotProvider, SessionList,
+  AgentWorkspace, CopilotProvider, ModelSelector, SessionList,
   type SessionItem,
 } from '../../lib/agent-copilot'
 import { demoWorkspaceFiles } from '../solutions/coding-agent-runtime'
 import WorkspaceSeeder from '../solutions/WorkspaceSeeder.vue'
+
+// 模型选择与模式选择同行（Cursor/VS Code 惯例）
+const model = ref('openai')
 
 const sessions = ref<SessionItem[]>([
   { id: 's1', title: '登录表单加校验', updatedAt: Date.now() - 60_000, pinned: true },
@@ -53,6 +56,9 @@ const config = {
           show-mode-selector
           :visible-panels="['changes', 'plan', 'tasks', 'files', 'terminal']"
         >
+          <template #toolbar>
+            <ModelSelector v-model="model" class="as-model" />
+          </template>
           <template #sidebar>
             <SessionList
               :sessions="sessions"
@@ -109,4 +115,5 @@ const config = {
   flex: 1;
   min-height: 0;
 }
+.as-model { margin-left: auto; }
 </style>

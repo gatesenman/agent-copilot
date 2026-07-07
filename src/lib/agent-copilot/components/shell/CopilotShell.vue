@@ -179,6 +179,9 @@ function pinSession(id: string, pinned: boolean) {
 
 // ================= 模型切换 =================
 
+/** 工作台形态：模型选择与 ModeSelector 同行渲染，不占顶栏 */
+const isWorkbench = computed(() => Array.isArray(props.panels) && props.panels.length > 0)
+
 const providerModel = ref(props.providerId ?? '')
 watch(
   () => props.providerId,
@@ -259,8 +262,9 @@ function onSettingsUpdate(values: Record<string, unknown>) {
 
       <div class="ac-shell__head-right">
         <slot name="header-actions" />
+        <!-- 纯对话模式模型选择在顶栏；工作台模式移到 ModeSelector 同行（Cursor/VS Code 惯例） -->
         <ModelSelector
-          v-if="showModelSelector"
+          v-if="showModelSelector && !isWorkbench"
           v-model="providerModel"
           :providers="providers"
           @change="onProviderChange"
@@ -330,7 +334,17 @@ function onSettingsUpdate(values: Record<string, unknown>) {
           height="100%"
           @terminal-command="(cmd) => emit('terminalCommand', cmd)"
           @browser-navigate="(url) => emit('browserNavigate', url)"
-        />
+        >
+          <template #toolbar>
+            <ModelSelector
+              v-if="showModelSelector"
+              v-model="providerModel"
+              class="ac-shell__toolbar-model"
+              :providers="providers"
+              @change="onProviderChange"
+            />
+          </template>
+        </AgentWorkspace>
         <CopilotChat
           v-else
           class="ac-shell__chat"
@@ -416,6 +430,8 @@ function onSettingsUpdate(values: Record<string, unknown>) {
 .ac-shell__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .ac-shell__main > :deep(.ac-workspace) { flex: 1; min-height: 0; border: none; border-radius: 0; }
 .ac-shell__chat { flex: 1; min-height: 0; }
+/* 工具条内模型选择靠右，与左侧 ModeSelector 呼应 */
+.ac-shell__toolbar-model { margin-left: auto; }
 .ac-shell__main > :deep(.ac-chat) { border: none; border-radius: 0; }
 
 @media (max-width: 780px) {
