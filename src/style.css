@@ -1,0 +1,35 @@
+/* 示例应用全局样式（组件库自身样式在 lib/agent-copilot/theme 内） */
+
+:root {
+  --app-primary: #0f6b54;
+  --app-bg: #f3f6f5;
+  --app-surface: #ffffff;
+  --app-fg: #1a1f1d;
+  --app-muted: #5f6b66;
+  --app-border: #e2e8e5;
+  --app-warn: #a16207;
+  --app-danger: #b91c1c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--app-bg);
+  color: var(--app-fg);
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
