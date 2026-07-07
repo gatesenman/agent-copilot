@@ -568,7 +568,7 @@ export interface CopilotActionDef {
   parameters?: ActionParameter[]
   /** 直接执行 */
   handler?: (args: Record<string, unknown>) => Promise<unknown> | unknown
-  /** HITL：渲染并等待用户确认后再执行（renderAndWait 语义） */
+  /** HITL：渲染并等待��户确认后再执行（renderAndWait 语义） */
   requiresApproval?: boolean
   /** 自定义渲染组件名（generative UI 注册表 key） */
   render?: string
@@ -863,6 +863,10 @@ export interface CopilotConfig {
   // ---- 外观 ----
   theme?: 'light' | 'dark' | 'auto'
   brandColor?: string
+  /** 内置预设主题（default / ocean / violet / amber / rose / mono），brandColor 与 themeTokens 可继续覆盖 */
+  themePreset?: import('../theme/theme-tokens').ThemePresetId
+  /** 细粒度设计 token 覆盖（亮暗可分别配置），映射为 --ac-* CSS 变量 */
+  themeTokens?: import('../theme/theme-tokens').ThemeTokensConfig
   radius?: 'none' | 'sm' | 'md' | 'lg'
   density?: 'compact' | 'comfortable'
   locale?: 'zh' | 'en'

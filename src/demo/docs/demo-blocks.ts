@@ -17,6 +17,7 @@ export const DEMO_BLOCKS: Record<string, Component> = {
   'change-review': defineAsyncComponent(() => import('./blocks/ChangeReviewDemo.vue')),
   'agent-form': defineAsyncComponent(() => import('./blocks/AgentFormDemo.vue')),
   'integration-live': defineAsyncComponent(() => import('./blocks/IntegrationDemo.vue')),
+  'theme-customizer': defineAsyncComponent(() => import('./blocks/ThemeCustomizerDemo.vue')),
 }
 
 /**

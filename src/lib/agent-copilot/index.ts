@@ -160,6 +160,11 @@ export type {
   ProtocolCapabilities, ProviderPreset,
 } from './protocols'
 
+// ============ 主题定制 ============
+// Design Tokens：预设主题、品牌色派生、细粒度 token 覆盖
+export { THEME_PRESETS, deriveBrandTokens, resolveThemeVars, tokensToVars } from './theme/theme-tokens'
+export type { ThemeTokens, ThemeTokensConfig, ThemePresetId } from './theme/theme-tokens'
+
 // ============ Web Component 集成通道 ============
 // <agent-copilot-chat> 自定义元素：React / Angular / 原生页面框架无关接入
 export { AgentCopilotChat, registerAgentCopilotElements } from './web-component'

@@ -19,6 +19,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import type { CopilotConfig, StructuredPayload } from '../types'
 import { provideCopilot } from '../composables/useCopilot'
+import { resolveThemeVars } from '../theme/theme-tokens'
 import '../theme/copilot-theme.css'
 
 const props = defineProps<{ config: CopilotConfig }>()
@@ -63,19 +64,21 @@ onUnmounted(() => {
 })
 
 const resolvedTheme = computed(() => {
-  if (store.config.theme === 'auto') return systemDark.value ? 'dark' : 'light'
+  // 读 props.config 保证运行时更新 config.theme 即时生效
+  if (props.config.theme === 'auto') return systemDark.value ? 'dark' : 'light'
   // 未显式配置时优先跟随全局 useTheme()，否则跟随系统
-  if (!store.config.theme) return globalTheme.value ?? (systemDark.value ? 'dark' : 'light')
-  return store.config.theme
+  if (!props.config.theme) return globalTheme.value ?? (systemDark.value ? 'dark' : 'light')
+  return props.config.theme
 })
 
-const brandStyle = computed(() => {
-  const s: Record<string, string> = {}
-  if (store.config.brandColor) {
-    s['--ac-primary'] = store.config.brandColor
-  }
-  return s
-})
+/** 主题定制：preset → brandColor 派生 → themeTokens；依赖 props 保证运行时更新 config 即时生效 */
+const brandStyle = computed(() =>
+  resolveThemeVars(resolvedTheme.value === 'dark' ? 'dark' : 'light', {
+    preset: props.config.themePreset,
+    brandColor: props.config.brandColor,
+    tokens: props.config.themeTokens,
+  }),
+)
 
 defineExpose({ store })
 </script>
