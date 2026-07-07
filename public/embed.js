@@ -27,8 +27,13 @@
   var cfg = window.agentCopilotConfig || {}
   var baseUrl = (cfg.baseUrl || '').replace(/\/+$/, '')
   if (!baseUrl) {
-    console.error('[AgentCopilotEmbed] 缺少 agentCopilotConfig.baseUrl')
-    return
+    // 未显式配置时，回退到 embed.js 自身所在 origin（对标 Dify：脚本与嵌入页同站部署）
+    var self = document.currentScript || document.querySelector('script[src*="embed.js"]')
+    try {
+      baseUrl = self && self.src ? new URL(self.src, location.href).origin : location.origin
+    } catch (err) {
+      baseUrl = location.origin
+    }
   }
 
   var Z = cfg.zIndex || 2147483000

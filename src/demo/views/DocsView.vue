@@ -12,6 +12,7 @@ import markdownDoc from '../../../docs/guide/markdown.md?raw'
 import protocolsDoc from '../../../docs/guide/protocols.md?raw'
 import enterpriseDoc from '../../../docs/guide/enterprise.md?raw'
 import agenticDoc from '../../../docs/guide/agentic.md?raw'
+import integrationDoc from '../../../docs/guide/integration.md?raw'
 
 interface DocSection {
   id: string
@@ -25,6 +26,7 @@ const SECTIONS: DocSection[] = [
   { id: 'input', label: '输入增强（/ @ # 队列 分支）', group: '核心能力', content: inputDoc },
   { id: 'markdown', label: 'Markdown 渲染', group: '核心能力', content: markdownDoc },
   { id: 'agentic', label: 'Agentic 工作台', group: '核心能力', content: agenticDoc },
+  { id: 'integration', label: '集成方式（SDK / 嵌入 / WC）', group: '集成', content: integrationDoc },
   { id: 'protocols', label: 'AI 协议接入（32 种）', group: '集成', content: protocolsDoc },
   { id: 'enterprise', label: '企业组件', group: '集成', content: enterpriseDoc },
 ]

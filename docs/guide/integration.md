@@ -48,7 +48,7 @@ const config: CopilotConfig = {
 ```html
 <script>
   window.agentCopilotConfig = {
-    baseUrl: 'https://your-copilot-host',  // 必填：本站点部署地址
+    baseUrl: 'https://your-copilot-host',  // 部署地址；缺省时回退到 embed.js 所在 origin
     title: 'AI 助手',
     theme: 'auto',                          // light | dark | auto
     brand: '0f6b54',                        // 品牌色 hex（无 #）

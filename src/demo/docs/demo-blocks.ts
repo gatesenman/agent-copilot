@@ -16,6 +16,7 @@ export const DEMO_BLOCKS: Record<string, Component> = {
   'plan-panel': defineAsyncComponent(() => import('./blocks/PlanPanelDemo.vue')),
   'change-review': defineAsyncComponent(() => import('./blocks/ChangeReviewDemo.vue')),
   'agent-form': defineAsyncComponent(() => import('./blocks/AgentFormDemo.vue')),
+  'integration-live': defineAsyncComponent(() => import('./blocks/IntegrationDemo.vue')),
 }
 
 /**
