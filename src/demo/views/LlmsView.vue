@@ -9,6 +9,10 @@ import { generateLlmsDoc } from '../ai-docs/llms-doc'
 import { buildAguiManifest, validateAguiManifest } from '../ai-docs/agui-manifest'
 import { downloadText } from '../../lib/agent-copilot/utils/session-export'
 import { copyText } from '../../lib/agent-copilot/utils/clipboard'
+import MarkdownText from '../../lib/agent-copilot/components/chat/MarkdownText.vue'
+
+/** 文档视图：rendered 真实渲染 Markdown；raw 原文（复制给 AI 用） */
+const viewMode = ref<'rendered' | 'raw'>('rendered')
 
 const doc = generateLlmsDoc()
 const stats = computed(() => ({
@@ -108,7 +112,31 @@ function downloadManifest() {
         </ul>
       </section>
 
-      <pre class="llms__doc" tabindex="0" aria-label="AI 可读文档全文">{{ doc }}</pre>
+      <div class="llms__view-bar" role="tablist" aria-label="文档视图切换">
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="viewMode === 'rendered'"
+          :class="['llms__view-btn', { 'llms__view-btn--active': viewMode === 'rendered' }]"
+          @click="viewMode = 'rendered'"
+        >
+          渲染视图
+        </button>
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="viewMode === 'raw'"
+          :class="['llms__view-btn', { 'llms__view-btn--active': viewMode === 'raw' }]"
+          @click="viewMode = 'raw'"
+        >
+          原文 llms.txt
+        </button>
+      </div>
+
+      <div v-if="viewMode === 'rendered'" class="llms__doc llms__doc--rendered" aria-label="AI 可读文档（渲染）">
+        <MarkdownText :content="doc" />
+      </div>
+      <pre v-else class="llms__doc" tabindex="0" aria-label="AI 可读文档全文">{{ doc }}</pre>
     </div>
   </div>
 </template>
@@ -216,6 +244,30 @@ function downloadManifest() {
   font-size: 12px;
   color: var(--ac-danger, #dc2626);
 }
+.llms__view-bar {
+  display: flex;
+  gap: 4px;
+  align-self: flex-start;
+  padding: 3px;
+  border: 1px solid var(--ac-border);
+  border-radius: 9px;
+  background: var(--ac-surface);
+}
+.llms__view-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ac-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.llms__view-btn:hover { color: var(--ac-fg); }
+.llms__view-btn--active {
+  background: var(--ac-primary);
+  color: var(--ac-primary-fg);
+}
 .llms__doc {
   margin: 0;
   padding: 20px;
@@ -228,5 +280,11 @@ function downloadManifest() {
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--ac-fg);
+}
+.llms__doc--rendered {
+  font-family: inherit;
+  font-size: 13.5px;
+  white-space: normal;
+  padding: 24px 28px;
 }
 </style>
