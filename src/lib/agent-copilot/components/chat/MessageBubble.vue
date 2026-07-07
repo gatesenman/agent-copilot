@@ -2,7 +2,7 @@
   <article
     class="ac-msg"
     :class="isUser ? 'ac-msg--user' : 'ac-msg--assistant'"
-    :aria-label="isUser ? '用户消息' : `${botName ?? 'AI'} 的回复`"
+    :aria-label="isUser ? t('msg.user') : t('msg.reply', { name: botName ?? 'AI' })"
   >
     <div class="ac-msg__row">
       <!-- 头像 -->
@@ -13,7 +13,7 @@
 
       <div class="ac-msg__bubble">
         <!-- 用户消息附着的上下文（@提及/#引用） -->
-        <div v-if="isUser && message.context?.length" class="ac-msg__ctx" aria-label="附着的上下文">
+        <div v-if="isUser && message.context?.length" class="ac-msg__ctx" :aria-label="t('msg.context')">
           <span v-for="c in message.context" :key="c.id" class="ac-msg__ctx-chip">
             <span v-if="c.type" class="ac-msg__ctx-type">{{ c.type }}</span>{{ c.label }}
           </span>
@@ -36,20 +36,20 @@
         <!-- 文本内容 -->
         <MarkdownText v-if="message.content" :content="message.content" :streaming="message.streaming" />
         <span v-if="message.streaming && message.content" class="ac-cursor" aria-hidden="true" />
-        <span v-if="message.streaming && !message.content && !(message.toolCalls?.length)" class="ac-msg__typing" aria-label="正在生成回复">
+        <span v-if="message.streaming && !message.content && !(message.toolCalls?.length)" class="ac-msg__typing" :aria-label="t('msg.generating')">
           <i /><i /><i />
         </span>
 
         <!-- 错误与重试 -->
         <div v-if="message.error" class="ac-msg__error" role="alert">
           <span>{{ message.error }}</span>
-          <button v-if="onRetry" type="button" class="ac-btn ac-btn--sm" @click="onRetry">重试</button>
+          <button v-if="onRetry" type="button" class="ac-btn ac-btn--sm" @click="onRetry">{{ t('chat.retry') }}</button>
         </div>
       </div>
 
       <span v-if="showAvatar && isUser" class="ac-msg__avatar ac-msg__avatar--user" aria-hidden="true">
         <img v-if="userAvatar" :src="userAvatar" alt="" />
-        <template v-else>我</template>
+        <template v-else>{{ t('msg.me') }}</template>
       </span>
     </div>
 
@@ -58,9 +58,9 @@
       <time v-if="showTimestamp" class="ac-msg__time">{{ timeText }}</time>
 
       <!-- 分支导航（编辑重发/重新生成产生的多版本） -->
-      <span v-if="branch && branch.total > 1" class="ac-branch" role="group" aria-label="消息分支导航">
+      <span v-if="branch && branch.total > 1" class="ac-branch" role="group" :aria-label="t('msg.branchNav')">
         <button
-          type="button" class="ac-branch__btn" aria-label="上一个分支"
+          type="button" class="ac-branch__btn" :aria-label="t('chat.branchPrev')"
           :disabled="branch.active <= 0"
           @click="emit('switchBranch', branch.active - 1)"
         >
@@ -68,7 +68,7 @@
         </button>
         <span aria-live="polite">{{ branch.active + 1 }}/{{ branch.total }}</span>
         <button
-          type="button" class="ac-branch__btn" aria-label="下一个分支"
+          type="button" class="ac-branch__btn" :aria-label="t('chat.branchNext')"
           :disabled="branch.active >= branch.total - 1"
           @click="emit('switchBranch', branch.active + 1)"
         >
@@ -81,14 +81,14 @@
         v-if="!isUser && !message.streaming && message.content && hasAnyAction"
         class="ac-msg__actions"
         role="toolbar"
-        aria-label="消息操作"
+        :aria-label="t('msg.actions')"
       >
         <button
           v-if="actionsConfig.copy"
           type="button"
           class="ac-msg__action"
-          :title="copied ? copiedLabel : copyLabel"
-          :aria-label="copyLabel"
+          :title="copied ? labelCopied : labelCopy"
+          :aria-label="labelCopy"
           @click="copyContent"
         >
           <svg v-if="!copied" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
@@ -103,8 +103,8 @@
           v-if="actionsConfig.regenerate && onRegenerate"
           type="button"
           class="ac-msg__action"
-          :title="regenerateLabel"
-          :aria-label="regenerateLabel"
+          :title="labelRegenerate"
+          :aria-label="labelRegenerate"
           @click="onRegenerate"
         >
           <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
@@ -116,8 +116,8 @@
           type="button"
           class="ac-msg__action"
           :class="{ 'is-active': feedback === 'up' }"
-          :title="feedbackUpLabel"
-          :aria-label="feedbackUpLabel"
+          :title="labelFeedbackUp"
+          :aria-label="labelFeedbackUp"
           :aria-pressed="feedback === 'up'"
           @click="emit('feedback', 'up')"
         >
@@ -130,8 +130,8 @@
           type="button"
           class="ac-msg__action"
           :class="{ 'is-active is-down': feedback === 'down' }"
-          :title="feedbackDownLabel"
-          :aria-label="feedbackDownLabel"
+          :title="labelFeedbackDown"
+          :aria-label="labelFeedbackDown"
           :aria-pressed="feedback === 'down'"
           @click="emit('feedback', 'down')"
         >
@@ -151,6 +151,7 @@
  */
 import { computed, ref } from 'vue'
 import type { ChatMessage, MessageActionsConfig, ToolDisplayConfig } from '../../types'
+import { useI18n } from '../../i18n'
 import MarkdownText from './MarkdownText.vue'
 import ToolActionCard from '../agentic/ToolActionCard.vue'
 import PayloadCard from '../generative-ui/PayloadCard.vue'
@@ -187,13 +188,22 @@ const props = withDefaults(
     showTimestamp: false,
     showAvatar: false,
     showThinking: true,
-    copyLabel: '复制',
-    copiedLabel: '已复制',
-    regenerateLabel: '重新生成',
-    feedbackUpLabel: '有帮助',
-    feedbackDownLabel: '没帮助',
+    copyLabel: undefined,
+    copiedLabel: undefined,
+    regenerateLabel: undefined,
+    feedbackUpLabel: undefined,
+    feedbackDownLabel: undefined,
   },
 )
+
+const { t, locale } = useI18n()
+
+// 未显式传入标签时回退到当前语言包
+const labelCopy = computed(() => props.copyLabel ?? t('chat.copy'))
+const labelCopied = computed(() => props.copiedLabel ?? t('chat.copied'))
+const labelRegenerate = computed(() => props.regenerateLabel ?? t('chat.regenerate'))
+const labelFeedbackUp = computed(() => props.feedbackUpLabel ?? t('chat.feedbackUp'))
+const labelFeedbackDown = computed(() => props.feedbackDownLabel ?? t('chat.feedbackDown'))
 
 const emit = defineEmits<{
   (e: 'feedback', value: 'up' | 'down'): void
@@ -202,7 +212,7 @@ const emit = defineEmits<{
 
 const isUser = computed(() => props.message.role === 'user')
 const timeText = computed(() =>
-  new Date(props.message.createdAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+  new Date(props.message.createdAt).toLocaleTimeString(locale.value, { hour: '2-digit', minute: '2-digit' }),
 )
 const botInitial = computed(() => (props.botName ?? 'AI').slice(0, 1).toUpperCase())
 

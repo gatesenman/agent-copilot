@@ -22,8 +22,8 @@
           v-if="showAttachButton"
           type="button"
           class="ac-input__action"
-          aria-label="上传附件"
-          title="上传附件"
+          :aria-label="t('chat.attachFile')"
+          :title="t('chat.attachFile')"
           :disabled="disabled"
           @click="fileInputRef?.click()"
         >
@@ -46,8 +46,8 @@
           type="button"
           class="ac-input__action"
           :class="{ 'ac-input__action--rec': voiceRecording }"
-          :aria-label="voiceRecording ? '正在录音' : '语音输入'"
-          :title="voiceRecording ? '正在录音' : '语音输入'"
+          :aria-label="voiceRecording ? t('chat.recording') : t('chat.voice')"
+          :title="voiceRecording ? t('chat.recording') : t('chat.voice')"
           :disabled="disabled"
           @click="onVoiceClick"
         >
@@ -63,8 +63,8 @@
           :class="{ 'ac-input__action--on': thinkingOn }"
           role="switch"
           :aria-checked="thinkingOn"
-          aria-label="开启深度思考"
-          :title="thinkingOn ? '深度思考：开' : '深度思考：关'"
+          :aria-label="t('chat.deepThinking')"
+          :title="thinkingOn ? t('chat.thinkingOn') : t('chat.thinkingOff')"
           :disabled="disabled"
           @click="emit('update:thinkingOn', !thinkingOn)"
         >
@@ -78,11 +78,11 @@
         ref="textareaRef"
         v-model="text"
         class="ac-input__textarea"
-        :placeholder="placeholder"
+        :placeholder="placeholder ?? t('chat.inputPlaceholder')"
         :disabled="disabled"
         :maxlength="maxLength && maxLength > 0 ? maxLength : undefined"
         rows="1"
-        aria-label="聊天输入框"
+        :aria-label="t('chat.inputAria')"
         @keydown="onKeydown"
         @input="onInput"
         @click="syncCaret"
@@ -96,7 +96,7 @@
         v-if="generating && !queueEnabled"
         type="button"
         class="ac-input__btn ac-input__btn--stop"
-        aria-label="停止生成"
+        :aria-label="t('chat.stop')"
         @click="emit('stop')"
       >
         <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true">
@@ -108,7 +108,7 @@
           v-if="generating && queueEnabled"
           type="button"
           class="ac-input__btn ac-input__btn--stop"
-          aria-label="停止生成"
+          :aria-label="t('chat.stop')"
           @click="emit('stop')"
         >
           <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true">
@@ -119,8 +119,8 @@
           type="submit"
           class="ac-input__btn"
           :disabled="disabled || !text.trim() || (generating && !queueEnabled)"
-          :aria-label="generating && queueEnabled ? '排队发送' : '发送消息'"
-          :title="generating && queueEnabled ? '当前正在生成，发送后将排队' : undefined"
+          :aria-label="generating && queueEnabled ? t('chat.queueSend') : t('chat.send')"
+          :title="generating && queueEnabled ? t('chat.queueHint') : undefined"
         >
           <svg v-if="!(generating && queueEnabled)" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <path d="M14 2 7.5 8.5M14 2 9.8 14l-2.3-5.5L2 6.2 14 2Z" stroke-linejoin="round" />
@@ -148,8 +148,11 @@
 import { computed, ref, toRef } from 'vue'
 import type { ContextItem, MentionProvider, SlashCommand } from '../../types'
 import { useCommands } from '../../composables/useCommands'
+import { useI18n } from '../../i18n'
 import CommandPalette, { type PaletteItem } from '../input/CommandPalette.vue'
 import ContextChips from '../input/ContextChips.vue'
+
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -181,7 +184,7 @@ const props = withDefaults(
     thinkingOn?: boolean
   }>(),
   {
-    disabled: false, generating: false, placeholder: '输入消息…', sendOnEnter: true,
+    disabled: false, generating: false, placeholder: undefined, sendOnEnter: true,
     maxLength: 0, commands: () => [], contextItems: () => [], queueEnabled: false,
     showAttachButton: false, attachAccept: undefined, showVoiceButton: false,
     voiceRecording: false, showThinkingToggle: false, thinkingOn: false,

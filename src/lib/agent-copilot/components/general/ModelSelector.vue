@@ -10,6 +10,9 @@
 import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { listProviderPresets } from '../../protocols/presets'
 import type { ProviderPreset } from '../../protocols/types'
+import { useI18n } from '../../i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: string
@@ -36,9 +39,9 @@ const groups = computed(() => {
   const modelProtocols = ['openai-compatible', 'anthropic', 'gemini', 'ollama-native', 'cohere']
   const interop = ['a2a', 'acp', 'openai-assistants']
   const g: { label: string; items: ProviderPreset[] }[] = [
-    { label: '模型协议', items: [] },
-    { label: 'Agent 框架', items: [] },
-    { label: '互操作协议', items: [] },
+    { label: t('model.groupModel'), items: [] },
+    { label: t('model.groupAgent'), items: [] },
+    { label: t('model.groupInterop'), items: [] },
   ]
   for (const p of all.value) {
     if (modelProtocols.includes(p.protocol)) g[0].items.push(p)
@@ -103,9 +106,9 @@ onBeforeUnmount(() => {
       <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg>
     </button>
 
-    <div v-if="open" class="ac-model-sel__menu" role="listbox" aria-label="选择模型或厂商">
+    <div v-if="open" class="ac-model-sel__menu" role="listbox" :aria-label="t('model.select')">
       <!-- 一级：分组导航列 -->
-      <div class="ac-model-sel__nav" role="tablist" aria-label="协议分组">
+      <div class="ac-model-sel__nav" role="tablist" :aria-label="t('model.groupsAria')">
         <button
           v-for="(g, i) in groups"
           :key="g.label"

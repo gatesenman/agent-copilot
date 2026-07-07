@@ -6,6 +6,7 @@
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { AgentMode, AgentModeOption } from '../../types'
+import { useI18n } from '../../i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -31,28 +32,31 @@ const emit = defineEmits<{
   (e: 'update:mode', mode: AgentMode): void
 }>()
 
-const DEFAULT_OPTIONS: AgentModeOption[] = [
+const { t } = useI18n()
+
+/** 默认四模式从语言包派生，随 locale 响应式切换 */
+const defaultOptions = computed<AgentModeOption[]>(() => [
   {
-    id: 'confirm_edits', label: '变更前确认',
-    description: '每次文件变更都需要你审查确认后才应用',
-    permissionHint: '最安全：所有写操作均需批准',
+    id: 'confirm_edits', label: t('mode.confirmEdits'),
+    description: t('mode.confirmEditsDesc'),
+    permissionHint: t('mode.confirmEditsHint'),
   },
   {
-    id: 'auto_edit', label: '自动编辑',
-    description: 'Agent 自动应用文件编辑，命令执行仍需确认',
-    permissionHint: '写文件自动，执行命令需批准',
+    id: 'auto_edit', label: t('mode.autoEdit'),
+    description: t('mode.autoEditDesc'),
+    permissionHint: t('mode.autoEditHint'),
   },
   {
-    id: 'plan', label: '计划模式',
-    description: '先产出执行计划，批准后才开始动手',
-    permissionHint: '只读分析，产出计划等待批准',
+    id: 'plan', label: t('mode.plan'),
+    description: t('mode.planDesc'),
+    permissionHint: t('mode.planHint'),
   },
   {
-    id: 'full_access', label: '完全访问',
-    description: 'Agent 自主执行所有操作，无需逐项确认',
-    permissionHint: '风险最高：写文件与命令全自动',
+    id: 'full_access', label: t('mode.fullAccess'),
+    description: t('mode.fullAccessDesc'),
+    permissionHint: t('mode.fullAccessHint'),
   },
-]
+])
 
 /** 内置字体图标（内联 SVG，零依赖）：自定义 options 传 icon 字符串时优先按原样渲染 */
 const MODE_ICON_PATHS: Record<AgentMode, { d: string; fill?: boolean }> = {
@@ -71,7 +75,7 @@ function iconPath(id: AgentMode) {
 }
 
 const resolvedOptions = computed<AgentModeOption[]>(() => {
-  const base = props.options ?? DEFAULT_OPTIONS
+  const base = props.options ?? defaultOptions.value
   if (!props.availableModes) return base
   return base.filter((o) => props.availableModes!.includes(o.id))
 })
@@ -136,7 +140,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onOutside))
       :disabled="disabled"
       :aria-expanded="open"
       aria-haspopup="listbox"
-      :aria-label="`当前模式：${current?.label}`"
+      :aria-label="t('mode.current', { label: current?.label ?? '' })"
       @click="toggle"
     >
       <span class="ac-mode__icon" aria-hidden="true">
@@ -156,7 +160,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onOutside))
       class="ac-mode__menu"
       :class="[dropUp ? 'ac-mode__menu--up' : 'ac-mode__menu--down', { 'ac-mode__menu--compact': !showDescription }]"
       role="listbox"
-      aria-label="选择运行模式"
+      :aria-label="t('mode.select')"
     >
       <button
         v-for="(opt, i) in resolvedOptions"

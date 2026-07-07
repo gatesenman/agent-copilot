@@ -1,21 +1,21 @@
 <template>
-  <section class="ac-chat" aria-label="AI 对话窗口">
+  <section class="ac-chat" :aria-label="t('chat.windowAria')">
     <header v-if="showHeader" class="ac-chat__header">
       <div class="ac-chat__titles">
         <h2 class="ac-chat__title">{{ title || store.config.botName }}</h2>
         <p v-if="subtitle" class="ac-chat__subtitle">{{ subtitle }}</p>
       </div>
       <div class="ac-chat__actions">
-        <span v-if="store.config.showTokenUsage && store.totalUsage.totalTokens > 0" class="ac-badge" title="累计 Token 用量">
-          {{ store.totalUsage.totalTokens.toLocaleString('zh-CN') }} tokens
+        <span v-if="store.config.showTokenUsage && store.totalUsage.totalTokens > 0" class="ac-badge" :title="t('chat.tokenUsage')">
+          {{ store.totalUsage.totalTokens.toLocaleString(locale) }} tokens
         </span>
         <slot name="header-actions" />
         <button
           v-if="showReset"
           type="button"
           class="ac-chat__icon-btn"
-          aria-label="清空会话"
-          title="清空会话"
+          :aria-label="t('chat.clear')"
+          :title="t('chat.clear')"
           @click="store.clearChat()"
         >
           <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -31,7 +31,7 @@
       role="log"
       aria-live="polite"
       :aria-busy="isRunning"
-      :aria-label="`对话消息，共 ${visibleMessages.length} 条`"
+      :aria-label="t('chat.messagesAria', { n: visibleMessages.length })"
     >
       <!-- 欢迎屏（config.welcomeScreen） -->
       <div
@@ -71,7 +71,7 @@
         class="ac-chat__load-earlier"
         @click="showEarlier"
       >
-        显示更早的 {{ hiddenCount }} 条消息
+        {{ t('chat.showEarlier', { n: hiddenCount }) }}
       </button>
 
       <MessageBubble
@@ -103,11 +103,11 @@
     />
 
     <!-- 排队中的消息 -->
-    <div v-if="store.queuedMessages.value.length > 0" class="ac-chat__queue" aria-label="排队中的消息">
+    <div v-if="store.queuedMessages.value.length > 0" class="ac-chat__queue" :aria-label="t('chat.queuedAria')">
       <div v-for="q in store.queuedMessages.value" :key="q.id" class="ac-chat__queue-item">
-        <span class="ac-badge ac-pulse">排队中</span>
+        <span class="ac-badge ac-pulse">{{ t('chat.queueing') }}</span>
         <span class="ac-chat__queue-text">{{ q.content }}</span>
-        <button type="button" class="ac-chat__icon-btn" :aria-label="`取消排队消息：${q.content}`" title="取消" @click="store.cancelQueued(q.id)">
+        <button type="button" class="ac-chat__icon-btn" :aria-label="t('chat.cancelQueued')" :title="t('chat.cancel')" @click="store.cancelQueued(q.id)">
           <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
             <path d="m4 4 8 8M12 4l-8 8" stroke-linecap="round" />
           </svg>
@@ -158,6 +158,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import type { ChatMessage } from '../../types'
 import { useCopilot } from '../../composables/useCopilot'
+import { useI18n } from '../../i18n'
 import MessageBubble from './MessageBubble.vue'
 import ChatInput from './ChatInput.vue'
 import ChatSuggestions from './ChatSuggestions.vue'
@@ -201,6 +202,7 @@ const props = withDefaults(
 )
 
 const store = useCopilot()
+const { t, locale } = useI18n()
 const scrollRef = ref<HTMLElement | null>(null)
 
 const isRunning = computed(() => store.status.value === 'running')
