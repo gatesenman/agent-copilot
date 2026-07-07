@@ -21,8 +21,10 @@ const props = withDefaults(
     size?: 'sm' | 'md'
     /** 菜单弹出方向：auto 根据视口空间自动翻转（默认），up 向上，down 向下 */
     placement?: 'auto' | 'up' | 'down'
+    /** 是否在下拉菜单中显示模式描述与权限提示（关闭后为紧凑单行菜单） */
+    showDescription?: boolean
   }>(),
-  { size: 'md', placement: 'auto' },
+  { size: 'md', placement: 'auto', showDescription: true },
 )
 
 const emit = defineEmits<{
@@ -31,26 +33,42 @@ const emit = defineEmits<{
 
 const DEFAULT_OPTIONS: AgentModeOption[] = [
   {
-    id: 'confirm_edits', label: '变更前确认', icon: '✓',
+    id: 'confirm_edits', label: '变更前确认',
     description: '每次文件变更都需要你审查确认后才应用',
     permissionHint: '最安全：所有写操作均需批准',
   },
   {
-    id: 'auto_edit', label: '自动编辑', icon: '⚡',
+    id: 'auto_edit', label: '自动编辑',
     description: 'Agent 自动应用文件编辑，命令执行仍需确认',
     permissionHint: '写文件自动，执行命令需批准',
   },
   {
-    id: 'plan', label: '计划模式', icon: '☰',
+    id: 'plan', label: '计划模式',
     description: '先产出执行计划，批准后才开始动手',
     permissionHint: '只读分析，产出计划等待批准',
   },
   {
-    id: 'full_access', label: '完全访问', icon: '▶',
+    id: 'full_access', label: '完全访问',
     description: 'Agent 自主执行所有操作，无需逐项确认',
     permissionHint: '风险最高：写文件与命令全自动',
   },
 ]
+
+/** 内置字体图标（内联 SVG，零依赖）：自定义 options 传 icon 字符串时优先按原样渲染 */
+const MODE_ICON_PATHS: Record<AgentMode, { d: string; fill?: boolean }> = {
+  // 盾形对勾：审查确认
+  confirm_edits: { d: 'M8 1.5 13.5 3.5v4c0 3.2-2.3 5.8-5.5 7-3.2-1.2-5.5-3.8-5.5-7v-4L8 1.5Z M5.5 7.8l1.8 1.8 3.2-3.4' },
+  // 闪电：自动执行
+  auto_edit: { d: 'M8.8 1.5 3.2 9h3.6l-1.6 5.5L11 7H7.4l1.4-5.5Z' },
+  // 清单：计划模式
+  plan: { d: 'M5.5 4h8M5.5 8h8M5.5 12h5.5M2.5 4h.01M2.5 8h.01M2.5 12h.01' },
+  // 播放三角：完全访问自动运行
+  full_access: { d: 'M4.5 3.2v9.6L12.8 8 4.5 3.2Z' },
+}
+
+function iconPath(id: AgentMode) {
+  return MODE_ICON_PATHS[id] ?? MODE_ICON_PATHS.confirm_edits
+}
 
 const resolvedOptions = computed<AgentModeOption[]>(() => {
   const base = props.options ?? DEFAULT_OPTIONS
@@ -66,8 +84,8 @@ const activeIndex = ref(0)
 /** 实际弹出方向（placement=auto 时打开瞬间根据视口空间计算） */
 const dropUp = ref(true)
 
-/** 菜单预估高度：4 个选项 × 约 64px + 边框 */
-const MENU_EST_HEIGHT = 280
+/** 菜单预估高度：带描述 4 × 约 64px；紧凑单行 4 × 约 38px */
+const menuEstHeight = computed(() => (props.showDescription ? 280 : 160))
 
 function resolveDirection() {
   if (props.placement === 'up') { dropUp.value = true; return }
@@ -77,7 +95,7 @@ function resolveDirection() {
   const spaceAbove = rect.top
   const spaceBelow = window.innerHeight - rect.bottom
   // 上方放得下则向上（输入区场景的默认习惯）；否则选空间更大的一侧
-  dropUp.value = spaceAbove >= MENU_EST_HEIGHT || spaceAbove >= spaceBelow
+  dropUp.value = spaceAbove >= menuEstHeight.value || spaceAbove >= spaceBelow
 }
 
 function toggle() {
@@ -121,7 +139,12 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onOutside))
       :aria-label="`当前模式：${current?.label}`"
       @click="toggle"
     >
-      <span class="ac-mode__icon" aria-hidden="true">{{ current?.icon }}</span>
+      <span class="ac-mode__icon" aria-hidden="true">
+        <template v-if="current?.icon">{{ current.icon }}</template>
+        <svg v-else-if="current" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path :d="iconPath(current.id).d" />
+        </svg>
+      </span>
       <span class="ac-mode__label">{{ current?.label }}</span>
       <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
         <path d="m4 6 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
@@ -131,7 +154,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onOutside))
     <div
       v-if="open"
       class="ac-mode__menu"
-      :class="dropUp ? 'ac-mode__menu--up' : 'ac-mode__menu--down'"
+      :class="[dropUp ? 'ac-mode__menu--up' : 'ac-mode__menu--down', { 'ac-mode__menu--compact': !showDescription }]"
       role="listbox"
       aria-label="选择运行模式"
     >
@@ -147,14 +170,19 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onOutside))
         @click="select(opt)"
       >
         <span class="ac-mode__item-head">
-          <span class="ac-mode__icon" aria-hidden="true">{{ opt.icon }}</span>
+          <span class="ac-mode__icon" aria-hidden="true">
+            <template v-if="opt.icon">{{ opt.icon }}</template>
+            <svg v-else viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <path :d="iconPath(opt.id).d" />
+            </svg>
+          </span>
           <span class="ac-mode__item-label">{{ opt.label }}</span>
           <svg v-if="opt.id === mode" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="m3 8 3.5 3.5L13 4.5" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </span>
-        <span class="ac-mode__item-desc">{{ opt.description }}</span>
-        <span v-if="opt.permissionHint" class="ac-mode__item-hint">{{ opt.permissionHint }}</span>
+        <span v-if="showDescription" class="ac-mode__item-desc">{{ opt.description }}</span>
+        <span v-if="showDescription && opt.permissionHint" class="ac-mode__item-hint">{{ opt.permissionHint }}</span>
       </button>
     </div>
   </div>
@@ -201,6 +229,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onOutside))
 }
 .ac-mode__menu--up { bottom: calc(100% + 6px); }
 .ac-mode__menu--down { top: calc(100% + 6px); }
+.ac-mode__menu--compact { width: 200px; }
+.ac-mode__menu--compact .ac-mode__item { padding: 8px 12px; }
 .ac-mode__item {
   display: flex;
   flex-direction: column;

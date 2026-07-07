@@ -18,6 +18,7 @@ const mode = ref<AgentMode>('confirm_edits')
       { name: 'size', type: `'sm' | 'md'`, default: `'md'`, description: '尺寸' },
       { name: 'disabled', type: 'boolean', default: 'false', description: '禁用交互（运行中锁定）' },
       { name: 'placement', type: `'auto' | 'up' | 'down'`, default: `'auto'`, description: '菜单弹出方向；auto 根据视口空间自动翻转' },
+      { name: 'showDescription', type: 'boolean', default: 'true', description: '菜单中是否显示模式描述与权限提示；关闭后为紧凑单行菜单' },
       { name: 'labels', type: 'Partial<Record<AgentMode, string>>', description: '自定义各模式显示文案' },
       { name: '@update:mode', type: '(mode: AgentMode) => void', description: '模式切换事件' },
     ]"
@@ -26,6 +27,7 @@ const mode = ref<AgentMode>('confirm_edits')
         { label: 'md 标准', value: 'md' },
         { label: 'sm 紧凑', value: 'sm' },
       ] },
+      { name: 'showDescription', label: '显示描述', type: 'boolean', default: true },
       { name: 'disabled', label: '禁用', type: 'boolean', default: false },
     ]"
   >
@@ -35,6 +37,7 @@ const mode = ref<AgentMode>('confirm_edits')
           :mode="mode"
           :size="values.size as 'sm' | 'md'"
           :disabled="!!values.disabled"
+          :show-description="values.showDescription !== false"
           placement="down"
           @update:mode="(m: AgentMode) => (mode = m)"
         />

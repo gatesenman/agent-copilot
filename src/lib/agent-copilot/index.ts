@@ -160,5 +160,9 @@ export type {
   ProtocolCapabilities, ProviderPreset,
 } from './protocols'
 
+// ============ Web Component 集成通道 ============
+// <agent-copilot-chat> 自定义元素：React / Angular / 原生页面框架无关接入
+export { AgentCopilotChat, registerAgentCopilotElements } from './web-component'
+
 // ============ 类型 ============
 export * from './types'

@@ -6,6 +6,15 @@ import { agentBackendPlugin } from './server/agent-backend.mjs'
 
 export default defineConfig({
   plugins: [vue(), agentBackendPlugin()],
+  build: {
+    rollupOptions: {
+      // 多页入口：index 演示站 + embed 对外嵌入端点（iframe / 分享链接 / embed.js 均指向它）
+      input: {
+        index: fileURLToPath(new URL('./index.html', import.meta.url)),
+        embed: fileURLToPath(new URL('./embed.html', import.meta.url)),
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

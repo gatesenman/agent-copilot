@@ -171,6 +171,7 @@ export const COMPONENT_API_GROUPS: ApiGroup[] = [
           { name: 'size', type: "'sm' | 'md'", default: "'md'", desc: '尺寸' },
           { name: 'disabled', type: 'boolean', desc: '运行中锁定' },
           { name: 'placement', type: "'auto' | 'up' | 'down'", default: "'auto'", desc: '菜单弹出方向（auto 视口自动翻转）' },
+          { name: 'showDescription', type: 'boolean', default: 'true', desc: '菜单中显示描述与权限提示；关闭为紧凑单行' },
         ],
         events: [{ name: 'update:mode', payload: 'AgentMode', desc: '模式切换' }],
       },
@@ -191,7 +192,7 @@ export const COMPONENT_API_GROUPS: ApiGroup[] = [
         when: 'Agent 回合的耗时分隔条（Cursor / VS Code Agent 的 "Worked for Xs" 行）。',
         props: [
           { name: 'startedAt', type: 'number', desc: '开始时间戳毫秒（running 时据此实时计时）' },
-          { name: 'durationMs', type: 'number', desc: '定格总耗时毫秒（非运行态优先使用）' },
+          { name: 'durationMs', type: 'number', desc: '定格总耗时���秒（非运行态优先使用）' },
           { name: 'running', type: 'boolean', default: 'false', desc: '运行中（走秒 + 呼吸点）' },
           { name: 'labels', type: '{ working?, worked? }', desc: '文案定制' },
         ],
