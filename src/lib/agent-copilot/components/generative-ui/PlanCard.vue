@@ -102,7 +102,7 @@ const STATUS_LABEL = computed<Record<string, string>>(() => ({
 .ac-plan-card__step[data-status='done'] .ac-plan-card__marker {
   background: var(--ac-success, #16a34a);
   border-color: var(--ac-success, #16a34a);
-  color: #fff;
+  color: var(--ac-primary-fg, #fff);
 }
 .ac-plan-card__step[data-status='doing'] .ac-plan-card__marker {
   border-color: var(--ac-primary);

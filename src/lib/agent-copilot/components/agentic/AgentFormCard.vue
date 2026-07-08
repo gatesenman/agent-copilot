@@ -570,7 +570,7 @@ const aiIssueCount = computed(() => props.form.fields.filter((f) => f.aiIssue).l
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--ac-bg, #fff);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
   transition: transform 0.15s ease;
 }

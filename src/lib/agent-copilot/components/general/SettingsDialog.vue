@@ -252,7 +252,7 @@ useFocusTrap(panelRef, {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--ac-bg, #fff);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
   transition: transform 0.18s;
 }

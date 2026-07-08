@@ -133,7 +133,7 @@ onBeforeUnmount(() => {
 .ac-rec__btn--cancel:hover { color: var(--ac-text, #111827); }
 .ac-rec__btn--stop {
   background: var(--ac-danger, #dc2626);
-  color: #fff;
+  color: var(--ac-primary-fg, #fff);
 }
 .ac-rec__btn--stop:hover { opacity: 0.9; }
 .ac-rec__dot {

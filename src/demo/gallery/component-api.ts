@@ -414,8 +414,12 @@ export const COMPONENT_API_GROUPS: ApiGroup[] = [
       {
         name: 'PayloadCard',
         brief: '22 种结构化载荷的统一分发入口',
-        when: '渲染 STRUCTURED_PAYLOAD 事件。按 payload.type 自动选卡；未知类型走 registerPayloadRenderer 注册的自定义渲染。',
-        props: [{ name: 'payload', type: 'StructuredPayload', desc: '{ type, data } 结构化载荷' }],
+        when: '渲染 STRUCTURED_PAYLOAD 事件。按 payload.type 自动选卡；未知类型走 registerPayloadRenderer 注册的自定义渲染。支持 loading 骨架屏与 error 错误占位（含 retry 事件）。',
+        props: [
+          { name: 'payload', type: 'StructuredPayload', desc: '{ type, data } 结构化载荷' },
+          { name: 'loading', type: 'boolean', desc: '载荷生成中显示骨架屏（默认 false）' },
+          { name: 'error', type: 'string', desc: '非空则显示错误占位与重试按钮，触发 @retry 事件' },
+        ],
       },
       {
         name: 'CodeBlockCard / DiffCard / FileTreeCard / TerminalCard',
@@ -561,7 +565,7 @@ export const COMPONENT_API_GROUPS: ApiGroup[] = [
         brief: '安全横幅 / 反馈弹窗 / 设置弹窗',
         props: [
           { name: 'level / policy / appealable', type: '—', desc: '（Safety）info|warning|blocked 级别与策略名' },
-          { name: 'open / reasons / showComment', type: '—', desc: '（Feedback）开关与原因选项' },
+          { name: 'open / reasons / showComment', type: '—', desc: '（Feedback）开关与原因选��' },
           { name: 'sections / values', type: 'SettingSection[] / Record', desc: '（Settings）设置项分组与值' },
         ],
         when: '企业合规与用户反馈的标准件。',

@@ -29,7 +29,21 @@ import PlanCard from './PlanCard.vue'
 import TimelineCard from './TimelineCard.vue'
 import FormCard from './FormCard.vue'
 
-const props = defineProps<{ payload: StructuredPayload }>()
+const props = withDefaults(
+  defineProps<{
+    payload: StructuredPayload
+    /** 载荷数据仍在生成/加载时显示骨架屏 */
+    loading?: boolean
+    /** 载荷生成失败时的错误信息；非空则显示错误占位与重试按钮 */
+    error?: string
+  }>(),
+  { loading: false, error: '' },
+)
+
+const emit = defineEmits<{
+  /** 用户点击错误占位中的重试按钮 */
+  (e: 'retry'): void
+}>()
 
 /** 内置类型 -> 组件映射 */
 const BUILTIN: Record<string, Component> = {
@@ -81,8 +95,19 @@ function formatJson(v: unknown): string {
 
 <template>
   <div class="ac-payload ac-slide-up">
+    <!-- 加载态：骨架屏 -->
+    <div v-if="loading" class="ac-card ac-payload__skeleton" role="status" :aria-label="t('common.loading')">
+      <div class="ac-payload__skel-bar ac-payload__skel-bar--w60" />
+      <div class="ac-payload__skel-bar" />
+      <div class="ac-payload__skel-bar ac-payload__skel-bar--w80" />
+    </div>
+    <!-- 错误态：占位 + 重试 -->
+    <div v-else-if="error" class="ac-card ac-payload__error" role="alert">
+      <span class="ac-payload__error-msg">{{ error }}</span>
+      <button type="button" class="ac-payload__retry" @click="emit('retry')">{{ t('common.retry') }}</button>
+    </div>
     <!-- 错误边界：单个载荷渲染异常时降级为原始 JSON，不拖垮整个消息流 -->
-    <ErrorBoundary v-if="resolved" :title="t('gencard.payloadError', { type: payload.type })">
+    <ErrorBoundary v-else-if="resolved" :title="t('gencard.payloadError', { type: payload.type })">
       <component
         :is="resolved"
         :payload="normalizedPayload"
@@ -123,4 +148,49 @@ function formatJson(v: unknown): string {
   background: var(--ac-bg);
   border-radius: calc(var(--ac-radius) * 0.6);
 }
+
+/* ---------- 加载骨架屏 ---------- */
+.ac-payload__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 12px;
+}
+.ac-payload__skel-bar {
+  height: 12px;
+  border-radius: 6px;
+  background: var(--ac-surface);
+  animation: ac-pulse 1.4s ease-in-out infinite;
+}
+.ac-payload__skel-bar--w60 { width: 60%; }
+.ac-payload__skel-bar--w80 { width: 80%; }
+@media (prefers-reduced-motion: reduce) {
+  .ac-payload__skel-bar { animation: none; opacity: 0.7; }
+}
+
+/* ---------- 错误占位 ---------- */
+.ac-payload__error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-color: var(--ac-danger, #b42318);
+}
+.ac-payload__error-msg {
+  font-size: 0.85em;
+  color: var(--ac-danger, #b42318);
+  overflow-wrap: anywhere;
+}
+.ac-payload__retry {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  font-size: 0.82em;
+  border: 1px solid var(--ac-border);
+  border-radius: calc(var(--ac-radius) * 0.6);
+  background: var(--ac-bg);
+  color: var(--ac-text);
+  cursor: pointer;
+}
+.ac-payload__retry:hover { background: var(--ac-surface); }
 </style>

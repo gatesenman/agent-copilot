@@ -149,7 +149,7 @@ const KIND_ICON: Record<AgentStep['kind'], string> = {
   height: 15px;
   border-radius: 50%;
   background: var(--ac-danger, #c93b3b);
-  color: #fff;
+  color: var(--ac-primary-fg, #fff);
   font-size: 10.5px;
   font-weight: 700;
   display: inline-flex;
