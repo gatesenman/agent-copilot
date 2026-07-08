@@ -64,7 +64,12 @@ const emit = defineEmits<{
 
 function typeInitial(type?: string): string {
   const map: Record<string, string> = {
-    person: '人', agent: 'A', entity: 'E', doc: '文', dataset: '数', command: '/',
+    person: t('palette.glyphPerson'),
+    agent: 'A',
+    entity: 'E',
+    doc: t('palette.glyphDoc'),
+    dataset: t('palette.glyphDataset'),
+    command: '/',
   }
   return map[type ?? ''] ?? (type?.slice(0, 1).toUpperCase() ?? '·')
 }

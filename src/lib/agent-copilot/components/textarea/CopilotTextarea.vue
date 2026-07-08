@@ -364,10 +364,10 @@ async function transformSelection(instruction: string) {
       replaced = await props.transformProvider(instruction, selection, full)
     } else {
       const c = client()
-      if (!c) { flashError('未配置 LLM，无法执行 AI 改写'); return }
+      if (!c) { flashError(t('ta.noLlm')); return }
       replaced = await c.chatOnce({
         messages: [
-          { role: 'system', content: `你是文本编辑助手。按指令改写用户给出的文本片段，只输出改写结果，不要解释。指令：${instruction}` },
+          { role: 'system', content: t('ta.transformSystem', { instruction }) },
           { role: 'user', content: selection },
         ],
         maxTokens: 800,
@@ -380,7 +380,7 @@ async function transformSelection(instruction: string) {
       commit(next, 'transform')
     }
   } catch {
-    flashError('AI 改写失败，请重试')
+    flashError(t('ta.transformFailed'))
   } finally {
     transforming.value = false
     selToolbar.visible = false

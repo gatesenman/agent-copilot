@@ -249,7 +249,7 @@ export const zhCN: LocaleMessages = {
 
   // ---- 澄清 / 思考 / 耗时（ClarifyCard / ThinkingBlock / WorkSummary）----
   'clarify.title': '需要你确认',
-  'clarify.other': '其他',
+  'clarify.other': '其��',
   'clarify.otherPlaceholder': '输入自定义答案…',
   'clarify.submit': '确认',
   'clarify.submitted': '已确认',
@@ -513,6 +513,13 @@ export const zhCN: LocaleMessages = {
     '你是文本自动补全引擎。用户正在{purpose}。根据已输入的文本，续写接下来的一小段（不超过40字），自然衔接，禁止重复已输入内容，只输出续写部分。',
   'ta.suggestPurposeFallback': '撰写内容',
   'ta.suggestContext': '应用上下文：',
+  'ta.noLlm': '未配置 LLM，无法执行 AI 改写',
+  'ta.transformSystem': '你是文本编辑助手。按指令改写用户给出的文本片段，只输出改写结果，不要解释。指令：{instruction}',
+  'ta.transformFailed': 'AI 改写失败，请重试',
+
+  'palette.glyphPerson': '人',
+  'palette.glyphDoc': '文',
+  'palette.glyphDataset': '数',
 
   // ---- 通用 ----
   'common.confirm': '确认',
@@ -991,6 +998,14 @@ export const enUS: LocaleMessages = {
     'You are a text auto-completion engine. The user is {purpose}. Based on the text entered so far, continue with a short next segment (under 40 characters) that flows naturally. Do not repeat existing text; output only the continuation.',
   'ta.suggestPurposeFallback': 'writing content',
   'ta.suggestContext': 'App context:',
+  'ta.noLlm': 'No LLM configured — AI rewrite is unavailable',
+  'ta.transformSystem':
+    'You are a text-editing assistant. Rewrite the given text fragment per the instruction. Output only the rewritten result, no explanations. Instruction: {instruction}',
+  'ta.transformFailed': 'AI rewrite failed, please retry',
+
+  'palette.glyphPerson': 'P',
+  'palette.glyphDoc': 'D',
+  'palette.glyphDataset': 'DS',
 
   'common.confirm': 'Confirm',
   'common.cancel': 'Cancel',
