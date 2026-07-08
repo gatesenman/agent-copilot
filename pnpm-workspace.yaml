@@ -1,4 +1,0 @@
-# pnpm 10.9+ / 11 从这里读取构建脚本白名单（package.json 的 pnpm 字段已被新版忽略）
-# esbuild 是 Vite 的核心依赖，必须允许其 postinstall 才能工作
-onlyBuiltDependencies:
-  - esbuild
