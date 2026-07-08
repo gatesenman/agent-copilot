@@ -13,7 +13,7 @@
     </div>
 
     <div v-if="interrupt.action" class="ac-approval__body">
-      <div class="ac-approval__label">待执行动作参数</div>
+      <div class="ac-approval__label">{{ t('approval.paramsLabel') }}</div>
       <table class="ac-approval__table">
         <tbody>
           <tr v-for="(v, k) in interrupt.action.args" :key="k">
@@ -41,15 +41,15 @@
         v-model="comment"
         class="ac-approval__comment"
         type="text"
-        placeholder="备注（可选）"
-        aria-label="审批备注"
+        :placeholder="t('approval.notePlaceholder')"
+        :aria-label="t('approval.noteAria')"
       />
       <div class="ac-approval__actions">
         <button type="button" class="ac-btn ac-btn--danger" @click="$emit('respond', { approved: false, comment })">
-          拒绝
+          {{ t('hitl.reject') }}
         </button>
         <button type="button" class="ac-btn ac-btn--primary" @click="$emit('respond', { approved: true, comment })">
-          批准执行
+          {{ t('hitl.approve') }}
         </button>
       </div>
     </div>
@@ -59,12 +59,12 @@
         v-model="inputValue"
         class="ac-approval__comment"
         type="text"
-        placeholder="请输入补充信息"
-        aria-label="补充信息"
+        :placeholder="t('approval.inputPlaceholder')"
+        :aria-label="t('approval.inputAria')"
         @keydown.enter="submitInput"
       />
       <div class="ac-approval__actions">
-        <button type="button" class="ac-btn ac-btn--primary" @click="submitInput">提交</button>
+        <button type="button" class="ac-btn ac-btn--primary" @click="submitInput">{{ t('common.submit') }}</button>
       </div>
     </div>
   </div>
@@ -76,7 +76,10 @@
  * 对应 CopilotKit renderAndWait 与 AgentScope 中断-恢复。
  */
 import { ref } from 'vue'
+import { useI18n } from '../../i18n'
 import type { InterruptRequest, InterruptResponse } from '../../types'
+
+const { t } = useI18n()
 
 defineProps<{ interrupt: InterruptRequest }>()
 const emit = defineEmits<{ respond: [response: Omit<InterruptResponse, 'interruptId'>] }>()

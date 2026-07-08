@@ -1,7 +1,7 @@
 <template>
-  <div v-if="suggestions.length || loading" class="ac-suggestions" role="group" aria-label="建议问题">
+  <div v-if="suggestions.length || loading" class="ac-suggestions" role="group" :aria-label="t('suggest.aria')">
     <span v-if="loading" class="ac-suggestions__loading">
-      <span class="ac-spin" /> 正在生成建议…
+      <span class="ac-spin" /> {{ t('suggest.loading') }}
     </span>
     <button
       v-for="s in suggestions"
@@ -20,7 +20,10 @@
 /**
  * ChatSuggestions — 建议问题按钮组（对齐 CopilotKit useCopilotChatSuggestions）
  */
+import { useI18n } from '../../i18n'
 import type { ChatSuggestion } from '../../types'
+
+const { t } = useI18n()
 
 withDefaults(
   defineProps<{

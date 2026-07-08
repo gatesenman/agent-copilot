@@ -7,7 +7,8 @@
  * 2. screenshot —— 展示截图（Agent 浏览网页的快照）
  * 3. src —— iframe 实时加载
  */
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useI18n } from '../../i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -32,7 +33,7 @@ const props = withDefaults(
     displayUrl: undefined,
     editable: false,
     height: '320px',
-    emptyText: '暂无预览内容',
+    emptyText: undefined,
     pageTitle: undefined,
   },
 )
@@ -41,6 +42,9 @@ const emit = defineEmits<{
   (e: 'navigate', url: string): void
   (e: 'refresh'): void
 }>()
+
+const { t } = useI18n()
+const emptyTextResolved = computed(() => props.emptyText ?? t('browser.empty'))
 
 const urlInput = ref(props.displayUrl ?? props.src ?? '')
 watch(
@@ -57,7 +61,7 @@ function submitUrl() {
 <template>
   <div class="ac-browser" :style="{ height }">
     <div class="ac-browser__bar">
-      <button type="button" class="ac-browser__btn" aria-label="刷新" @click="emit('refresh')">
+      <button type="button" class="ac-browser__btn" :aria-label="t('browser.refresh')" @click="emit('refresh')">
         <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
           <path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 1.5v3h-3" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
@@ -70,7 +74,7 @@ function submitUrl() {
           v-model="urlInput"
           class="ac-browser__url"
           :readonly="!editable"
-          aria-label="页面地址"
+          :aria-label="t('browser.urlAria')"
           spellcheck="false"
         />
       </form>
@@ -79,7 +83,7 @@ function submitUrl() {
       <slot>
         <template v-if="screenshot">
           <figure class="ac-browser__shot">
-            <img :src="screenshot" :alt="pageTitle ?? '页面截图'" />
+            <img :src="screenshot" :alt="pageTitle ?? t('browser.screenshotAlt')" />
             <figcaption v-if="pageTitle">{{ pageTitle }}</figcaption>
           </figure>
         </template>
@@ -87,10 +91,10 @@ function submitUrl() {
           v-else-if="src"
           :src="src"
           class="ac-browser__frame"
-          :title="pageTitle ?? '页面预览'"
+          :title="pageTitle ?? t('browser.previewTitle')"
           sandbox="allow-scripts allow-same-origin"
         />
-        <div v-else class="ac-browser__empty">{{ emptyText }}</div>
+        <div v-else class="ac-browser__empty">{{ emptyTextResolved }}</div>
       </slot>
     </div>
   </div>

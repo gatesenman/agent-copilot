@@ -6,6 +6,7 @@
  * 分叉状态（input-required / failed / canceled）以徽章色区分。
  */
 import { computed } from 'vue'
+import { useI18n } from '../../i18n'
 
 const props = defineProps<{
   /** A2A: submitted/working/input-required/completed/failed/canceled；ACP: created/in-progress/awaiting/completed/failed/cancelled */
@@ -24,17 +25,24 @@ const normalized = computed(() => {
   return map[props.state] ?? props.state
 })
 
-const STATES = [
-  { id: 'submitted', label: '已提交' },
-  { id: 'working', label: '处理中' },
-  { id: 'completed', label: '已完成' },
-]
+const { t } = useI18n()
 
-const LABELS: Record<string, string> = {
-  submitted: '已提交', working: '处理中', 'input-required': '等待输入',
-  completed: '已完成', failed: '已失败', canceled: '已取消',
-  rejected: '已拒绝', 'auth-required': '需要认证',
-}
+const STATES = computed(() => [
+  { id: 'submitted', label: t('status.submitted') },
+  { id: 'working', label: t('status.working') },
+  { id: 'completed', label: t('status.completed') },
+])
+
+const LABELS = computed<Record<string, string>>(() => ({
+  submitted: t('status.submitted'),
+  working: t('status.working'),
+  'input-required': t('status.inputRequired'),
+  completed: t('status.completed'),
+  failed: t('status.failed'),
+  canceled: t('status.canceled'),
+  rejected: t('status.rejected'),
+  'auth-required': t('status.authRequired'),
+}))
 
 const tone = computed(() => {
   const s = normalized.value
@@ -54,7 +62,7 @@ const progressIdx = computed(() => {
 </script>
 
 <template>
-  <div class="ac-task-status" role="status" :aria-label="`任务状态：${LABELS[normalized] ?? state}`">
+  <div class="ac-task-status" role="status" :aria-label="t('status.aria', { status: LABELS[normalized] ?? state })">
     <div class="ac-task-status__head">
       <span v-if="protocol" class="ac-badge">{{ protocol }}</span>
       <span class="ac-task-status__label" :class="`ac-task-status__label--${tone}`">

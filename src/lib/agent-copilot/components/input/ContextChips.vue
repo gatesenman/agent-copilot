@@ -1,12 +1,12 @@
 <template>
-  <div v-if="items.length > 0" class="ac-ctx" role="list" aria-label="附着的上下文">
+  <div v-if="items.length > 0" class="ac-ctx" role="list" :aria-label="t('ctx.aria')">
     <span v-for="item in items" :key="item.id" class="ac-ctx__chip" role="listitem" :data-source="item.source">
       <span class="ac-ctx__tag" aria-hidden="true">{{ sourceTag(item) }}</span>
       <span class="ac-ctx__label">{{ item.label }}</span>
       <button
         type="button"
         class="ac-ctx__remove"
-        :aria-label="`移除上下文 ${item.label}`"
+        :aria-label="t('ctx.removeAria', { label: item.label })"
         @click="emit('remove', item.id)"
       >×</button>
     </span>
@@ -18,9 +18,12 @@
  * ContextChips — 输入框上方的上下文附着条
  * 展示 @提及 / #引用 / 手动附着 / 文件 的上下文项，可删除
  */
+import { useI18n } from '../../i18n'
 import type { ContextItem } from '../../types'
 
 defineProps<{ items: ContextItem[] }>()
+
+const { t } = useI18n()
 
 const emit = defineEmits<{
   (e: 'remove', id: string): void

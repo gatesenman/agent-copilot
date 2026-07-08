@@ -4,7 +4,7 @@
       <span class="ac-sqlcard__label">SQL</span>
       <span v-if="payload.title" class="ac-sqlcard__title">{{ payload.title }}</span>
       <span class="ac-sqlcard__meta">
-        {{ data.rowCount ?? data.rows.length }} 行<template v-if="data.elapsedMs !== undefined"> · {{ data.elapsedMs }}ms</template>
+        {{ t('gencard.sqlRows', { n: data.rowCount ?? data.rows.length }) }}<template v-if="data.elapsedMs !== undefined"> · {{ data.elapsedMs }}ms</template>
       </span>
     </div>
     <pre class="ac-sqlcard__sql ac-scroll"><code v-html="highlightedSql"></code></pre>
@@ -28,8 +28,11 @@
 <script setup lang="ts">
 /** SqlResultCard — sql_result 载荷：SQL 语句 + 结果表（Data Agent） */
 import { computed } from 'vue'
+import { useI18n } from '../../i18n'
 import type { SqlResultPayload, StructuredPayload } from '../../types'
 import { highlightCode } from './highlight'
+
+const { t } = useI18n()
 
 const props = defineProps<{ payload: StructuredPayload }>()
 const data = computed<SqlResultPayload>(() => (props.payload.data ?? { sql: '', columns: [], rows: [] }) as SqlResultPayload)

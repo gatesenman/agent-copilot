@@ -10,6 +10,7 @@
  */
 import { computed } from 'vue'
 import { useCopilot } from '../../composables/useCopilot'
+import { useI18n } from '../../i18n'
 import type { WorkspaceFile } from '../../types'
 import CopilotChat from '../chat/CopilotChat.vue'
 import ModeSelector from '../agentic/ModeSelector.vue'
@@ -72,15 +73,16 @@ const emit = defineEmits<{
 }>()
 
 const store = useCopilot()
+const { t } = useI18n()
 
-const DEFAULT_LABELS: Record<string, string> = {
-  changes: '变更',
-  plan: '计划',
-  tasks: '任务',
-  files: '文件',
-  terminal: '终端',
-  browser: '浏览器',
-}
+const DEFAULT_LABELS = computed<Record<string, string>>(() => ({
+  changes: t('workspace.changes'),
+  plan: t('workspace.plan'),
+  tasks: t('workspace.tasks'),
+  files: t('workspace.files'),
+  terminal: t('workspace.terminal'),
+  browser: t('workspace.browser'),
+}))
 
 const pendingChanges = computed(() => store.fileChanges.value.filter((c) => c.status === 'pending').length)
 const activeTasks = computed(() => store.tasks.value.filter((t) => t.status === 'active' || t.status === 'pending').length)
@@ -88,7 +90,7 @@ const activeTasks = computed(() => store.tasks.value.filter((t) => t.status === 
 const panelTabs = computed<PanelTab[]>(() =>
   props.visiblePanels.map((id) => ({
     id,
-    label: props.panelLabels?.[id] ?? DEFAULT_LABELS[id],
+    label: props.panelLabels?.[id] ?? DEFAULT_LABELS.value[id],
     badge: id === 'changes' ? pendingChanges.value : id === 'tasks' ? activeTasks.value : undefined,
     badgeTone: id === 'changes' ? ('warning' as const) : undefined,
   })),
@@ -141,7 +143,7 @@ function clearTerminal() {
               @approve="(steps) => store.decidePlan('approved', Array.isArray(steps) ? steps : undefined)"
               @reject="store.decidePlan('rejected')"
             />
-            <p v-else class="ac-workspace__empty">暂无计划</p>
+            <p v-else class="ac-workspace__empty">{{ t('browser.planEmpty') }}</p>
           </div>
         </template>
         <template #tasks>

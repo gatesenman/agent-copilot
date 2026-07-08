@@ -298,7 +298,7 @@ function fileName(path: string): string {
         <!-- 自定义预览 slot：可替换为 Markdown 渲染、图片等 -->
         <slot name="preview" :file="activeFile">
           <div class="ac-fpanel__code-wrap">
-            <pre class="ac-fpanel__code"><code><span v-for="(line, i) in (activeFile.content ?? '（无内容）').split('\n')" :key="i" class="ac-fpanel__line"><span class="ac-fpanel__ln" aria-hidden="true">{{ i + 1 }}</span>{{ line }}
+            <pre class="ac-fpanel__code"><code><span v-for="(line, i) in (activeFile.content ?? t('files.noContent')).split('\n')" :key="i" class="ac-fpanel__line"><span class="ac-fpanel__ln" aria-hidden="true">{{ i + 1 }}</span>{{ line }}
 </span></code></pre>
           </div>
         </slot>

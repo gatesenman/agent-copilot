@@ -8,7 +8,7 @@
         :viewBox="`0 0 ${W} ${H}`"
         class="ac-chartcard__svg"
         role="img"
-        :aria-label="payload.title || '图表'"
+        :aria-label="payload.title || t('chart.fallbackTitle')"
       >
         <!-- 网格线与Y轴标签 -->
         <g v-for="tick in ticks" :key="tick.v">
@@ -60,7 +60,7 @@
 
       <!-- 饼图 -->
       <div v-else class="ac-chartcard__pie-wrap">
-        <svg :viewBox="`0 0 120 120`" class="ac-chartcard__pie" role="img" :aria-label="payload.title || '饼图'">
+        <svg :viewBox="`0 0 120 120`" class="ac-chartcard__pie" role="img" :aria-label="payload.title || t('chart.pie')">
           <circle
             v-for="(seg, i) in pieSegments"
             :key="i"
@@ -98,7 +98,10 @@
 <script setup lang="ts">
 /** ChartCard — chart 载荷：零依赖 SVG 柱状/折线/饼图（Data Agent） */
 import { computed } from 'vue'
+import { useI18n } from '../../i18n'
 import type { ChartPayload, StructuredPayload } from '../../types'
+
+const { t, locale } = useI18n()
 
 const props = defineProps<{ payload: StructuredPayload }>()
 const data = computed<ChartPayload>(() => (props.payload.data ?? { kind: 'bar', labels: [], series: [] }) as ChartPayload)
@@ -133,7 +136,16 @@ const ticks = computed(() => {
   const n = 4
   return Array.from({ length: n + 1 }, (_, i) => {
     const v = (maxV.value / n) * i
-    return { v, y: yScale(v), label: v >= 10000 ? `${(v / 10000).toLocaleString('zh-CN')}万` : v.toLocaleString('zh-CN') }
+    return {
+      v,
+      y: yScale(v),
+      label:
+        locale.value === 'zh-CN' && v >= 10000
+          ? `${(v / 10000).toLocaleString('zh-CN')}万`
+          : v >= 10000
+            ? new Intl.NumberFormat(locale.value, { notation: 'compact' }).format(v)
+            : v.toLocaleString(locale.value),
+    }
   })
 })
 

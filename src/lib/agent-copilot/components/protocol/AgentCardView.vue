@@ -7,6 +7,7 @@
  * 可用于「Agent 目录 / 服务注册中心」类企业界面。
  */
 import { computed } from 'vue'
+import { useI18n } from '../../i18n'
 
 export interface A2AAgentCard {
   name: string
@@ -26,13 +27,21 @@ const props = defineProps<{
   status?: 'online' | 'offline' | 'unknown'
 }>()
 
+const { t } = useI18n()
+
 const capabilityList = computed(() => {
   const caps = props.card.capabilities ?? {}
   return [
-    { label: '流式输出', on: !!caps.streaming },
-    { label: '推送通知', on: !!caps.pushNotifications },
-    { label: '状态历史', on: !!caps.stateTransitionHistory },
+    { label: t('agent.capStreaming'), on: !!caps.streaming },
+    { label: t('agent.capPush'), on: !!caps.pushNotifications },
+    { label: t('agent.capHistory'), on: !!caps.stateTransitionHistory },
   ]
+})
+
+const statusTitle = computed(() => {
+  if (props.status === 'online') return t('agent.online')
+  if (props.status === 'offline') return t('agent.offline')
+  return t('agent.unknown')
 })
 </script>
 
@@ -47,7 +56,7 @@ const capabilityList = computed(() => {
             v-if="status"
             class="ac-agent-card__dot"
             :class="`ac-agent-card__dot--${status}`"
-            :title="status === 'online' ? '在线' : status === 'offline' ? '离线' : '未知'"
+            :title="statusTitle"
           />
         </div>
         <p v-if="card.provider?.organization || card.version" class="ac-agent-card__meta">
@@ -60,7 +69,7 @@ const capabilityList = computed(() => {
 
     <p v-if="card.description" class="ac-agent-card__desc">{{ card.description }}</p>
 
-    <div class="ac-agent-card__caps" role="list" aria-label="Agent 能力">
+    <div class="ac-agent-card__caps" role="list" :aria-label="t('agent.capsAria')">
       <span
         v-for="c in capabilityList"
         :key="c.label"
@@ -75,14 +84,14 @@ const capabilityList = computed(() => {
         <div class="ac-agent-card__skill-name">{{ s.name }}</div>
         <div v-if="s.description" class="ac-agent-card__skill-desc">{{ s.description }}</div>
         <div v-if="s.tags?.length" class="ac-agent-card__tags">
-          <span v-for="t in s.tags" :key="t" class="ac-agent-card__tag">{{ t }}</span>
+          <span v-for="tag in s.tags" :key="tag" class="ac-agent-card__tag">{{ tag }}</span>
         </div>
       </div>
     </div>
 
     <footer v-if="card.defaultInputModes?.length || card.defaultOutputModes?.length" class="ac-agent-card__io">
-      <span v-if="card.defaultInputModes?.length">输入：{{ card.defaultInputModes.join(', ') }}</span>
-      <span v-if="card.defaultOutputModes?.length">输出：{{ card.defaultOutputModes.join(', ') }}</span>
+      <span v-if="card.defaultInputModes?.length">{{ t('agent.inputModes', { modes: card.defaultInputModes.join(', ') }) }}</span>
+      <span v-if="card.defaultOutputModes?.length">{{ t('agent.outputModes', { modes: card.defaultOutputModes.join(', ') }) }}</span>
     </footer>
   </div>
 </template>

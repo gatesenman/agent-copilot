@@ -1,5 +1,5 @@
 <template>
-  <div v-if="visible && items.length > 0" class="ac-palette ac-slide-up" role="listbox" :aria-label="ariaLabel">
+  <div v-if="visible && items.length > 0" class="ac-palette ac-slide-up" role="listbox" :aria-label="ariaLabelText">
     <div class="ac-palette__head">{{ heading }}</div>
     <button
       v-for="(item, i) in items"
@@ -29,6 +29,8 @@
  * CommandPalette — / @ # 三类触发共用的浮层命令面板
  * 由 ChatInput 控制显隐、过滤与键盘导航（↑↓ Enter Esc）
  */
+import { computed } from 'vue'
+import { useI18n } from '../../i18n'
 
 export interface PaletteItem {
   id: string
@@ -41,7 +43,7 @@ export interface PaletteItem {
   raw: unknown
 }
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     visible: boolean
     items: PaletteItem[]
@@ -49,8 +51,11 @@ withDefaults(
     heading: string
     ariaLabel?: string
   }>(),
-  { ariaLabel: '命令面板' },
+  { ariaLabel: undefined },
 )
+
+const { t } = useI18n()
+const ariaLabelText = computed(() => props.ariaLabel ?? t('palette.aria'))
 
 const emit = defineEmits<{
   (e: 'select', item: PaletteItem): void

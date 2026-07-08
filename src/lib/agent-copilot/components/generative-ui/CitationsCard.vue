@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '../../i18n'
 import type { CitationsPayload, StructuredPayload } from '../../types'
 
 const props = defineProps<{ payload: StructuredPayload }>()
 const data = computed<CitationsPayload>(() => (props.payload.data ?? { items: [] }) as CitationsPayload)
 const title = computed(() => props.payload.title)
+
+const { t } = useI18n()
 </script>
 
 <template>
   <div class="ac-citations-card">
-    <div class="ac-citations-card__title">{{ title || '参考来源' }}</div>
+    <div class="ac-citations-card__title">{{ title || t('gencard.citations') }}</div>
     <ol class="ac-citations-card__list">
       <li v-for="(item, i) in data.items" :key="i" class="ac-citations-card__item">
         <div class="ac-citations-card__head">

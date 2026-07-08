@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '../../i18n'
 import type { ImagePayload, StructuredPayload } from '../../types'
 
 const props = defineProps<{ payload: StructuredPayload }>()
 const data = computed<ImagePayload>(() => (props.payload.data ?? { src: '' }) as ImagePayload)
 const title = computed(() => props.payload.title)
 
-const alt = computed(() => data.value.alt ?? data.value.caption ?? title.value ?? '生成图像')
+const { t } = useI18n()
+
+const alt = computed(() => data.value.alt ?? data.value.caption ?? title.value ?? t('gencard.generatedImage'))
 </script>
 
 <template>

@@ -7,7 +7,7 @@
     <button
       type="button"
       class="ac-sidebar__toggle"
-      :aria-label="open ? '收起助手侧栏' : '展开助手侧栏'"
+      :aria-label="open ? t('sidebar.collapse') : t('sidebar.expand')"
       :aria-expanded="open"
       @click="open = !open"
     >
@@ -20,7 +20,7 @@
         :title="title"
         :subtitle="subtitle"
         :initial-message="initialMessage"
-        :placeholder="placeholder"
+        :placeholder="placeholderText"
       >
         <template #header-actions><slot name="header-actions" /></template>
       </CopilotChat>
@@ -33,8 +33,9 @@
  * CopilotSidebar — 固定于视口右侧的抽屉形态（CopilotKit <CopilotSidebar> 对齐）。
  * 默认收起，仅显示边缘开关；展开后覆盖在页面内容之上，不参与文档流。
  */
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import CopilotChat from './CopilotChat.vue'
+import { useI18n } from '../../i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -49,11 +50,14 @@ const props = withDefaults(
     title: '',
     subtitle: '',
     initialMessage: '',
-    placeholder: '输入消息…',
+    placeholder: undefined,
     defaultOpen: false,
     width: '400px',
   },
 )
+
+const { t } = useI18n()
+const placeholderText = computed(() => props.placeholder ?? t('chat.inputPlaceholder'))
 
 const open = ref(props.defaultOpen)
 

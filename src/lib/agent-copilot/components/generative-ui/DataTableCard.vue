@@ -2,16 +2,16 @@
   <div class="ac-card ac-dtable ac-slide-up">
     <div class="ac-dtable__head">
       <span v-if="payload.title" class="ac-dtable__title">{{ payload.title }}</span>
-      <span class="ac-dtable__count">{{ filteredRows.length }} 条</span>
+      <span class="ac-dtable__count">{{ t('dtable.count', { n: filteredRows.length }) }}</span>
       <input
         v-if="data.filterable"
         v-model="filterText"
         type="search"
         class="ac-dtable__filter"
-        placeholder="筛选…"
-        aria-label="筛选表格数据"
+        :placeholder="t('dtable.filterPlaceholder')"
+        :aria-label="t('dtable.filterAria')"
       />
-      <button v-if="data.exportable" type="button" class="ac-dtable__export" @click="exportCsv">导出 CSV</button>
+      <button v-if="data.exportable" type="button" class="ac-dtable__export" @click="exportCsv">{{ t('dtable.exportCsv') }}</button>
     </div>
     <div class="ac-dtable__scroll ac-scroll">
       <table class="ac-dtable__table">
@@ -36,15 +36,15 @@
             </td>
           </tr>
           <tr v-if="pagedRows.length === 0">
-            <td :colspan="data.columns.length" class="ac-dtable__empty">无匹配数据</td>
+            <td :colspan="data.columns.length" class="ac-dtable__empty">{{ t('dtable.noMatch') }}</td>
           </tr>
         </tbody>
       </table>
     </div>
     <div v-if="pageCount > 1" class="ac-dtable__pager">
-      <button type="button" class="ac-dtable__pagebtn" :disabled="page === 0" @click="page--">上一页</button>
+      <button type="button" class="ac-dtable__pagebtn" :disabled="page === 0" @click="page--">{{ t('dtable.prevPage') }}</button>
       <span class="ac-dtable__pageinfo">{{ page + 1 }} / {{ pageCount }}</span>
-      <button type="button" class="ac-dtable__pagebtn" :disabled="page >= pageCount - 1" @click="page++">下一页</button>
+      <button type="button" class="ac-dtable__pagebtn" :disabled="page >= pageCount - 1" @click="page++">{{ t('dtable.nextPage') }}</button>
     </div>
   </div>
 </template>
@@ -52,7 +52,10 @@
 <script setup lang="ts">
 /** DataTableCard — table 载荷增强版：排序/筛选/分页/导出 CSV（Data Agent） */
 import { computed, ref, watch } from 'vue'
+import { useI18n } from '../../i18n'
 import type { StructuredPayload, TablePayload } from '../../types'
+
+const { t } = useI18n()
 
 const props = defineProps<{ payload: StructuredPayload }>()
 

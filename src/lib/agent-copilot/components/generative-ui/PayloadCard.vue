@@ -9,6 +9,7 @@
  */
 import { computed } from 'vue'
 import type { Component } from 'vue'
+import { useI18n } from '../../i18n'
 import type { StructuredPayload } from '../../types'
 import { getPayloadRenderer } from './payload-registry'
 import ErrorBoundary from '../general/ErrorBoundary.vue'
@@ -71,6 +72,8 @@ const normalizedPayload = computed<StructuredPayload>(() => {
   return props.payload
 })
 
+const { t } = useI18n()
+
 function formatJson(v: unknown): string {
   try { return JSON.stringify(v, null, 2) } catch { return String(v) }
 }
@@ -79,7 +82,7 @@ function formatJson(v: unknown): string {
 <template>
   <div class="ac-payload ac-slide-up">
     <!-- 错误边界：单个载荷渲染异常时降级为原始 JSON，不拖垮整个消息流 -->
-    <ErrorBoundary v-if="resolved" :title="`载荷渲染失败（${payload.type}）`">
+    <ErrorBoundary v-if="resolved" :title="t('gencard.payloadError', { type: payload.type })">
       <component
         :is="resolved"
         :payload="normalizedPayload"

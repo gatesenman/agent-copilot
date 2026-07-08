@@ -2,7 +2,7 @@
   <div class="ac-card ac-treecard ac-slide-up">
     <div v-if="payload.title" class="ac-treecard__title">
       <span>{{ payload.title }}</span>
-      <span class="ac-treecard__stats">{{ stats.dirs }} 目录 · {{ stats.files }} 文件</span>
+      <span class="ac-treecard__stats">{{ t('gencard.dirsFiles', { dirs: stats.dirs, files: stats.files }) }}</span>
     </div>
     <ul class="ac-treecard__root" role="tree">
       <FileTreeNodeItem
@@ -19,10 +19,13 @@
 <script setup lang="ts">
 /** FileTreeCard — file_tree 载荷：可折叠目录树（Code Agent），VS Code 风格图标与缩进参考线 */
 import { computed, defineComponent, h, ref, type PropType, type VNode } from 'vue'
+import { useI18n } from '../../i18n'
 import type { FileTreeNode, FileTreePayload, StructuredPayload } from '../../types'
 
 const props = defineProps<{ payload: StructuredPayload }>()
 const data = computed<FileTreePayload>(() => (props.payload.data ?? { root: [] }) as FileTreePayload)
+
+const { t } = useI18n()
 
 /** 树统计：目录数 / 文件数 */
 const stats = computed(() => {
@@ -60,7 +63,11 @@ function svgIcon(paths: string[], size: number, stroke: string, extra: Record<st
   }, paths.map((d) => h('path', { d })))
 }
 
-const BADGE_TEXT: Record<string, string> = { new: '新增', modified: '修改', deleted: '删除' }
+const BADGE_TEXT = computed<Record<string, string>>(() => ({
+  new: t('gencard.badgeNew'),
+  modified: t('gencard.badgeModified'),
+  deleted: t('gencard.badgeDeleted'),
+}))
 
 /** 递归节点（内联组件，避免额外文件）。显式标注类型以支持自引用。 */
 const FileTreeNodeItem: ReturnType<typeof defineComponent> = defineComponent({
@@ -89,7 +96,7 @@ const FileTreeNodeItem: ReturnType<typeof defineComponent> = defineComponent({
               : svgIcon(['M1.5 4.5A1.5 1.5 0 0 1 3 3h3l1.5 1.5H13A1.5 1.5 0 0 1 14.5 6v6A1.5 1.5 0 0 1 13 13.5H3A1.5 1.5 0 0 1 1.5 12v-7.5Z'], 14, 'var(--ac-warn, #d29922)', { class: 'ac-tree__ficon' }))
           : svgIcon(['M4 1.5h5L13 5.5v8A1.5 1.5 0 0 1 11.5 15h-7A1.5 1.5 0 0 1 3 13.5v-10A1.5 1.5 0 0 1 4 1.5Z', 'M9 1.5V5.5H13'], 13, extColor(p.node.name), { class: 'ac-tree__ficon' }),
         h('span', { class: ['ac-tree__name', isDir ? 'is-dir' : '', p.node.badge === 'deleted' ? 'is-deleted' : ''] }, p.node.name),
-        p.node.badge ? h('span', { class: `ac-tree__badge is-${p.node.badge}` }, BADGE_TEXT[p.node.badge] ?? p.node.badge) : null,
+        p.node.badge ? h('span', { class: `ac-tree__badge is-${p.node.badge}` }, BADGE_TEXT.value[p.node.badge] ?? p.node.badge) : null,
         p.node.comment ? h('span', { class: 'ac-tree__comment' }, p.node.comment) : null,
         isDir && childCount ? h('span', { class: 'ac-tree__count' }, String(childCount)) : null,
       ]

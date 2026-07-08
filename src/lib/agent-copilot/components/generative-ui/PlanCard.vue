@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '../../i18n'
 import type { PlanPayload, StructuredPayload } from '../../types'
 
 const props = defineProps<{ payload: StructuredPayload }>()
 const data = computed<PlanPayload>(() => (props.payload.data ?? { steps: [] }) as PlanPayload)
 const title = computed(() => props.payload.title)
 
-const STATUS_LABEL: Record<string, string> = {
-  todo: '待办',
-  doing: '进行中',
-  done: '完成',
-  skipped: '跳过',
-}
+const { t } = useI18n()
+
+const STATUS_LABEL = computed<Record<string, string>>(() => ({
+  todo: t('planCard.todo'),
+  doing: t('planCard.doing'),
+  done: t('planCard.done'),
+  skipped: t('planCard.skipped'),
+}))
 </script>
 
 <template>

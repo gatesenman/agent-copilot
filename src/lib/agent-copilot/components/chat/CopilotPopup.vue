@@ -1,15 +1,15 @@
 <template>
   <div class="ac-popup">
     <Transition name="ac-popup">
-      <div v-if="open" ref="windowRef" class="ac-popup__window" role="dialog" aria-modal="false" aria-label="AI 助手对话框">
+      <div v-if="open" ref="windowRef" class="ac-popup__window" role="dialog" aria-modal="false" :aria-label="t('popup.dialogAria')">
         <CopilotChat
           :title="title"
           :subtitle="subtitle"
           :initial-message="initialMessage"
-          :placeholder="placeholder"
+          :placeholder="placeholderText"
         >
           <template #header-actions>
-            <button type="button" class="ac-popup__close" aria-label="关闭对话框" @click="open = false">
+            <button type="button" class="ac-popup__close" :aria-label="t('popup.closeAria')" @click="open = false">
               <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
                 <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round" />
               </svg>
@@ -22,7 +22,7 @@
     <button
       type="button"
       class="ac-popup__fab"
-      :aria-label="open ? '关闭 AI 助手' : '打开 AI 助手'"
+      :aria-label="open ? t('popup.close') : t('popup.open')"
       :aria-expanded="open"
       @click="open = !open"
     >
@@ -40,8 +40,9 @@
 /**
  * CopilotPopup — 悬浮气泡形态（CopilotKit <CopilotPopup> 对齐）
  */
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import CopilotChat from './CopilotChat.vue'
+import { useI18n } from '../../i18n'
 import { useFocusTrap } from '../../composables/useFocusTrap'
 
 const props = withDefaults(
@@ -56,10 +57,13 @@ const props = withDefaults(
     title: '',
     subtitle: '',
     initialMessage: '',
-    placeholder: '输入消息…',
+    placeholder: undefined,
     defaultOpen: false,
   },
 )
+
+const { t } = useI18n()
+const placeholderText = computed(() => props.placeholder ?? t('chat.inputPlaceholder'))
 
 const open = ref(props.defaultOpen)
 const windowRef = ref<HTMLElement | null>(null)
