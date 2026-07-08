@@ -5,7 +5,7 @@ defineOptions({ name: 'AgentStepList' })
  * AgentStepList — Agent 执行步骤时间流
  *
  * 将一次运行中的思考、工具调用、终端命令、文件浏览等动作按时间顺序
- * 排成可折叠的日志流（Claude/v0 式的执行过程展示）。
+ * 排成可折叠的日志流（Claude Code 式的执行过程展示）。
  * 每个步骤：种类图标 + 标题 + 可选状态 + 可折叠详情（文本或 detail 插槽）。
  */
 import { ref } from 'vue'

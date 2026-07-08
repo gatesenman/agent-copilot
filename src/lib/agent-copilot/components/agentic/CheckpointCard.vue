@@ -5,7 +5,7 @@ defineOptions({ name: 'CheckpointCard' })
  * CheckpointCard — 版本快照卡
  *
  * 消息流内嵌的一次变更快照：版本标签 + 聚合差异统计（+11 / -5）+
- * 逐文件路径与增删行数 + 撤销回滚按钮（v0 式的 "Removed xxx v14" 卡片）。
+ * 逐文件路径与增删行数 + 撤销回滚按钮（Cursor 式的检查点回滚卡片）。
  * 与 ChangeReviewPanel（审查面板）互补：这是轻量只读展示 + 一键回滚。
  */
 import { computed, ref } from 'vue'

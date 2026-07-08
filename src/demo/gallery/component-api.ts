@@ -200,7 +200,7 @@ export const COMPONENT_API_GROUPS: ApiGroup[] = [
       {
         name: 'AgentStepList',
         brief: '执行步骤时间流（思考 / 工具 / 终端 / 文件动作的可折叠日志）',
-        when: '消息流中按时间线展示 Agent 的执行过程（Claude / v0 式步骤日志）。',
+        when: '消息流中按时间线展示 Agent 的执行过程（Claude Code 式步骤日志）。',
         props: [
           { name: 'steps', type: 'AgentStep[]', desc: '步骤数组（kind: thinking/tool/terminal/file/search/info）' },
           { name: 'compact', type: 'boolean', default: 'false', desc: '紧凑密度' },

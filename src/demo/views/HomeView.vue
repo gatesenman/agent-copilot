@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * 首页 — 产品介绍 + 能力矩阵 + 快速开始。
- * 设计参照 Next.js / v0 式落地页：网格装饰 Hero、命令行、双栏产品预览。
+ * 设计参照 Next.js 式落地页：网格装饰 Hero、命令行、双栏产品预览。
  * 全部颜色走 --ac-* 主题 token，亮暗模式自动适配。
  */
 const emit = defineEmits<{ (e: 'navigate', tab: string): void }>()

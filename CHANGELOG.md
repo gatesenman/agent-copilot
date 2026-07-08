@@ -205,7 +205,7 @@
 
 - 顶部导航新增 AI 文档页：将接入方式、组合式 API、事件流协议与 48 个组件 API
   汇编成��份 llms.txt 风格 Markdown（约 650 行 / 6.3k tokens），一键复制或下载，
-  供 AI 编码助手（Cursor / Copilot / v0 等）正确理解并使用本库
+  供 AI 编码助手（Cursor / Copilot 等）正确理解并使用本库
 - 数据源与「全组件 API 速查」同一（component-api.ts），随组件演进自动更新
 
 ### 行业对标审计：移除不专业组件（Breaking）
@@ -251,7 +251,7 @@
 - 演��场「接入协议」默认切到真实后端（`/api/agent`）；agentscope 适配器补传 `metadata`（agentMode / thinking）
 - 修复 `RUN_ERROR` 在无流式消息时不���见：错误始终以气泡呈现（含重试与配置指引）
 
-### 新组件：AgentStepList 与 CheckpointCard（对照 v0 执行日志 UI 补齐）
+### 新组件：AgentStepList 与 CheckpointCard（对照主流 Agent 执行日志 UI 补齐）
 
 - `AgentStepList` 执行步骤时间流：思考 / 检索 / 终端 / 文件 / 工具动作按时间线排成可折叠日志，
   支持 running 旋转指示、error 态、note 注释、detail 插槽自定义详情
@@ -331,7 +331,7 @@
 ### 修复
 
 - 演练场预览区聊天组件未撑满（`.ac-root` 中间层缺弹性布局）
-- 暗色主题级联：移除 `theme: 'light'` 硬编码默认，未显式配置时跟随全局 `data-ac-theme` / 系统偏好
+- 暗���主题级联：移除 `theme: 'light'` 硬编码默认，未显式配置时跟随全局 `data-ac-theme` / 系统偏好
 - 演示站硬编码颜���全部替换为 `--ac-*` 设计令牌（暗色模式整站生效）
 
 ## [0.3.0] - 2026-07-02

@@ -2,7 +2,7 @@
 /**
  * AI 文档页 —— llms.txt 风格的一站式 AI 可读文档。
  * 把库的接入方式、组合式 API、事件协议与全组件 API 汇编成单份 Markdown，
- * 供用户复制给 AI 编码助手（Cursor / Copilot / v0 等）或下载为 llms.txt。
+ * 供用户复制给 AI 编码助手（Cursor / Copilot 等）或下载为 llms.txt。
  */
 import { computed, ref } from 'vue'
 import { generateLlmsDoc } from '../ai-docs/llms-doc'
@@ -64,7 +64,7 @@ function downloadManifest() {
           <h1 class="llms__title">AI 文档 · llms.txt</h1>
           <p class="llms__sub text-pretty">
             将本组件库的接入方式、组合式 API、事件流协议与全部组件 API 汇编成单份 AI 可读 Markdown。
-            复制给 AI 编码助手（Cursor、GitHub Copilot、v0 等）即可让其正确使用 agent-copilot 开发。
+            复制给 AI 编码助手（Cursor、GitHub Copilot 等）即可让其正确使用 agent-copilot 开发。
           </p>
         </div>
         <div class="llms__actions">
