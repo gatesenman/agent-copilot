@@ -5,6 +5,7 @@
  * 产物跳转 / 已完成自动折叠 / 当前任务自动定位 / 流式占位 / 紧凑密度。
  */
 import { computed, nextTick, ref, watch } from 'vue'
+import { useI18n } from '../../i18n'
 import type { AgentTask, AgentTaskArtifact } from '../../types'
 import TaskTrackerItem from './TaskTrackerItem.vue'
 
@@ -29,8 +30,11 @@ const props = withDefaults(
     autoScroll?: boolean
     labels?: { empty?: string; retry?: string; skip?: string; doneCollapsed?: string; planning?: string }
   }>(),
-  { title: '任务', collapsible: true, showProgress: true, density: 'comfortable', collapseDoneAfter: 0, autoScroll: true },
+  { title: undefined, collapsible: true, showProgress: true, density: 'comfortable', collapseDoneAfter: 0, autoScroll: true },
 )
+
+const { t } = useI18n()
+const titleText = computed(() => props.title ?? t('task.title'))
 
 const emit = defineEmits<{
   (e: 'taskClick', task: AgentTask): void
@@ -64,13 +68,13 @@ const collapsedDonePrefix = computed(() => {
 })
 const visibleTasks = computed(() => props.tasks.slice(collapsedDonePrefix.value))
 
-const emptyText = computed(() => props.labels?.empty ?? '暂无任务')
-const planningText = computed(() => props.labels?.planning ?? '计划中…')
+const emptyText = computed(() => props.labels?.empty ?? t('task.empty'))
+const planningText = computed(() => props.labels?.planning ?? t('task.planning'))
 
 /** aria-live 播报：当前任务变化时向读屏器通报 */
 const liveText = computed(() => {
   if (!activeTask.value) return ''
-  return `${activeTask.value.activeForm ?? activeTask.value.title}（${doneCount.value}/${totalCount.value}）`
+  return `${activeTask.value.activeForm ?? activeTask.value.title} (${doneCount.value}/${totalCount.value})`
 })
 
 /** active 任务变化时自动滚动定位 */
@@ -94,7 +98,7 @@ watch(
       :aria-expanded="!collapsed"
       @click="collapsed = !collapsed"
     >
-      <span class="ac-tasks__title">{{ title }}</span>
+      <span class="ac-tasks__title">{{ titleText }}</span>
       <span v-if="showProgress && totalCount" class="ac-tasks__progress">{{ doneCount }}/{{ totalCount }}</span>
       <span
         v-if="showProgress && totalCount"
@@ -103,7 +107,7 @@ watch(
         :aria-valuenow="doneCount"
         :aria-valuemin="0"
         :aria-valuemax="totalCount"
-        :aria-label="`任务进度 ${doneCount}/${totalCount}`"
+        :aria-label="t('task.progressAria', { done: doneCount, total: totalCount })"
       >
         <span class="ac-tasks__bar-fill" :style="{ width: `${(doneCount / totalCount) * 100}%` }" />
       </span>
@@ -112,7 +116,7 @@ watch(
       </svg>
     </button>
     <div v-else class="ac-tasks__head ac-tasks__head--static">
-      <span class="ac-tasks__title">{{ title }}</span>
+      <span class="ac-tasks__title">{{ titleText }}</span>
       <span v-if="showProgress && totalCount" class="ac-tasks__progress">{{ doneCount }}/{{ totalCount }}</span>
     </div>
 
@@ -126,7 +130,7 @@ watch(
         @click="doneExpanded = true"
       >
         <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m3 8.5 3.5 3.5L13 5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-        {{ labels?.doneCollapsed ?? `已完成 ${collapsedDonePrefix} 项` }}
+        {{ labels?.doneCollapsed ?? t('task.doneCollapsed', { n: collapsedDonePrefix }) }}
         <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" /></svg>
       </button>
 

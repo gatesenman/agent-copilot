@@ -6,8 +6,9 @@
  * 降级 UI 提供：错误摘要、可展开的技术细节、重试按钮。
  * 宿主可通过 @error 事件接入监控上报（Sentry 等）。
  */
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { onErrorCaptured } from 'vue'
+import { useI18n } from '../../i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -19,11 +20,15 @@ const props = withDefaults(
     showDetail?: boolean
   }>(),
   {
-    title: '此区块渲染失败',
-    retryLabel: '重试',
+    title: undefined,
+    retryLabel: undefined,
     showDetail: true,
   },
 )
+
+const { t } = useI18n()
+const titleText = computed(() => props.title ?? t('error.title'))
+const retryText = computed(() => props.retryLabel ?? t('error.retry'))
 
 const emit = defineEmits<{
   (e: 'error', err: Error, info: string): void
@@ -54,14 +59,14 @@ function retry() {
       <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="ac-boundary__icon">
         <path d="M8 5.5v3.2M8 11.2v.1M6.9 2.2 1.6 11.4a1.3 1.3 0 0 0 1.1 1.9h10.6a1.3 1.3 0 0 0 1.1-1.9L9.1 2.2a1.3 1.3 0 0 0-2.2 0Z" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
-      <span class="ac-boundary__title">{{ title }}</span>
-      <button v-if="retryLabel" type="button" class="ac-boundary__retry" @click="retry">
-        {{ retryLabel }}
+      <span class="ac-boundary__title">{{ titleText }}</span>
+      <button v-if="retryLabel !== ''" type="button" class="ac-boundary__retry" @click="retry">
+        {{ retryText }}
       </button>
     </div>
     <slot name="fallback" :error="error" />
     <details v-if="showDetail" class="ac-boundary__detail">
-      <summary>技术细节</summary>
+      <summary>{{ t('error.details') }}</summary>
       <pre class="ac-boundary__pre">{{ error.message }}{{ errorInfo ? `\n(${errorInfo})` : '' }}</pre>
     </details>
   </div>

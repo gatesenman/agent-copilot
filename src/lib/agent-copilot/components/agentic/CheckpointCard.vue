@@ -7,6 +7,7 @@
  * 与 ChangeReviewPanel（审查面板）互补：这是轻量只读展示 + 一键回滚。
  */
 import { computed, ref } from 'vue'
+import { useI18n } from '../../i18n'
 import type { FileChange } from '../../types'
 
 const props = withDefaults(
@@ -35,12 +36,14 @@ const expanded = ref(props.defaultExpanded)
 const totalAdd = computed(() => props.files.reduce((s, f) => s + (f.additions ?? 0), 0))
 const totalDel = computed(() => props.files.reduce((s, f) => s + (f.deletions ?? 0), 0))
 
-const KIND_LABEL: Record<FileChange['kind'], string> = {
-  create: '新增',
-  modify: '修改',
-  delete: '删除',
-  rename: '重命名',
-}
+const { t } = useI18n()
+
+const KIND_LABEL = computed<Record<FileChange['kind'], string>>(() => ({
+  create: t('change.create'),
+  modify: t('change.modify'),
+  delete: t('change.delete'),
+  rename: t('change.rename'),
+}))
 
 function fileName(path: string) {
   return path.split('/').pop() ?? path
@@ -52,7 +55,7 @@ function dirName(path: string) {
 </script>
 
 <template>
-  <section class="ac-ckpt" aria-label="版本快照">
+  <section class="ac-ckpt" :aria-label="t('ckpt.aria')">
     <header class="ac-ckpt__head">
       <button
         type="button"
@@ -67,7 +70,7 @@ function dirName(path: string) {
         <span v-if="version" class="ac-ckpt__ver">{{ version }}</span>
       </button>
       <div class="ac-ckpt__meta">
-        <span class="ac-ckpt__stat" aria-label="差异统计">
+        <span class="ac-ckpt__stat" :aria-label="t('ckpt.diffStat')">
           <em v-if="totalAdd" class="ac-ckpt__add">+{{ totalAdd }}</em>
           <i v-if="totalAdd && totalDel" class="ac-ckpt__sep">/</i>
           <em v-if="totalDel" class="ac-ckpt__del">-{{ totalDel }}</em>
@@ -76,8 +79,8 @@ function dirName(path: string) {
           v-if="revertable"
           type="button"
           class="ac-ckpt__revert"
-          aria-label="撤销此变更"
-          title="撤销此变更"
+          :aria-label="t('ckpt.revert')"
+          :title="t('ckpt.revert')"
           @click="emit('revert')"
         >
           <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">

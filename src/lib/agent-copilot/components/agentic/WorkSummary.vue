@@ -5,6 +5,7 @@
  * 对应 Cursor / Windsurf / VS Code Agent 的 "Worked for Xs" 分隔行。
  */
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from '../../i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -20,9 +21,11 @@ const props = withDefaults(
   { running: false },
 )
 
+const { t } = useI18n()
+
 const L = computed(() => ({
-  working: props.labels?.working ?? '正在工作',
-  worked: props.labels?.worked ?? '已工作',
+  working: props.labels?.working ?? t('work.working'),
+  worked: props.labels?.worked ?? t('work.worked'),
 }))
 
 const now = ref(Date.now())
@@ -56,9 +59,9 @@ const formatted = computed(() => {
   const h = Math.floor(totalSec / 3600)
   const m = Math.floor((totalSec % 3600) / 60)
   const s = totalSec % 60
-  if (h > 0) return `${h} 小时 ${m} 分`
-  if (m > 0) return `${m} 分 ${s} 秒`
-  return `${s} 秒`
+  if (h > 0) return `${t('time.h', { n: h })} ${t('time.m', { n: m })}`
+  if (m > 0) return `${t('time.m', { n: m })} ${t('time.s', { n: s })}`
+  return t('time.s', { n: s })
 })
 </script>
 

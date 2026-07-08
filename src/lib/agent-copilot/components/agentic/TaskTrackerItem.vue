@@ -3,6 +3,7 @@
  * TaskTrackerItem —— TaskTracker 的递归任务项。
  * 支持子任务层级、activeForm 进行时文案、耗时、错误原因、重试/跳过操作、产物链接。
  */
+import { useI18n } from '../../i18n'
 import type { AgentTask, AgentTaskArtifact } from '../../types'
 
 const props = withDefaults(
@@ -16,6 +17,8 @@ const props = withDefaults(
   }>(),
   { depth: 0, compact: false },
 )
+
+const { t } = useI18n()
 
 const emit = defineEmits<{
   (e: 'taskClick', task: AgentTask): void
@@ -61,13 +64,13 @@ function formatDuration(ms: number) {
           type="button"
           class="ac-tasks__action"
           @click.stop="emit('retry', task)"
-        >{{ labels?.retry ?? '重试' }}</button>
+        >{{ labels?.retry ?? t('task.retry') }}</button>
         <button
           v-if="task.skippable && (task.status === 'pending' || task.status === 'error')"
           type="button"
           class="ac-tasks__action ac-tasks__action--ghost"
           @click.stop="emit('skip', task)"
-        >{{ labels?.skip ?? '跳过' }}</button>
+        >{{ labels?.skip ?? t('task.skip') }}</button>
       </span>
     </div>
 

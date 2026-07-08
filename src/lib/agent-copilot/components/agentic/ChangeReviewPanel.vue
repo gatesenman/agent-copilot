@@ -4,6 +4,7 @@
  * 变更列表 + 展开 diff + 单文件/全部 接受/拒绝；统计增删行数。
  */
 import { computed, ref } from 'vue'
+import { useI18n } from '../../i18n'
 import type { FileChange } from '../../types'
 
 const props = withDefaults(
@@ -40,17 +41,19 @@ const emit = defineEmits<{
   (e: 'open', change: FileChange): void
 }>()
 
+const { t } = useI18n()
+
 const L = computed(() => ({
-  title: props.labels?.title ?? '变更审查',
-  acceptAll: props.labels?.acceptAll ?? '全部接受',
-  rejectAll: props.labels?.rejectAll ?? '全部拒绝',
-  accept: props.labels?.accept ?? '接受',
-  reject: props.labels?.reject ?? '拒绝',
-  accepted: props.labels?.accepted ?? '已接受',
-  rejected: props.labels?.rejected ?? '已拒绝',
-  empty: props.labels?.empty ?? '暂无待审查的变更',
-  summary: props.labels?.summary ?? '{n} 个文件已更改',
-  undoAll: props.labels?.undoAll ?? '撤销',
+  title: props.labels?.title ?? t('review.title'),
+  acceptAll: props.labels?.acceptAll ?? t('review.acceptAll'),
+  rejectAll: props.labels?.rejectAll ?? t('review.rejectAll'),
+  accept: props.labels?.accept ?? t('review.accept'),
+  reject: props.labels?.reject ?? t('review.reject'),
+  accepted: props.labels?.accepted ?? t('review.accepted'),
+  rejected: props.labels?.rejected ?? t('review.rejected'),
+  empty: props.labels?.empty ?? t('review.empty'),
+  summary: props.labels?.summary ?? t('review.summary'),
+  undoAll: props.labels?.undoAll ?? t('review.undoAll'),
 }))
 
 /** collapsible 形态下列表是否展开 */
@@ -62,9 +65,9 @@ const pendingCount = computed(() => props.changes.filter((c) => c.status === 'pe
 const totalAdd = computed(() => props.changes.reduce((s, c) => s + (c.additions ?? 0), 0))
 const totalDel = computed(() => props.changes.reduce((s, c) => s + (c.deletions ?? 0), 0))
 
-const KIND_LABEL: Record<FileChange['kind'], string> = {
-  create: '新增', modify: '修改', delete: '删除', rename: '重命名',
-}
+const KIND_LABEL = computed<Record<FileChange['kind'], string>>(() => ({
+  create: t('change.create'), modify: t('change.modify'), delete: t('change.delete'), rename: t('change.rename'),
+}))
 
 function toggle(id: string) {
   expanded.value = { ...expanded.value, [id]: !expanded.value[id] }
@@ -121,7 +124,7 @@ function diffLines(diff: string): { cls: string; text: string }[] {
       <span class="ac-review__stats">
         <span class="ac-review__stat ac-review__stat--add">+{{ totalAdd }}</span>
         <span class="ac-review__stat ac-review__stat--del">-{{ totalDel }}</span>
-        <span class="ac-review__count">{{ changes.length }} 个文件</span>
+        <span class="ac-review__count">{{ t('review.filesN', { n: changes.length }) }}</span>
       </span>
       <span class="ac-review__spacer" />
       <template v-if="!readonly && pendingCount > 0">
@@ -139,7 +142,7 @@ function diffLines(diff: string): { cls: string; text: string }[] {
             <svg class="ac-review__chevron" :class="{ 'ac-review__chevron--open': expanded[change.id] }" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
               <path d="m6 4 4 4-4 4" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
-            <span class="ac-review__kind" :class="`ac-review__kind--${change.kind}`">{{ KIND_LABEL[change.kind] }}</span>
+            <span class="ac-review__kind" :class="`ac-review__kind--${change.kind}`">{{ KIND_LABEL[change.kind as FileChange['kind']] }}</span>
             <span class="ac-review__path">{{ change.path }}</span>
             <span v-if="change.fromPath" class="ac-review__from">← {{ change.fromPath }}</span>
             <span class="ac-review__nums">

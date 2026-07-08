@@ -3,6 +3,7 @@
  * CompareView —— 双模型对比视图
  * 同一问题在两个模型/配置下的回答并排对比，支持投票选优。
  */
+import { useI18n } from '../../i18n'
 import MarkdownText from '../chat/MarkdownText.vue'
 
 export interface CompareSide {
@@ -42,12 +43,14 @@ withDefaults(
 const emit = defineEmits<{
   (e: 'vote', side: 'left' | 'right' | 'tie'): void
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
   <div class="ac-compare">
     <div class="ac-compare__question">
-      <span class="ac-compare__q-label">{{ labels.question ?? '对比问题' }}</span>
+      <span class="ac-compare__q-label">{{ labels.question ?? t('compare.question') }}</span>
       <p class="ac-compare__q-text">{{ question }}</p>
     </div>
 
@@ -57,7 +60,7 @@ const emit = defineEmits<{
         :key="key"
         class="ac-compare__side"
         :class="{ 'ac-compare__side--winner': voted === key }"
-        :aria-label="`${side.label} 的回答`"
+        :aria-label="t('compare.answerAria', { name: side.label })"
       >
         <header class="ac-compare__head">
           <span class="ac-compare__model">{{ side.label }}</span>
@@ -68,20 +71,20 @@ const emit = defineEmits<{
         </header>
         <div class="ac-compare__body">
           <MarkdownText :content="side.content" :streaming="side.streaming" />
-          <span v-if="side.streaming" class="ac-compare__typing" aria-label="生成中">{{ labels.streaming ?? '生成中…' }}</span>
+          <span v-if="side.streaming" class="ac-compare__typing">{{ labels.streaming ?? t('compare.streaming') }}</span>
         </div>
       </section>
     </div>
 
-    <div v-if="votable" class="ac-compare__vote" role="group" aria-label="投票选优">
+    <div v-if="votable" class="ac-compare__vote" role="group" :aria-label="t('compare.voteAria')">
       <button type="button" class="ac-compare__vote-btn" :class="{ 'ac-compare__vote-btn--active': voted === 'left' }" @click="emit('vote', 'left')">
-        {{ labels.voteLeft ?? '左边更好' }}
+        {{ labels.voteLeft ?? t('compare.voteLeft') }}
       </button>
       <button type="button" class="ac-compare__vote-btn" :class="{ 'ac-compare__vote-btn--active': voted === 'tie' }" @click="emit('vote', 'tie')">
-        {{ labels.voteTie ?? '不相上下' }}
+        {{ labels.voteTie ?? t('compare.voteTie') }}
       </button>
       <button type="button" class="ac-compare__vote-btn" :class="{ 'ac-compare__vote-btn--active': voted === 'right' }" @click="emit('vote', 'right')">
-        {{ labels.voteRight ?? '右边更好' }}
+        {{ labels.voteRight ?? t('compare.voteRight') }}
       </button>
     </div>
   </div>

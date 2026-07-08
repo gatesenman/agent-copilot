@@ -7,6 +7,7 @@
  * AI 检查：aiReview + 字段级 aiIssue 内联警示（AI 审查回填模式）
  */
 import { computed, reactive, ref, watch } from 'vue'
+import { useI18n } from '../../i18n'
 import type { FormFieldSpec, FormPayload } from '../../types'
 
 const props = withDefaults(
@@ -42,19 +43,21 @@ const emit = defineEmits<{
   (e: 'cancel'): void
 }>()
 
+const { t } = useI18n()
+
 const L = computed(() => ({
-  required: props.labels?.required ?? '此项必填',
-  submittedTip: props.labels?.submittedTip ?? '已提交',
-  reviewingTip: props.labels?.reviewingTip ?? 'AI 检查中…',
-  aiIssuesTitle: props.labels?.aiIssuesTitle ?? 'AI 检查发现以下问题，请修改后重新提交',
-  aiPassedTitle: props.labels?.aiPassedTitle ?? 'AI 检查通过',
-  tagsPlaceholder: props.labels?.tagsPlaceholder ?? '输入后按 Enter 添加',
-  invalidEmail: props.labels?.invalidEmail ?? '邮箱格式不正确',
-  invalidUrl: props.labels?.invalidUrl ?? '链接格式不正确',
-  invalidTel: props.labels?.invalidTel ?? '电话格式不正确',
-  minLengthMsg: props.labels?.minLengthMsg ?? '至少 {n} 个字符',
-  maxLengthMsg: props.labels?.maxLengthMsg ?? '最多 {n} 个字符',
-  rangeMsg: props.labels?.rangeMsg ?? '取值范围 {min} ~ {max}',
+  required: props.labels?.required ?? t('form.required'),
+  submittedTip: props.labels?.submittedTip ?? t('form.submitted'),
+  reviewingTip: props.labels?.reviewingTip ?? t('form.reviewing'),
+  aiIssuesTitle: props.labels?.aiIssuesTitle ?? t('form.aiIssuesTitle'),
+  aiPassedTitle: props.labels?.aiPassedTitle ?? t('form.aiPassedTitle'),
+  tagsPlaceholder: props.labels?.tagsPlaceholder ?? t('form.tagsPlaceholder'),
+  invalidEmail: props.labels?.invalidEmail ?? t('form.invalidEmail'),
+  invalidUrl: props.labels?.invalidUrl ?? t('form.invalidUrl'),
+  invalidTel: props.labels?.invalidTel ?? t('form.invalidTel'),
+  minLengthMsg: props.labels?.minLengthMsg ?? t('form.minLength'),
+  maxLengthMsg: props.labels?.maxLengthMsg ?? t('form.maxLength'),
+  rangeMsg: props.labels?.rangeMsg ?? t('form.range'),
 }))
 
 // ---- 值初始化 ----
@@ -138,7 +141,7 @@ function validateField(f: FormFieldSpec, v: unknown): string | null {
 
   if (f.pattern) {
     try {
-      if (!new RegExp(f.pattern).test(s)) return f.patternMessage ?? '格式不正确'
+      if (!new RegExp(f.pattern).test(s)) return f.patternMessage ?? t('form.invalidFormat')
     } catch { /* 无效正则跳过 */ }
   }
   return null
@@ -164,9 +167,9 @@ const displayValues = computed(() => props.submittedValues ?? values)
 function displayValue(f: FormFieldSpec): string {
   const v = displayValues.value[f.name]
   if (v == null || v === '') return '—'
-  if (Array.isArray(v)) return v.length ? (v as string[]).join('、') : '—'
-  if (f.type === 'switch') return v ? '是' : '否'
-  if (f.type === 'rating') return `${v} / ${f.maxRating ?? 5} 星`
+  if (Array.isArray(v)) return v.length ? (v as string[]).join(', ') : '—'
+  if (f.type === 'switch') return v ? t('form.yes') : t('form.no')
+  if (f.type === 'rating') return t('form.starN', { n: `${v} / ${f.maxRating ?? 5}` })
   if ((f.type === 'select' || f.type === 'radio') && f.options) {
     return f.options.find((o) => o.value === v)?.label ?? String(v)
   }
@@ -183,7 +186,7 @@ const aiIssueCount = computed(() => props.form.fields.filter((f) => f.aiIssue).l
       <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
         <rect x="2.5" y="2" width="11" height="12" rx="1.5" /><path d="M5.5 5.5h5M5.5 8h5M5.5 10.5h3" stroke-linecap="round" />
       </svg>
-      <span class="ac-form__title">{{ form.title || '请填写信息' }}</span>
+      <span class="ac-form__title">{{ form.title || t('form.fillTitle') }}</span>
       <span v-if="reviewing" class="ac-form__reviewing" role="status">
         <span class="ac-form__spinner" aria-hidden="true" />{{ L.reviewingTip }}
       </span>
@@ -203,7 +206,7 @@ const aiIssueCount = computed(() => props.form.fields.filter((f) => f.aiIssue).l
       <div>
         <strong>{{ L.aiIssuesTitle }}</strong>
         <p v-if="form.aiSummary">{{ form.aiSummary }}</p>
-        <p v-else-if="aiIssueCount">共 {{ aiIssueCount }} 处待修改，已在对应字段旁标出。</p>
+        <p v-else-if="aiIssueCount">{{ t('form.aiIssueCount', { n: aiIssueCount }) }}</p>
       </div>
     </div>
     <div v-else-if="form.aiReview === 'passed'" class="ac-form__ai ac-form__ai--passed" role="status">
@@ -224,7 +227,7 @@ const aiIssueCount = computed(() => props.form.fields.filter((f) => f.aiIssue).l
       </template>
     </dl>
 
-    <!-- 待填写 -->
+    <!-- ��填写 -->
     <form v-else class="ac-form__body" novalidate @submit.prevent="submit">
       <div
         v-for="f in form.fields"
@@ -261,7 +264,7 @@ const aiIssueCount = computed(() => props.form.fields.filter((f) => f.aiIssue).l
           class="ac-form__input"
           :disabled="disabled"
         >
-          <option value="" disabled>{{ f.placeholder || '请选择' }}</option>
+          <option value="" disabled>{{ f.placeholder || t('form.selectPlaceholder') }}</option>
           <option v-for="o in f.options" :key="o.value" :value="o.value">{{ o.label }}</option>
         </select>
 
@@ -343,7 +346,7 @@ const aiIssueCount = computed(() => props.form.fields.filter((f) => f.aiIssue).l
             type="button"
             class="ac-form__star"
             :class="{ 'ac-form__star--on': (values[f.name] as number) >= n }"
-            :aria-label="`${n} 星`"
+            :aria-label="t('form.starN', { n })"
             :aria-pressed="(values[f.name] as number) === n"
             :disabled="disabled"
             @click="values[f.name] = (values[f.name] as number) === n ? 0 : n"
@@ -356,9 +359,9 @@ const aiIssueCount = computed(() => props.form.fields.filter((f) => f.aiIssue).l
 
         <!-- tags 标签输入 -->
         <div v-else-if="f.type === 'tags'" class="ac-form__tags">
-          <span v-for="t in (values[f.name] as string[])" :key="t" class="ac-form__tag">
-            {{ t }}
-            <button type="button" class="ac-form__tag-x" :aria-label="`移除 ${t}`" :disabled="disabled" @click="removeTag(f.name, t)">×</button>
+          <span v-for="tag in (values[f.name] as string[])" :key="tag" class="ac-form__tag">
+            {{ tag }}
+            <button type="button" class="ac-form__tag-x" :aria-label="t('form.removeItem', { name: tag })" :disabled="disabled" @click="removeTag(f.name, tag)">×</button>
           </span>
           <input
             :id="`af-${form.formId}-${f.name}`"
@@ -404,7 +407,7 @@ const aiIssueCount = computed(() => props.form.fields.filter((f) => f.aiIssue).l
           {{ form.cancelLabel }}
         </button>
         <button type="submit" class="ac-form__btn ac-form__btn--primary" :disabled="disabled || reviewing">
-          {{ reviewing ? L.reviewingTip : (form.submitLabel || '提交') }}
+          {{ reviewing ? L.reviewingTip : (form.submitLabel || t('form.submit')) }}
         </button>
       </div>
     </form>

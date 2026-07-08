@@ -3,7 +3,8 @@
  * ThinkingBlock —— 思考内容折叠块。
  * 流式追加时呈现波动指示；结束后显示耗时并默认折叠。
  */
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useI18n } from '../../i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -21,11 +22,13 @@ const props = withDefaults(
   { streaming: false },
 )
 
-const L = {
-  thinking: props.labels?.thinking ?? '思考中',
-  thought: props.labels?.thought ?? '已思考',
-  seconds: props.labels?.seconds ?? '秒',
-}
+const { t } = useI18n()
+
+const L = computed(() => ({
+  thinking: props.labels?.thinking ?? t('think.thinking'),
+  thought: props.labels?.thought ?? t('think.thought'),
+  seconds: props.labels?.seconds ?? t('time.seconds'),
+}))
 
 const expanded = ref(props.defaultExpanded ?? props.streaming)
 
@@ -50,7 +53,7 @@ function toggle() {
         </svg>
       </span>
       <span class="ac-think__title">
-        {{ streaming ? L.thinking : L.thought }}<template v-if="!streaming && duration">（{{ (duration / 1000).toFixed(1) }} {{ L.seconds }}）</template>
+        {{ streaming ? L.thinking : L.thought }}<template v-if="!streaming && duration"> ({{ (duration / 1000).toFixed(1) }}{{ L.seconds }})</template>
       </span>
       <span v-if="streaming" class="ac-think__dots" aria-hidden="true"><i /><i /><i /></span>
       <svg class="ac-think__chevron" :class="{ 'ac-think__chevron--open': expanded }" viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">

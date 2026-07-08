@@ -4,6 +4,7 @@
  * 对齐 AskUserQuestions 交互：选项带描述，可多题组合。
  */
 import { computed, reactive, ref } from 'vue'
+import { useI18n } from '../../i18n'
 
 export interface ClarifyQuestion {
   id: string
@@ -30,12 +31,14 @@ const emit = defineEmits<{
   (e: 'submit', answers: Record<string, string[]>): void
 }>()
 
+const { t } = useI18n()
+
 const L = computed(() => ({
-  title: props.labels?.title ?? '需要你确认',
-  other: props.labels?.other ?? '其他',
-  otherPlaceholder: props.labels?.otherPlaceholder ?? '输入自定义答案…',
-  submit: props.labels?.submit ?? '确认',
-  submittedTip: props.labels?.submittedTip ?? '已确认',
+  title: props.labels?.title ?? t('clarify.title'),
+  other: props.labels?.other ?? t('clarify.other'),
+  otherPlaceholder: props.labels?.otherPlaceholder ?? t('clarify.otherPlaceholder'),
+  submit: props.labels?.submit ?? t('clarify.submit'),
+  submittedTip: props.labels?.submittedTip ?? t('clarify.submitted'),
 }))
 
 /** 每题选中的选项 label 集合 */
@@ -97,7 +100,7 @@ const review = computed(() => props.submittedAnswers ?? {})
     <dl v-if="submitted" class="ac-clarify__review">
       <template v-for="q in questions" :key="q.id">
         <dt>{{ q.question }}</dt>
-        <dd>{{ (review[q.id] ?? []).join('、') || '—' }}</dd>
+        <dd>{{ (review[q.id] ?? []).join(', ') || '—' }}</dd>
       </template>
     </dl>
 

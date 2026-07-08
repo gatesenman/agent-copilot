@@ -7,6 +7,7 @@
  * 每个步骤：种类图标 + 标题 + 可选状态 + 可折叠详情（文本或 detail 插槽）。
  */
 import { ref } from 'vue'
+import { useI18n } from '../../i18n'
 
 export interface AgentStep {
   id: string
@@ -35,6 +36,8 @@ const props = withDefaults(
 
 const emit = defineEmits<{ (e: 'toggle', step: AgentStep, expanded: boolean): void }>()
 
+const { t } = useI18n()
+
 const openMap = ref<Record<string, boolean>>(
   Object.fromEntries(props.steps.filter((s) => s.expanded).map((s) => [s.id, true])),
 )
@@ -60,7 +63,7 @@ const KIND_ICON: Record<AgentStep['kind'], string> = {
 </script>
 
 <template>
-  <div class="ac-steps" :class="{ 'ac-steps--compact': compact }" role="log" aria-label="Agent 执行步骤">
+  <div class="ac-steps" :class="{ 'ac-steps--compact': compact }" role="log" :aria-label="t('steps.aria')">
     <div v-for="step in steps" :key="step.id" class="ac-steps__item" :data-status="step.status">
       <component
         :is="hasDetail(step) ? 'button' : 'div'"
@@ -84,8 +87,8 @@ const KIND_ICON: Record<AgentStep['kind'], string> = {
         </svg>
         <span class="ac-steps__title">{{ step.title }}</span>
         <span v-if="step.note" class="ac-steps__note">{{ step.note }}</span>
-        <span v-if="step.status === 'running'" class="ac-steps__spin" aria-label="进行中" />
-        <span v-else-if="step.status === 'error'" class="ac-steps__err" aria-label="出错">!</span>
+        <span v-if="step.status === 'running'" class="ac-steps__spin" :aria-label="t('steps.running')" />
+        <span v-else-if="step.status === 'error'" class="ac-steps__err" :aria-label="t('steps.error')">!</span>
       </component>
       <div v-if="hasDetail(step) && openMap[step.id]" class="ac-steps__detail">
         <slot name="detail" :step="step">
