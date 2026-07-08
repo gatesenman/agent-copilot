@@ -13,6 +13,7 @@ import { AGENT_TYPE_PRESETS, createEmptyAgentState, DEFAULT_CONFIG, DEFAULT_LABE
 import { createRuntime } from '../protocols'
 import { COPILOT_GLOBAL_DEFAULTS_KEY } from '../plugin'
 import { mergeCopilotConfig, splitConfigPatch, validateAndWarn } from '../utils/config-merge'
+import { applyEventMiddleware, applyMessageMiddleware } from '../middleware'
 
 export type ChatStatus = 'idle' | 'running' | 'awaiting_interrupt' | 'error'
 
@@ -299,16 +300,54 @@ export function createCopilotStore(
     if (config.debug) console.log('[agent-copilot]', ...args)
   }
 
-  // ============ 事件消费 ============
+  // ============ 事件消费（含 event 中间件与遥测采集） ============
 
   async function consumeEvents(stream: AsyncIterable<AgentEvent>) {
-    for await (const event of stream) {
+    const startedAt = performance.now()
+    let ttftAt: number | undefined
+    let eventCount = 0
+    let toolCallCount = 0
+    let outputChars = 0
+    let usage: TokenUsage | undefined
+    let runId = currentRunId.value ?? ''
+    let outcome: 'finished' | 'error' | 'interrupted' | 'cancelled' = 'finished'
+    let result: 'RUN_FINISHED' | 'RUN_ERROR' | 'INTERRUPT' = 'RUN_FINISHED'
+
+    for await (const event of applyEventMiddleware(stream, config.middleware?.event)) {
+      eventCount++
+      if (event.runId) runId = event.runId
+      if (event.type === 'TEXT_DELTA') {
+        if (ttftAt === undefined) ttftAt = performance.now()
+        outputChars += String((event.data as { delta?: string })?.delta ?? '').length
+      }
+      if (event.type === 'TOOL_CALL_START') toolCallCount++
+      if (event.type === 'USAGE') usage = event.data as TokenUsage
+
       log('event', event.type, event.data)
       handleEvent(event)
-      if (event.type === 'RUN_FINISHED' || event.type === 'RUN_ERROR') return event.type
-      if (event.type === 'INTERRUPT') return 'INTERRUPT'
+
+      if (event.type === 'RUN_FINISHED' || event.type === 'RUN_ERROR') {
+        if (event.type === 'RUN_ERROR') outcome = 'error'
+        else if ((event.data as { cancelled?: boolean })?.cancelled) outcome = 'cancelled'
+        result = event.type
+        break
+      }
+      if (event.type === 'INTERRUPT') {
+        outcome = 'interrupted'
+        result = 'INTERRUPT'
+        break
+      }
     }
-    return 'RUN_FINISHED'
+
+    // 遥测回调：TTFT / 总时长 / 事件数 / 工具数 / 输出速率
+    const durationMs = Math.round(performance.now() - startedAt)
+    const genWindowMs = ttftAt !== undefined ? performance.now() - ttftAt : 0
+    callbacks.onTelemetry?.({
+      runId, outcome, durationMs, eventCount, toolCallCount, outputChars, usage,
+      ttftMs: ttftAt !== undefined ? Math.round(ttftAt - startedAt) : undefined,
+      charsPerSecond: genWindowMs > 50 ? Math.round((outputChars / genWindowMs) * 1000) : undefined,
+    })
+    return result
   }
 
   function currentAssistantMessage(): ChatMessage | undefined {
@@ -617,7 +656,9 @@ export function createCopilotStore(
     callbacks.onResponseStart?.(runId)
 
     try {
-      const outcome = await consumeEvents(runtime.run(collectRunInput(runId)))
+      // message 中间件链：发送前改写 RunInput（脱敏/注入上下文等）
+      const runInput = await applyMessageMiddleware(collectRunInput(runId), config.middleware?.message)
+      const outcome = await consumeEvents(runtime.run(runInput))
       if (outcome === 'INTERRUPT') {
         // 挂起等待 respondToInterrupt
         currentRunId.value = runId

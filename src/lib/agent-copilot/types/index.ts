@@ -399,6 +399,8 @@ export type AgentEventType =
   | 'USAGE'
   | 'RUN_FINISHED'
   | 'RUN_ERROR'
+  /** 连接失败自动重连中（data: { attempt, maxRetries, delayMs, reason }） */
+  | 'CONNECTION_RETRY'
   // Agentic Coding 域事件
   | 'THINKING_START'
   | 'THINKING_DELTA'
@@ -592,7 +594,7 @@ export interface CopilotActionDef {
   parameters?: ActionParameter[]
   /** 直接执行 */
   handler?: (args: Record<string, unknown>) => Promise<unknown> | unknown
-  /** HITL：渲染并等待�����户确认后再执行（renderAndWait 语义） */
+  /** HITL：渲染并等待用户确认后再执行（renderAndWait 语义） */
   requiresApproval?: boolean
   /** 自定义渲染组件名（generative UI 注册表 key） */
   render?: string
@@ -782,6 +784,29 @@ export interface CopilotCallbacks {
   onUsage?: (usage: TokenUsage) => void
   onFeedback?: (messageId: string, feedback: 'up' | 'down') => void
   onSuggestionClick?: (suggestion: ChatSuggestion) => void
+  /** 每次运行结束（成功/失败/中断）回调遥测指标 */
+  onTelemetry?: (telemetry: RunTelemetry) => void
+}
+
+/** 单次运行遥测指标（onTelemetry 回调载荷） */
+export interface RunTelemetry {
+  runId: string
+  /** 结束方式 */
+  outcome: 'finished' | 'error' | 'interrupted' | 'cancelled'
+  /** 总时长 ms */
+  durationMs: number
+  /** 首 token 延迟 ms（TTFT，无文本输出时为 undefined） */
+  ttftMs?: number
+  /** 事件总数 */
+  eventCount: number
+  /** 工具调用数 */
+  toolCallCount: number
+  /** 输出字符数 */
+  outputChars: number
+  /** token 用量（后端上报时才有） */
+  usage?: TokenUsage
+  /** 输出速率（字符/秒，基于首 token 后的时间窗口） */
+  charsPerSecond?: number
 }
 
 export interface CopilotConfig {
@@ -916,6 +941,27 @@ export interface CopilotConfig {
 
   // ---- 生命周期回调 ----
   callbacks?: CopilotCallbacks
+  /**
+   * 中间件管道：message（发送前改写 RunInput）/ event（接收时过滤改写事件）。
+   * 内置助手：redactPatterns / dropEventTypes / mapTextDelta（见 middleware.ts）
+   */
+  middleware?: import('../middleware').MiddlewareConfig
+  /** 网络韧性：SSE 断线自动重连（指数退避） */
+  network?: NetworkConfig
+}
+
+/** SSE 重连配置 */
+export interface ReconnectConfig {
+  /** 是否启用自动重连，默认 false */
+  enabled?: boolean
+  /** 最大重试次数，默认 3 */
+  retries?: number
+  /** 首次重试延迟毫秒（指数退避基数），默认 1000 */
+  baseDelayMs?: number
+}
+
+export interface NetworkConfig {
+  reconnect?: ReconnectConfig
 }
 
 /** 四类 Agent 预设的默认配置片段 */

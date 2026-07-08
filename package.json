@@ -12,6 +12,8 @@
     "dev": "vite --host --port 3000",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:backend": "node test-backend/server.mjs",
     "test:protocols": "tsx test-backend/protocol-tests.ts"
   },
@@ -28,6 +30,7 @@
     "tsx": "^4.23.0",
     "typescript": "^5.7.3",
     "vite": "^6.0.7",
+    "vitest": "^4.1.10",
     "vue-tsc": "^2.2.0"
   }
 }

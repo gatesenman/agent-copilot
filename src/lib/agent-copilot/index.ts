@@ -25,6 +25,11 @@
 export { createCopilot, defineCopilotConfig, COPILOT_GLOBAL_DEFAULTS_KEY } from './plugin'
 export { mergeCopilotConfig, validateCopilotConfig, REACTIVE_CONFIG_KEYS, STRUCTURAL_CONFIG_KEYS } from './utils/config-merge'
 
+// ============ 中间件管道 ============
+// message（发送前改写 RunInput）/ event（接收时过滤改写事件）+ 内置脱敏/过滤助手
+export { applyMessageMiddleware, applyEventMiddleware, redactPatterns, dropEventTypes, mapTextDelta } from './middleware'
+export type { MessageMiddleware, EventMiddleware, MiddlewareConfig } from './middleware'
+
 // ============ 组件 ============
 // ---- 一体化聚合大组件（推荐入口：一个标签开箱即用） ----
 export { default as AgentCopilot } from './components/shell/AgentCopilot.vue'
