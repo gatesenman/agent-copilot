@@ -16,6 +16,7 @@ import integrationDoc from '../../../docs/guide/integration.md?raw'
 import configurationDoc from '../../../docs/guide/configuration.md?raw'
 import themingDoc from '../../../docs/guide/theming.md?raw'
 import i18nDoc from '../../../docs/guide/i18n.md?raw'
+import reliabilityDoc from '../../../docs/guide/reliability.md?raw'
 
 interface DocSection {
   id: string
@@ -35,6 +36,7 @@ const SECTIONS: DocSection[] = [
   { id: 'configuration', label: '标准传参（五层配置模型）', group: '集成', content: configurationDoc },
   { id: 'protocols', label: 'AI 协议接入（32 种）', group: '集成', content: protocolsDoc },
   { id: 'enterprise', label: '企业组件', group: '集成', content: enterpriseDoc },
+  { id: 'reliability', label: '可靠性与可观测（中间件 / 重连 / 遥测）', group: '集成', content: reliabilityDoc },
 ]
 
 const groups = computed(() => {
