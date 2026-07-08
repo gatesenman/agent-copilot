@@ -178,7 +178,7 @@ public class PipelineOrchestrator {
       JsonNode res = llm.complete(List.of(
           Map.of("role", "system", "content",
               "你是协作领域的意图识别器。分析用户输入，只输出 JSON："
-                  + "{\"intent\":\"查询工作项|查询成员|创建审批流|评估对比|创建指派|查询指派|闲聊|超出范围\","
+                  + "{\"intent\":\"查询工作项|查询成员|创建审批流|���估对比|创建指派|查询指派|闲聊|超出范围\","
                   + "\"entities\":[\"提到的单号或对象\"],\"confidence\":0.0}"),
           Map.of("role", "user", "content", lastUserMessage(ctx))
       ), 0.1).block();
@@ -263,8 +263,8 @@ public class PipelineOrchestrator {
     stageStarted(ctx, "output_management");
     governance.emit(ctx, "pre_output", "info", "GOV-OUTPUT", "输出已通过治理检查（脱敏/合规）");
     ctx.emit("AGENT_STATE_DELTA", Map.of(
-        "rfqCount", db.rfqs.size(),
-        "orderCount", db.orders.size()));
+        "workItemCount", db.workItems.size(),
+        "assignmentCount", db.assignments.size()));
     stageFinished(ctx, "output_management", "succeeded", "已交付", null);
   }
 

@@ -31,5 +31,12 @@ export default defineConfig({
   server: {
     host: true,
     port: 3000,
+    proxy: {
+      // 协议一致性测试：/api/mock/* 转发到 Java 最小 mock 后端（java-backend）
+      '/api/mock': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+    },
   },
 })
