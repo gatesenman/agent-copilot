@@ -3,7 +3,8 @@
  * SourcePanel —— RAG 引用溯源面板
  * 展示回答引用的知识来源：文档片段、置信分、原文定位。
  */
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { useI18n } from '../../i18n'
 
 export interface SourceChunk {
   id: string
@@ -19,19 +20,23 @@ export interface SourceChunk {
   url?: string
 }
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     sources: SourceChunk[]
     title?: string
     /** "查看原文"按钮文案 */
     openLabel?: string
   }>(),
-  { title: '引用来源', openLabel: '查看原文' },
+  { title: undefined, openLabel: undefined },
 )
 
 const emit = defineEmits<{
   (e: 'open', source: SourceChunk): void
 }>()
+
+const { t } = useI18n()
+const titleText = computed(() => props.title ?? t('source.title'))
+const openText = computed(() => props.openLabel ?? t('source.open'))
 
 const expandedId = ref<string | null>(null)
 
@@ -48,9 +53,9 @@ function scoreTone(score?: number) {
 </script>
 
 <template>
-  <section class="ac-sources" :aria-label="title">
+  <section class="ac-sources" :aria-label="titleText">
     <h4 class="ac-sources__title">
-      {{ title }}
+      {{ titleText }}
       <span class="ac-sources__count">{{ sources.length }}</span>
     </h4>
     <ol class="ac-sources__list">
@@ -79,7 +84,7 @@ function scoreTone(score?: number) {
           <div class="ac-sources__meta">
             <span v-if="s.location" class="ac-sources__loc">{{ s.location }}</span>
             <button v-if="s.url" type="button" class="ac-sources__open" @click="emit('open', s)">
-              {{ openLabel }}
+              {{ openText }}
             </button>
           </div>
         </div>

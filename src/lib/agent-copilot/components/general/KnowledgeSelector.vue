@@ -6,6 +6,7 @@
  * 支持 v-model:selected（id 数组），选中后以 Chips 形式展示。
  */
 import { computed, onScopeDispose, ref } from 'vue'
+import { useI18n } from '../../i18n'
 
 export interface KnowledgeBase {
   id: string
@@ -29,12 +30,15 @@ const props = withDefaults(
     maxCount?: number
     disabled?: boolean
   }>(),
-  { placeholder: '选择知识库', maxCount: 0, disabled: false },
+  { placeholder: undefined, maxCount: 0, disabled: false },
 )
 
 const emit = defineEmits<{
   (e: 'update:selected', ids: string[]): void
 }>()
+
+const { t } = useI18n()
+const placeholderText = computed(() => props.placeholder ?? t('kb.placeholder'))
 
 const open = ref(false)
 const rootRef = ref<HTMLElement | null>(null)
@@ -72,8 +76,8 @@ if (typeof document !== 'undefined') {
       <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
         <path d="M2.5 3.5A1.5 1.5 0 0 1 4 2h8a1.5 1.5 0 0 1 1.5 1.5v10L8 11 2.5 13.5v-10Z" stroke-linejoin="round" />
       </svg>
-      <span v-if="selectedBases.length === 0">{{ placeholder }}</span>
-      <span v-else class="ac-kb__count">{{ selectedBases.map((b) => b.name).join('、') }}</span>
+      <span v-if="selectedBases.length === 0">{{ placeholderText }}</span>
+      <span v-else class="ac-kb__count">{{ selectedBases.map((b) => b.name).join(', ') }}</span>
       <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" :style="{ transform: open ? 'rotate(180deg)' : undefined }">
         <path d="m4 6 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
@@ -97,7 +101,7 @@ if (typeof document !== 'undefined') {
         <span class="ac-kb__body">
           <span class="ac-kb__name">
             {{ base.name }}
-            <span v-if="base.docCount != null" class="ac-kb__docs">{{ base.docCount }} 篇</span>
+            <span v-if="base.docCount != null" class="ac-kb__docs">{{ t('kb.docsN', { n: base.docCount }) }}</span>
           </span>
           <span v-if="base.description" class="ac-kb__desc">{{ base.description }}</span>
         </span>

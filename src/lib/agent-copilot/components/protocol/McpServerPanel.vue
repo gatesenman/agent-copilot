@@ -5,7 +5,8 @@
  * 展示一个 MCP 服务器的 tools / resources / prompts 三类清单，
  * 支持传入 McpClient 实例在线加载，或直接传静态数据（演示/离线）。
  */
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useI18n } from '../../i18n'
 import type { McpClient, McpPrompt, McpResource, McpTool } from '../../protocols/mcp'
 
 const props = defineProps<{
@@ -25,6 +26,8 @@ const emit = defineEmits<{
   /** 点击「作为工具接入」时通知宿主把 tools 桥接为 actions */
   (e: 'bridge'): void
 }>()
+
+const { t: tr } = useI18n()
 
 const activeTab = ref<'tools' | 'resources' | 'prompts'>('tools')
 const loading = ref(false)
@@ -46,17 +49,17 @@ onMounted(async () => {
     if (r.status === 'fulfilled') loadedResources.value = r.value
     if (p.status === 'fulfilled') loadedPrompts.value = p.value
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'MCP 服务器加载失败'
+    error.value = e instanceof Error ? e.message : tr('mcp.loadError')
   } finally {
     loading.value = false
   }
 })
 
-const TABS = [
-  { id: 'tools' as const, label: '工具' },
-  { id: 'resources' as const, label: '资源' },
-  { id: 'prompts' as const, label: '提示模板' },
-]
+const TABS = computed(() => [
+  { id: 'tools' as const, label: tr('mcp.tabTools') },
+  { id: 'resources' as const, label: tr('mcp.tabResources') },
+  { id: 'prompts' as const, label: tr('mcp.tabPrompts') },
+])
 
 function countOf(tab: 'tools' | 'resources' | 'prompts'): number {
   return tab === 'tools' ? loadedTools.value.length
@@ -69,15 +72,15 @@ function countOf(tab: 'tools' | 'resources' | 'prompts'): number {
   <div class="ac-card ac-mcp">
     <header class="ac-mcp__head">
       <div class="ac-mcp__title-wrap">
-        <h3 class="ac-mcp__title">{{ serverName ?? client?.serverInfo?.name ?? 'MCP 服务器' }}</h3>
+        <h3 class="ac-mcp__title">{{ serverName ?? client?.serverInfo?.name ?? tr('mcp.defaultName') }}</h3>
         <span class="ac-badge">MCP</span>
       </div>
       <button v-if="loadedTools.length" type="button" class="ac-btn ac-btn--sm" @click="emit('bridge')">
-        作为工具接入
+        {{ tr('mcp.asTools') }}
       </button>
     </header>
 
-    <nav class="ac-mcp__tabs" role="tablist" aria-label="MCP 服务器内容">
+    <nav class="ac-mcp__tabs" role="tablist" :aria-label="tr('mcp.tabsAria')">
       <button
         v-for="t in TABS"
         :key="t.id"
@@ -92,12 +95,12 @@ function countOf(tab: 'tools' | 'resources' | 'prompts'): number {
       </button>
     </nav>
 
-    <div v-if="loading" class="ac-mcp__empty">{{ labels?.loading ?? '加载中…' }}</div>
+    <div v-if="loading" class="ac-mcp__empty">{{ labels?.loading ?? tr('common.loading') }}</div>
     <div v-else-if="error" class="ac-mcp__empty ac-mcp__empty--error">{{ error }}</div>
 
     <!-- 工具 -->
     <ul v-else-if="activeTab === 'tools'" class="ac-mcp__list" role="tabpanel">
-      <li v-if="loadedTools.length === 0" class="ac-mcp__empty">{{ labels?.noTools ?? '无工具' }}</li>
+      <li v-if="loadedTools.length === 0" class="ac-mcp__empty">{{ labels?.noTools ?? tr('mcp.noTools') }}</li>
       <li v-for="t in loadedTools" :key="t.name" class="ac-mcp__item">
         <div class="ac-mcp__item-head">
           <code class="ac-mcp__item-name">{{ t.name }}</code>
@@ -119,7 +122,7 @@ function countOf(tab: 'tools' | 'resources' | 'prompts'): number {
 
     <!-- 资源 -->
     <ul v-else-if="activeTab === 'resources'" class="ac-mcp__list" role="tabpanel">
-      <li v-if="loadedResources.length === 0" class="ac-mcp__empty">{{ labels?.noResources ?? '无资源' }}</li>
+      <li v-if="loadedResources.length === 0" class="ac-mcp__empty">{{ labels?.noResources ?? tr('mcp.noResources') }}</li>
       <li v-for="r in loadedResources" :key="r.uri" class="ac-mcp__item">
         <div class="ac-mcp__item-head">
           <code class="ac-mcp__item-name">{{ r.name ?? r.uri }}</code>
@@ -131,7 +134,7 @@ function countOf(tab: 'tools' | 'resources' | 'prompts'): number {
 
     <!-- 提示模板 -->
     <ul v-else class="ac-mcp__list" role="tabpanel">
-      <li v-if="loadedPrompts.length === 0" class="ac-mcp__empty">{{ labels?.noPrompts ?? '无提示模板' }}</li>
+      <li v-if="loadedPrompts.length === 0" class="ac-mcp__empty">{{ labels?.noPrompts ?? tr('mcp.noPrompts') }}</li>
       <li v-for="p in loadedPrompts" :key="p.name" class="ac-mcp__item">
         <div class="ac-mcp__item-head">
           <code class="ac-mcp__item-name">{{ p.name }}</code>
@@ -139,7 +142,7 @@ function countOf(tab: 'tools' | 'resources' | 'prompts'): number {
         <p v-if="p.description" class="ac-mcp__item-desc">{{ p.description }}</p>
         <div v-if="p.arguments?.length" class="ac-mcp__params">
           <span v-for="a in p.arguments" :key="a.name" class="ac-mcp__param" :title="a.description">
-            {{ a.name }}<em v-if="a.required">{{ labels?.required ?? '必填' }}</em>
+            {{ a.name }}<em v-if="a.required">{{ labels?.required ?? tr('mcp.required') }}</em>
           </span>
         </div>
       </li>

@@ -4,6 +4,7 @@
  * 企业级成本可观测：会话累计 token、预算占比、费用估算。
  */
 import { computed } from 'vue'
+import { useI18n } from '../../i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -13,15 +14,19 @@ const props = withDefaults(
     completionTokens: number
     /** 配额上限（tokens），不传则不显示进度条 */
     quota?: number
-    /** 每 1K prompt token 价格（元） */
+    /** 每 1K prompt token 价格 */
     promptPricePerK?: number
-    /** 每 1K completion token 价格（元） */
+    /** 每 1K completion token 价格 */
     completionPricePerK?: number
+    /** 费用货币符号 */
+    currency?: string
     /** 紧凑模式（单行） */
     compact?: boolean
   }>(),
-  { compact: false },
+  { compact: false, currency: '¥' },
 )
+
+const { t } = useI18n()
 
 const total = computed(() => props.promptTokens + props.completionTokens)
 const pct = computed(() => (props.quota ? Math.min(100, (total.value / props.quota) * 100) : 0))
@@ -43,18 +48,18 @@ function fmt(n: number) {
 </script>
 
 <template>
-  <div class="ac-usage" :class="{ 'ac-usage--compact': compact }" role="status" aria-label="Token 用量">
+  <div class="ac-usage" :class="{ 'ac-usage--compact': compact }" role="status" :aria-label="t('usage.aria')">
     <div class="ac-usage__row">
       <span class="ac-usage__total">{{ fmt(total) }} <span class="ac-usage__unit">tokens</span></span>
       <span class="ac-usage__split">
-        <span title="输入 tokens">输入 {{ fmt(promptTokens) }}</span>
+        <span :title="`${t('usage.input')} tokens`">{{ t('usage.input') }} {{ fmt(promptTokens) }}</span>
         <span aria-hidden="true">·</span>
-        <span title="输出 tokens">输出 {{ fmt(completionTokens) }}</span>
+        <span :title="`${t('usage.output')} tokens`">{{ t('usage.output') }} {{ fmt(completionTokens) }}</span>
       </span>
-      <span v-if="cost != null" class="ac-usage__cost">≈ ¥{{ cost.toFixed(4) }}</span>
+      <span v-if="cost != null" class="ac-usage__cost">≈ {{ currency }}{{ cost.toFixed(4) }}</span>
     </div>
     <div v-if="quota" class="ac-usage__bar-wrap">
-      <div class="ac-usage__bar" role="progressbar" :aria-valuenow="Math.round(pct)" aria-valuemin="0" aria-valuemax="100" :aria-label="`配额已用 ${Math.round(pct)}%`">
+      <div class="ac-usage__bar" role="progressbar" :aria-valuenow="Math.round(pct)" aria-valuemin="0" aria-valuemax="100" :aria-label="t('usage.quotaUsed', { n: Math.round(pct) })">
         <div class="ac-usage__fill" :class="`ac-usage__fill--${tone}`" :style="{ width: `${pct}%` }" />
       </div>
       <span class="ac-usage__quota">{{ Math.round(pct) }}% / {{ fmt(quota) }}</span>

@@ -4,6 +4,7 @@
  * 支持拖入/点击选择、类型与大小校验、上传进度展示（进度由外部驱动）。
  */
 import { computed, ref } from 'vue'
+import { useI18n } from '../../i18n'
 
 export interface UploadingFile {
   id: string
@@ -37,6 +38,8 @@ const emit = defineEmits<{
   (e: 'reject', reason: string): void
 }>()
 
+const { t } = useI18n()
+
 const dragging = ref(false)
 const inputRef = ref<HTMLInputElement>()
 
@@ -47,11 +50,11 @@ function pick(list: FileList | null) {
   const ok: File[] = []
   for (const f of Array.from(list)) {
     if (props.files.length + ok.length >= props.maxFiles) {
-      emit('reject', `最多上传 ${props.maxFiles} 个文件`)
+      emit('reject', t('drop.maxFilesErr', { n: props.maxFiles }))
       break
     }
     if (f.size > props.maxSizeMb * 1024 * 1024) {
-      emit('reject', `「${f.name}」超过 ${props.maxSizeMb}MB 上限`)
+      emit('reject', t('drop.maxSizeErr', { name: f.name, n: props.maxSizeMb }))
       continue
     }
     ok.push(f)
@@ -77,7 +80,7 @@ function fmtSize(bytes: number) {
       :class="{ 'ac-drop__zone--drag': dragging, 'ac-drop__zone--disabled': !canAdd }"
       role="button"
       tabindex="0"
-      aria-label="拖拽或点击上传文件"
+      :aria-label="t('drop.aria')"
       @click="canAdd && inputRef?.click()"
       @keydown.enter="canAdd && inputRef?.click()"
       @dragover.prevent="dragging = true"
@@ -88,12 +91,12 @@ function fmtSize(bytes: number) {
         <path d="M12 16V4m0 0 4 4m-4-4L8 8" stroke-linecap="round" stroke-linejoin="round" />
         <path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" stroke-linecap="round" />
       </svg>
-      <p class="ac-drop__hint">{{ labels.dropHint ?? '拖拽文件到此处，或' }}<span class="ac-drop__link">{{ labels.clickPick ?? '点击选择' }}</span></p>
-      <p class="ac-drop__sub">单个文件不超过 {{ maxSizeMb }}MB，最多 {{ maxFiles }} 个</p>
+      <p class="ac-drop__hint">{{ labels.dropHint ?? t('drop.hint') }}<span class="ac-drop__link">{{ labels.clickPick ?? t('drop.pick') }}</span></p>
+      <p class="ac-drop__sub">{{ t('drop.limits', { size: maxSizeMb, n: maxFiles }) }}</p>
       <input ref="inputRef" type="file" class="ac-drop__input" multiple :accept="accept" :disabled="!canAdd" @change="pick(($event.target as HTMLInputElement).files); ($event.target as HTMLInputElement).value = ''" />
     </div>
 
-    <ul v-if="files.length" class="ac-drop__list" aria-label="上传文件列表">
+    <ul v-if="files.length" class="ac-drop__list" :aria-label="t('drop.listAria')">
       <li v-for="f in files" :key="f.id" class="ac-drop__file">
         <svg class="ac-drop__file-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
           <path d="M4 1.5h5L13 5.5v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-12a1 1 0 0 1 1-1Z" stroke-linejoin="round" />
@@ -109,10 +112,10 @@ function fmtSize(bytes: number) {
             <div class="ac-drop__file-fill" :style="{ width: `${f.progress}%` }" />
           </div>
         </div>
-        <span v-if="f.progress >= 100 && !f.error" class="ac-drop__done" aria-label="上传完成">
+        <span v-if="f.progress >= 100 && !f.error" class="ac-drop__done" :aria-label="t('drop.done')">
           <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="var(--ac-success)" stroke-width="1.8" aria-hidden="true"><path d="m3 8.5 3.5 3.5L13 4.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </span>
-        <button type="button" class="ac-drop__rm" :aria-label="`移除 ${f.name}`" @click="emit('remove', f.id)">
+        <button type="button" class="ac-drop__rm" :aria-label="t('form.removeItem', { name: f.name })" @click="emit('remove', f.id)">
           <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8" stroke-linecap="round" /></svg>
         </button>
       </li>

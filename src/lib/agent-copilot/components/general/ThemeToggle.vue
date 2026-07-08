@@ -4,6 +4,7 @@
  * 配合 useTheme() 使用；也可通过 v-model:mode 完全受控。
  */
 import { computed } from 'vue'
+import { useI18n } from '../../i18n'
 import type { ThemeMode } from '../../composables/useTheme'
 
 const props = withDefaults(
@@ -22,15 +23,17 @@ const emit = defineEmits<{
   (e: 'update:mode', mode: ThemeMode): void
 }>()
 
+const { t } = useI18n()
+
 const options = computed(() => [
-  { value: 'light' as const, label: props.labels.light ?? '亮色', icon: 'sun' },
-  { value: 'dark' as const, label: props.labels.dark ?? '暗色', icon: 'moon' },
-  { value: 'system' as const, label: props.labels.system ?? '系统', icon: 'auto' },
+  { value: 'light' as const, label: props.labels.light ?? t('theme.light'), icon: 'sun' },
+  { value: 'dark' as const, label: props.labels.dark ?? t('theme.dark'), icon: 'moon' },
+  { value: 'system' as const, label: props.labels.system ?? t('theme.system'), icon: 'auto' },
 ])
 </script>
 
 <template>
-  <div class="ac-theme-toggle" :class="`ac-theme-toggle--${size}`" role="radiogroup" aria-label="主题模式">
+  <div class="ac-theme-toggle" :class="`ac-theme-toggle--${size}`" role="radiogroup" :aria-label="t('theme.aria')">
     <button
       v-for="opt in options"
       :key="opt.value"

@@ -3,6 +3,9 @@
  * SafetyBanner —— 安全拦截/合规提示横幅
  * 内容审核命中、敏感数据检测、权限不足等企业安全场景的统一提示。
  */
+import { computed } from 'vue'
+import { useI18n } from '../../i18n'
+
 withDefaults(
   defineProps<{
     /** 严重级别 */
@@ -23,11 +26,16 @@ const emit = defineEmits<{
   (e: 'dismiss'): void
 }>()
 
-const LEVEL_META = {
-  info: { label: '提示', icon: 'i' },
-  warning: { label: '警告', icon: '!' },
-  blocked: { label: '已拦截', icon: 'x' },
-} as const
+const { t } = useI18n()
+
+const LEVEL_META = computed(
+  () =>
+    ({
+      info: { label: t('safety.info'), icon: 'i' },
+      warning: { label: t('safety.warning'), icon: '!' },
+      blocked: { label: t('safety.blocked'), icon: 'x' },
+    }) as const,
+)
 </script>
 
 <template>
@@ -50,8 +58,8 @@ const LEVEL_META = {
       <p v-if="detail" class="ac-safety__detail">{{ detail }}</p>
     </div>
     <div class="ac-safety__actions">
-      <button v-if="appealable" type="button" class="ac-safety__btn" @click="emit('appeal')">申诉</button>
-      <button type="button" class="ac-safety__x" aria-label="关闭提示" @click="emit('dismiss')">
+      <button v-if="appealable" type="button" class="ac-safety__btn" @click="emit('appeal')">{{ t('safety.appeal') }}</button>
+      <button type="button" class="ac-safety__x" :aria-label="t('safety.dismiss')" @click="emit('dismiss')">
         <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
           <path d="m4 4 8 8M12 4l-8 8" stroke-linecap="round" />
         </svg>

@@ -3,7 +3,8 @@
  * FeedbackDialog —— 结构化反馈弹窗
  * 点踩后收集细化原因（企业质量回流）：分类多选 + 自由文本。
  */
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useI18n } from '../../i18n'
 import { useFocusTrap } from '../../composables/useFocusTrap'
 
 const props = withDefaults(
@@ -22,11 +23,26 @@ const props = withDefaults(
     showComment?: boolean
   }>(),
   {
-    reasons: () => ['内容不准确', '答非所问', '信息过时', '格式混乱', '回答不完整', '存在安全风险'],
-    title: '告诉我们哪里可以改进',
+    reasons: undefined,
+    title: undefined,
     labels: () => ({}),
     showComment: true,
   },
+)
+
+const { t } = useI18n()
+
+const titleText = computed(() => props.title ?? t('feedback.title'))
+const reasonList = computed(
+  () =>
+    props.reasons ?? [
+      t('feedback.reasonInaccurate'),
+      t('feedback.reasonIrrelevant'),
+      t('feedback.reasonOutdated'),
+      t('feedback.reasonFormat'),
+      t('feedback.reasonIncomplete'),
+      t('feedback.reasonUnsafe'),
+    ],
 )
 
 const emit = defineEmits<{
@@ -70,19 +86,19 @@ function submit() {
 <template>
   <Teleport to="body">
     <div v-if="open" class="ac-fbd__overlay" role="presentation" @click.self="emit('close')">
-      <div ref="dialogRef" class="ac-fbd" role="dialog" aria-modal="true" :aria-label="title">
+      <div ref="dialogRef" class="ac-fbd" role="dialog" aria-modal="true" :aria-label="titleText">
         <header class="ac-fbd__head">
-          <h3 class="ac-fbd__title">{{ title }}</h3>
-          <button type="button" class="ac-fbd__close" aria-label="关闭" @click="emit('close')">
+          <h3 class="ac-fbd__title">{{ titleText }}</h3>
+          <button type="button" class="ac-fbd__close" :aria-label="t('common.close')" @click="emit('close')">
             <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
               <path d="m4 4 8 8M12 4l-8 8" stroke-linecap="round" />
             </svg>
           </button>
         </header>
 
-        <div class="ac-fbd__reasons" role="group" aria-label="反馈原因">
+        <div class="ac-fbd__reasons" role="group" :aria-label="t('feedback.reasonsAria')">
           <button
-            v-for="r in reasons"
+            v-for="r in reasonList"
             :key="r"
             type="button"
             class="ac-fbd__reason"
@@ -99,19 +115,19 @@ function submit() {
           v-model="comment"
           class="ac-fbd__comment"
           rows="3"
-          :placeholder="labels.commentPlaceholder ?? '补充说明（可选）…'"
-          aria-label="补充说明"
+          :placeholder="labels.commentPlaceholder ?? t('feedback.commentPlaceholder')"
+          :aria-label="t('feedback.commentAria')"
         />
 
         <footer class="ac-fbd__foot">
-          <button type="button" class="ac-fbd__btn" @click="emit('close')">{{ labels.cancel ?? '取消' }}</button>
+          <button type="button" class="ac-fbd__btn" @click="emit('close')">{{ labels.cancel ?? t('common.cancel') }}</button>
           <button
             type="button"
             class="ac-fbd__btn ac-fbd__btn--primary"
             :disabled="selected.size === 0 && !comment.trim()"
             @click="submit"
           >
-            {{ labels.submit ?? '提交反馈' }}
+            {{ labels.submit ?? t('feedback.submit') }}
           </button>
         </footer>
       </div>

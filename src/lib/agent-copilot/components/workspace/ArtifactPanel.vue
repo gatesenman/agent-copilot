@@ -11,6 +11,7 @@
  *   <ArtifactPanel :artifacts="items" />
  */
 import { computed, ref } from 'vue'
+import { useI18n } from '../../i18n'
 import type { ChatMessage, StructuredPayload, StructuredPayloadType } from '../../types'
 import { downloadText, exportSession, type ExportFormat } from '../../utils/session-export'
 import PayloadCard from '../generative-ui/PayloadCard.vue'
@@ -42,12 +43,14 @@ const emit = defineEmits<{
   (e: 'open', item: ArtifactItem): void
 }>()
 
+const { t, locale } = useI18n()
+
 const L = computed(() => ({
-  title: props.labels?.title ?? '产物',
-  empty: props.labels?.empty ?? '会话中的代码、表格、图片等产物会归集到这里',
-  download: props.labels?.download ?? '下载',
-  exportMd: props.labels?.exportMd ?? '导出 Markdown',
-  exportJson: props.labels?.exportJson ?? '导出 JSON',
+  title: props.labels?.title ?? t('artifact.title'),
+  empty: props.labels?.empty ?? t('artifact.empty'),
+  download: props.labels?.download ?? t('common.download'),
+  exportMd: props.labels?.exportMd ?? t('artifact.exportMd'),
+  exportJson: props.labels?.exportJson ?? t('artifact.exportJson'),
 }))
 
 /** 默认收集的“产出型”载荷（排除表单/计划等交互型） */
@@ -56,18 +59,18 @@ const DEFAULT_TYPES: StructuredPayloadType[] = [
   'image', 'document', 'metrics', 'file_tree',
 ]
 
-const TYPE_META: Partial<Record<StructuredPayloadType, { label: string; icon: string }>> = {
-  code: { label: '代码', icon: '{ }' },
+const TYPE_META = computed<Partial<Record<StructuredPayloadType, { label: string; icon: string }>>>(() => ({
+  code: { label: t('artifact.typeCode'), icon: '{ }' },
   diff: { label: 'Diff', icon: '±' },
-  table: { label: '表格', icon: '▦' },
-  comparison: { label: '对比', icon: '▦' },
-  chart: { label: '图表', icon: '▁▃▅' },
+  table: { label: t('artifact.typeTable'), icon: '▦' },
+  comparison: { label: t('artifact.typeComparison'), icon: '▦' },
+  chart: { label: t('artifact.typeChart'), icon: '▁▃▅' },
   sql_result: { label: 'SQL', icon: '⌸' },
-  image: { label: '图片', icon: '▣' },
-  document: { label: '文档', icon: '¶' },
-  metrics: { label: '指标', icon: '◔' },
-  file_tree: { label: '文件树', icon: '⌥' },
-}
+  image: { label: t('artifact.typeImage'), icon: '▣' },
+  document: { label: t('artifact.typeDocument'), icon: '¶' },
+  metrics: { label: t('artifact.typeMetrics'), icon: '◔' },
+  file_tree: { label: t('artifact.typeFileTree'), icon: '⌥' },
+}))
 
 const items = computed<ArtifactItem[]>(() => {
   if (props.artifacts) return props.artifacts
@@ -92,7 +95,7 @@ function toggle(item: ArtifactItem) {
 }
 
 function titleOf(item: ArtifactItem): string {
-  const meta = TYPE_META[item.payload.type]
+  const meta = TYPE_META.value[item.payload.type]
   return item.payload.title ?? meta?.label ?? item.payload.type
 }
 
@@ -143,7 +146,7 @@ function doExport(format: ExportFormat) {
             <span class="ac-artifacts__icon" aria-hidden="true">{{ TYPE_META[item.payload.type]?.icon ?? '◇' }}</span>
             <span class="ac-artifacts__name">{{ titleOf(item) }}</span>
             <span class="ac-artifacts__type">{{ TYPE_META[item.payload.type]?.label ?? item.payload.type }}</span>
-            <span v-if="item.createdAt" class="ac-artifacts__time">{{ new Date(item.createdAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) }}</span>
+            <span v-if="item.createdAt" class="ac-artifacts__time">{{ new Date(item.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) }}</span>
           </button>
           <button type="button" class="ac-artifacts__dl" :title="L.download" :aria-label="`${L.download} ${titleOf(item)}`" @click="download(item)">
             <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">

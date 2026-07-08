@@ -6,6 +6,7 @@
  * v-model:values 双向绑定设置值。无任何写死业务字段，完全由外部配置。
  */
 import { computed, ref } from 'vue'
+import { useI18n } from '../../i18n'
 import { useFocusTrap } from '../../composables/useFocusTrap'
 
 export interface SettingField {
@@ -40,7 +41,7 @@ const props = withDefaults(
     /** 显示重置按钮 */
     showReset?: boolean
   }>(),
-  { title: '设置', showReset: false },
+  { title: undefined, showReset: false },
 )
 
 const emit = defineEmits<{
@@ -50,9 +51,13 @@ const emit = defineEmits<{
   (e: 'reset'): void
 }>()
 
+const { t } = useI18n()
+
+const titleText = computed(() => props.title ?? t('settings.title'))
+
 const L = computed(() => ({
-  close: props.labels?.close ?? '完成',
-  reset: props.labels?.reset ?? '恢复默认',
+  close: props.labels?.close ?? t('settings.close'),
+  reset: props.labels?.reset ?? t('settings.reset'),
 }))
 
 function setValue(key: string, value: unknown) {
@@ -75,12 +80,12 @@ useFocusTrap(panelRef, {
 
 <template>
   <Teleport to="body">
-    <div v-if="open" class="ac-settings" role="dialog" aria-modal="true" :aria-label="title">
+    <div v-if="open" class="ac-settings" role="dialog" aria-modal="true" :aria-label="titleText">
       <div class="ac-settings__mask" @click="close" />
       <div ref="panelRef" class="ac-settings__panel ac-root">
         <header class="ac-settings__head">
-          <h2 class="ac-settings__title">{{ title }}</h2>
-          <button type="button" class="ac-settings__x" aria-label="关闭" @click="close">
+          <h2 class="ac-settings__title">{{ titleText }}</h2>
+          <button type="button" class="ac-settings__x" :aria-label="t('common.close')" @click="close">
             <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
               <path d="m3 3 10 10M13 3 3 13" stroke-linecap="round" />
             </svg>

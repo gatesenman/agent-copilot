@@ -14,6 +14,7 @@
  * interactive 开启后底部显示命令输入行，回车触发 command 事件。
  */
 import { computed, nextTick, ref, watch } from 'vue'
+import { useI18n } from '../../i18n'
 import type { TerminalEntry } from '../../types'
 import { copyText } from '../../utils/clipboard'
 
@@ -43,16 +44,22 @@ const props = withDefaults(
     cwd?: string
   }>(),
   {
-    title: '终端',
+    title: undefined,
     prompt: '$',
     interactive: false,
     autoScroll: true,
     height: '260px',
-    emptyText: '暂无输出',
-    inputPlaceholder: '输入命令，回车执行（↑/↓ 历史，Ctrl+L 清屏）',
+    emptyText: undefined,
+    inputPlaceholder: undefined,
     busy: false,
   },
 )
+
+const { t } = useI18n()
+
+const titleText = computed(() => props.title ?? t('term.title'))
+const emptyTextResolved = computed(() => props.emptyText ?? t('term.empty'))
+const inputPlaceholderResolved = computed(() => props.inputPlaceholder ?? t('term.inputPlaceholder'))
 
 const emit = defineEmits<{
   (e: 'command', cmd: string): void
@@ -237,17 +244,17 @@ async function copyAll() {
 </script>
 
 <template>
-  <div class="ac-term" :style="{ height }" role="log" :aria-label="title">
+  <div class="ac-term" :style="{ height }" role="log" :aria-label="titleText">
     <div class="ac-term__head">
       <span class="ac-term__dots" aria-hidden="true"><i /><i /><i /></span>
-      <span class="ac-term__title">{{ title }}<span v-if="cwd" class="ac-term__cwd"> — {{ cwd }}</span></span>
-      <button type="button" class="ac-term__tool" :aria-label="copied ? '已复制' : '复制全部输出'" @click="copyAll">
-        {{ copied ? '已复制' : '复制' }}
+      <span class="ac-term__title">{{ titleText }}<span v-if="cwd" class="ac-term__cwd"> — {{ cwd }}</span></span>
+      <button type="button" class="ac-term__tool" :aria-label="copied ? t('common.copied') : t('term.copyAll')" @click="copyAll">
+        {{ copied ? t('common.copied') : t('common.copy') }}
       </button>
-      <button type="button" class="ac-term__tool" aria-label="清空终端" @click="emit('clear')">{{ clearLabel ?? '清空' }}</button>
+      <button type="button" class="ac-term__tool" :aria-label="t('term.clearAria')" @click="emit('clear')">{{ clearLabel ?? t('chat.clear') }}</button>
     </div>
     <div ref="bodyRef" class="ac-term__body" @scroll.passive="onBodyScroll">
-      <div v-if="entries.length === 0" class="ac-term__empty">{{ emptyText }}</div>
+      <div v-if="entries.length === 0" class="ac-term__empty">{{ emptyTextResolved }}</div>
       <div
         v-for="entry in parsedEntries"
         :key="entry.id"

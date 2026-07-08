@@ -4,6 +4,7 @@
  * 企业内沉淀的高频提示词模板，支持分类筛选与变量占位（{变量}）。
  */
 import { computed, ref } from 'vue'
+import { useI18n } from '../../i18n'
 
 export interface PromptTemplate {
   id: string
@@ -25,22 +26,34 @@ const emit = defineEmits<{
   (e: 'select', template: PromptTemplate): void
 }>()
 
-const activeCategory = ref<string>('全部')
+const { t } = useI18n()
+
+/** 「全部」分类哨兵值，避免把展示文案当作状态 */
+const ALL = '__all__'
+const UNCATEGORIZED = '__uncategorized__'
+
+const activeCategory = ref<string>(ALL)
 const query = ref('')
 
 const categories = computed(() => {
   const set = new Set<string>()
-  for (const t of props.templates) set.add(t.category ?? '未分类')
-  return ['全部', ...set]
+  for (const tpl of props.templates) set.add(tpl.category ?? UNCATEGORIZED)
+  return [ALL, ...set]
 })
+
+function categoryLabel(c: string) {
+  if (c === ALL) return t('prompts.all')
+  if (c === UNCATEGORIZED) return t('prompts.uncategorized')
+  return c
+}
 
 const filtered = computed(() => {
   let list = props.templates
-  if (activeCategory.value !== '全部') {
-    list = list.filter((t) => (t.category ?? '未分类') === activeCategory.value)
+  if (activeCategory.value !== ALL) {
+    list = list.filter((tpl) => (tpl.category ?? UNCATEGORIZED) === activeCategory.value)
   }
   const q = query.value.trim().toLowerCase()
-  if (q) list = list.filter((t) => t.title.toLowerCase().includes(q) || t.content.toLowerCase().includes(q))
+  if (q) list = list.filter((tpl) => tpl.title.toLowerCase().includes(q) || tpl.content.toLowerCase().includes(q))
   return list
 })
 
@@ -53,9 +66,9 @@ function varCount(content: string) {
 <template>
   <div class="ac-prompts">
     <div class="ac-prompts__top">
-      <input v-model="query" type="search" class="ac-prompts__search" placeholder="搜索模板…" aria-label="搜索提示模板" />
+      <input v-model="query" type="search" class="ac-prompts__search" :placeholder="t('prompts.search')" :aria-label="t('prompts.searchAria')" />
     </div>
-    <div class="ac-prompts__cats" role="tablist" aria-label="模板分类">
+    <div class="ac-prompts__cats" role="tablist" :aria-label="t('prompts.catsAria')">
       <button
         v-for="c in categories"
         :key="c"
@@ -66,20 +79,20 @@ function varCount(content: string) {
         :aria-selected="c === activeCategory"
         @click="activeCategory = c"
       >
-        {{ c }}
+        {{ categoryLabel(c) }}
       </button>
     </div>
     <ul class="ac-prompts__list">
-      <li v-for="t in filtered" :key="t.id">
-        <button type="button" class="ac-prompts__item" @click="emit('select', t)">
+      <li v-for="tpl in filtered" :key="tpl.id">
+        <button type="button" class="ac-prompts__item" @click="emit('select', tpl)">
           <span class="ac-prompts__title">
-            {{ t.title }}
-            <span v-if="varCount(t.content)" class="ac-prompts__vars">{{ varCount(t.content) }} 个变量</span>
+            {{ tpl.title }}
+            <span v-if="varCount(tpl.content)" class="ac-prompts__vars">{{ t('prompts.varsN', { n: varCount(tpl.content) }) }}</span>
           </span>
-          <span class="ac-prompts__desc">{{ t.description ?? t.content }}</span>
+          <span class="ac-prompts__desc">{{ tpl.description ?? tpl.content }}</span>
         </button>
       </li>
-      <li v-if="filtered.length === 0" class="ac-prompts__empty">{{ emptyText ?? '没有匹配的模板' }}</li>
+      <li v-if="filtered.length === 0" class="ac-prompts__empty">{{ emptyText ?? t('prompts.empty') }}</li>
     </ul>
   </div>
 </template>
