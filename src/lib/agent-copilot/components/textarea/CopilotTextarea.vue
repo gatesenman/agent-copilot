@@ -9,7 +9,7 @@
         :rows="rows"
         :disabled="disabled"
         :maxlength="maxLength || undefined"
-        aria-label="AI 辅助文本域"
+        :aria-label="t('ta.aria')"
         @input="onInput"
         @keydown="onKeydown"
         @mouseup="onSelectionChange"
@@ -28,7 +28,7 @@
         class="ac-textarea__seltool"
         :style="{ left: selToolbar.x + 'px', top: selToolbar.y + 'px' }"
         role="toolbar"
-        aria-label="选中文本 AI 操作"
+        :aria-label="t('ta.selectionAria')"
         @mousedown.prevent
       >
         <template v-if="!customMode">
@@ -41,8 +41,8 @@
             @click="applyQuickAction(a)"
           >{{ a.label }}</button>
           <span class="ac-textarea__seldiv" />
-          <button type="button" class="ac-textarea__selbtn" :disabled="transforming" title="自定义指令（Ctrl+K）" @click="customMode = true">
-            指令…
+          <button type="button" class="ac-textarea__selbtn" :disabled="transforming" :title="t('ta.customTitle')" @click="customMode = true">
+            {{ t('ta.custom') }}
           </button>
         </template>
         <template v-else>
@@ -51,27 +51,27 @@
             v-model="customInstruction"
             class="ac-textarea__selinput"
             type="text"
-            placeholder="如：改成正式邮件语气"
+            :placeholder="t('ta.customPlaceholder')"
             :disabled="transforming"
             @keydown.enter.prevent="applyCustom"
             @keydown.esc.stop="customMode = false"
           />
           <button type="button" class="ac-textarea__selbtn ac-textarea__selbtn--primary" :disabled="transforming || !customInstruction.trim()" @click="applyCustom">
             <span v-if="transforming" class="ac-spin" />
-            <span v-else>应用</span>
+            <span v-else>{{ t('ta.apply') }}</span>
           </button>
         </template>
       </div>
     </div>
 
     <div class="ac-textarea__bar">
-      <span v-if="transforming" class="ac-textarea__hint"><span class="ac-spin" /> AI 处理选中内容…</span>
+      <span v-if="transforming" class="ac-textarea__hint"><span class="ac-spin" /> {{ t('ta.transforming') }}</span>
       <span v-else-if="ghost" class="ac-textarea__hint">
-        <kbd>Tab</kbd> 接受全部 · <kbd>Ctrl+→</kbd> 逐词接受 · <kbd>Esc</kbd> 忽略
+        <kbd>Tab</kbd> {{ t('ta.ghostHint') }} · <kbd>Ctrl+→</kbd> {{ t('ta.ghostWord') }} · <kbd>Esc</kbd> {{ t('ta.ghostDismiss') }}
       </span>
-      <span v-else-if="suggesting" class="ac-textarea__hint"><span class="ac-spin" /> AI 补全中…</span>
+      <span v-else-if="suggesting" class="ac-textarea__hint"><span class="ac-spin" /> {{ t('ta.suggesting') }}</span>
       <span v-else-if="errorMsg" class="ac-textarea__hint ac-textarea__hint--err">{{ errorMsg }}</span>
-      <span v-else class="ac-textarea__hint">{{ hint || '选中文本可唤起 AI 改写工具条' }}</span>
+      <span v-else class="ac-textarea__hint">{{ hint || t('ta.defaultHint') }}</span>
 
       <span class="ac-textarea__bar-end">
         <span v-if="showCount" class="ac-textarea__count" :class="{ 'ac-textarea__count--over': maxLength > 0 && modelValue.length >= maxLength }">
@@ -84,7 +84,7 @@
           :disabled="disabled"
           @click="undoAi"
         >
-          撤销 AI 修改
+          {{ t('ta.undo') }}
         </button>
         <button
           v-if="insertPrompt"
@@ -93,7 +93,7 @@
           :disabled="suggesting || transforming || disabled"
           @click="runInsert"
         >
-          AI 生成
+          {{ t('ta.generate') }}
         </button>
       </span>
     </div>
@@ -113,8 +113,9 @@
  * 6. Provider 可插拔：suggestionProvider / transformProvider 优先，
  *    否则回落到 useCopilot 的浏览器直连 LLM（需 apiKey）
  */
-import { nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useCopilot } from '../../composables/useCopilot'
+import { useI18n } from '../../i18n'
 import { LlmClient } from '../../runtime/llm-client'
 
 interface QuickAction {
@@ -122,13 +123,6 @@ interface QuickAction {
   label: string
   instruction: string
 }
-
-const DEFAULT_ACTIONS: QuickAction[] = [
-  { key: 'polish', label: '润色', instruction: '润色这段文本，使其更通顺专业，保持原意与语言' },
-  { key: 'shorten', label: '精简', instruction: '在保留关键信息的前提下把这段文本压缩到一半以内' },
-  { key: 'expand', label: '扩写', instruction: '在保持原意的基础上扩写这段文本，补充细节，长度约为原来的两倍' },
-  { key: 'translate', label: '译英', instruction: '把这段文本翻译成地道的英文' },
-]
 
 const props = withDefaults(
   defineProps<{
@@ -188,7 +182,16 @@ const errorMsg = ref('')
 /** AI 写入前的快照（null = 无可撤销内容） */
 const lastSnapshot = ref<string | null>(null)
 
-const quickActions = props.actions ?? DEFAULT_ACTIONS
+const { t } = useI18n()
+
+const DEFAULT_ACTIONS = computed<QuickAction[]>(() => [
+  { key: 'polish', label: t('ta.polish'), instruction: t('ta.polishInstr') },
+  { key: 'shorten', label: t('ta.shorten'), instruction: t('ta.shortenInstr') },
+  { key: 'expand', label: t('ta.expand'), instruction: t('ta.expandInstr') },
+  { key: 'translate', label: t('ta.translate'), instruction: t('ta.translateInstr') },
+])
+
+const quickActions = computed<QuickAction[]>(() => props.actions ?? DEFAULT_ACTIONS.value)
 
 // ---- 选区工具条 ----
 const selToolbar = reactive({ visible: false, x: 0, y: 0, start: 0, end: 0 })
@@ -264,9 +267,8 @@ async function suggest(value: string) {
           {
             role: 'system',
             content:
-              `你是文本自动补全引擎。用户正在${props.purpose || '撰写内容'}。` +
-              `根据已输入的文本，续写接下来的一小段（不超过40字），自然衔接，禁止重复已输入内容，只输出续写部分。` +
-              (contextSummary() ? `\n\n应用上下文：\n${contextSummary()}` : ''),
+              t('ta.suggestSystem', { purpose: props.purpose || t('ta.suggestPurposeFallback') }) +
+              (contextSummary() ? `\n\n${t('ta.suggestContext')}\n${contextSummary()}` : ''),
           },
           { role: 'user', content: value },
         ],

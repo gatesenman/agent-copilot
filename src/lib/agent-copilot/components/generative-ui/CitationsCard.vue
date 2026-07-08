@@ -11,7 +11,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div class="ac-citations-card">
+  <div class="ac-citations-card" role="group" :aria-label="title || t('gencard.citations')">
     <div class="ac-citations-card__title">{{ title || t('gencard.citations') }}</div>
     <ol class="ac-citations-card__list">
       <li v-for="(item, i) in data.items" :key="i" class="ac-citations-card__item">

@@ -235,7 +235,7 @@
 .ac-md__adm--caution { border-left-color: var(--ac-danger); }
 .ac-md__adm--caution .ac-md__adm-title { color: var(--ac-danger); }
 
-/* 代码块增强（带头部：文件名/语言 + 复制） */
+/* 代码��增强（带头部：文件名/语言 + 复制） */
 .ac-md__code { margin: 0.6em 0; border: 1px solid var(--ac-border); border-radius: calc(var(--ac-radius) * 0.8); overflow: hidden; }
 .ac-md__code-head {
   display: flex;
@@ -648,3 +648,16 @@
   to { transform: translateY(0); opacity: 1; }
 }
 .ac-slide-up { animation: ac-slide-up 0.18s ease-out; }
+
+/* ---------- 键盘导航焦点环（统一 :focus-visible 标准） ---------- */
+/* 覆盖 .ac-root 内所有可聚焦元素；独立使用的组件通过 ac- 前缀类兜底 */
+.ac-root :is(button, a, input, select, textarea, [tabindex]):focus-visible,
+:is(button, a, input, select, textarea)[class*='ac-']:focus-visible {
+  outline: 2px solid var(--ac-primary, #0f6b54);
+  outline-offset: 2px;
+}
+/* 输入类控件外框已有边框，焦点环收紧避免双重描边 */
+.ac-root :is(input, select, textarea):focus-visible,
+:is(input, select, textarea)[class*='ac-']:focus-visible {
+  outline-offset: 0;
+}

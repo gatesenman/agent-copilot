@@ -70,7 +70,7 @@ withDefaults(
     sidebarWidth?: string
   }>(),
   {
-    title: 'AI 助手',
+    title: undefined,
     subtitle: undefined,
     height: '640px',
     showHeader: true,

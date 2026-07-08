@@ -106,7 +106,7 @@ if (typeof document !== 'undefined') {
           <span v-if="base.description" class="ac-kb__desc">{{ base.description }}</span>
         </span>
       </button>
-      <p v-if="bases.length === 0" class="ac-kb__empty">{{ emptyText ?? '暂无知识库' }}</p>
+      <p v-if="bases.length === 0" class="ac-kb__empty">{{ emptyText ?? t('kb.empty') }}</p>
     </div>
   </div>
 </template>

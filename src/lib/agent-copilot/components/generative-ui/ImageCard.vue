@@ -13,7 +13,7 @@ const alt = computed(() => data.value.alt ?? data.value.caption ?? title.value ?
 </script>
 
 <template>
-  <div class="ac-image-card">
+  <div class="ac-image-card" role="group" :aria-label="title || alt">
     <div v-if="title" class="ac-image-card__title">{{ title }}</div>
     <img
       :src="data.src"

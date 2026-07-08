@@ -1,5 +1,5 @@
 <template>
-  <div class="ac-card ac-tl">
+  <div class="ac-card ac-tl" role="group" :aria-label="payload.title || t('gencard.timelineRegion')">
     <div v-if="payload.title" class="ac-tl__title">{{ payload.title }}</div>
     <ol class="ac-tl__list">
       <li v-for="(ev, i) in data.events ?? []" :key="i" class="ac-tl__event" :data-tone="ev.tone ?? 'info'">
@@ -16,7 +16,10 @@
 <script setup lang="ts">
 /** timeline_events 载荷 → 垂直事件时间线 */
 import { computed } from 'vue'
+import { useI18n } from '../../i18n'
 import type { StructuredPayload, TimelineEventsPayload } from '../../types'
+
+const { t } = useI18n()
 
 const props = defineProps<{ payload: StructuredPayload }>()
 const data = computed(() => (props.payload.data ?? {}) as TimelineEventsPayload)

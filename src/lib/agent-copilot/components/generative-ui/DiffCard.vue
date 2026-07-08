@@ -1,5 +1,5 @@
 <template>
-  <div class="ac-card ac-diffcard ac-slide-up">
+  <div class="ac-card ac-diffcard ac-slide-up" role="region" :aria-label="`${t('gencard.diffRegion')}: ${data.filename || payload.title || 'diff'}`">
     <div class="ac-diffcard__head">
       <span class="ac-diffcard__file">{{ data.filename || payload.title || 'diff' }}</span>
       <span class="ac-diffcard__stat">
@@ -25,7 +25,10 @@
 <script setup lang="ts">
 /** DiffCard — diff 载荷：行级增删视图（Code Agent） */
 import { computed } from 'vue'
+import { useI18n } from '../../i18n'
 import type { DiffPayload, StructuredPayload } from '../../types'
+
+const { t } = useI18n()
 
 const props = defineProps<{ payload: StructuredPayload }>()
 const data = computed<DiffPayload>(() => (props.payload.data ?? { lines: [] }) as DiffPayload)

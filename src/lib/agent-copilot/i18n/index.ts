@@ -426,6 +426,10 @@ export const zhCN: LocaleMessages = {
   'gencard.citations': '参考来源',
   'gencard.sqlRows': '{n} 行',
   'gencard.payloadError': '载荷渲染失败（{type}）',
+  'gencard.diffRegion': '代码差异',
+  'gencard.timelineRegion': '事件时间线',
+  'gencard.codeRegion': '代码块',
+  'gencard.sqlRegion': 'SQL 查询结果',
 
   // ---- 审批卡片 ----
   'approval.paramsLabel': '待执行动作参数',
@@ -501,6 +505,14 @@ export const zhCN: LocaleMessages = {
   'ta.shorten': '精简',
   'ta.expand': '扩写',
   'ta.translate': '译英',
+  'ta.polishInstr': '润色这段文本，使其更通顺专业，保持原意与语言',
+  'ta.shortenInstr': '在保留关键信息的前提下把这段文本压缩到一半以内',
+  'ta.expandInstr': '在保持原意的基础上扩写这段文本，补充细节，长度约为原来的两倍',
+  'ta.translateInstr': '把这段文本翻译成地道的英文',
+  'ta.suggestSystem':
+    '你是文本自动补全引擎。用户正在{purpose}。根据已输入的文本，续写接下来的一小段（不超过40字），自然衔接，禁止重复已输入内容，只输出续写部分。',
+  'ta.suggestPurposeFallback': '撰写内容',
+  'ta.suggestContext': '应用上下文：',
 
   // ---- 通用 ----
   'common.confirm': '确认',
@@ -900,6 +912,10 @@ export const enUS: LocaleMessages = {
   'gencard.citations': 'References',
   'gencard.sqlRows': '{n} rows',
   'gencard.payloadError': 'Failed to render payload ({type})',
+  'gencard.diffRegion': 'Code diff',
+  'gencard.timelineRegion': 'Event timeline',
+  'gencard.codeRegion': 'Code block',
+  'gencard.sqlRegion': 'SQL query result',
 
   'approval.paramsLabel': 'Pending action parameters',
   'approval.notePlaceholder': 'Note (optional)',
@@ -967,6 +983,14 @@ export const enUS: LocaleMessages = {
   'ta.shorten': 'Shorten',
   'ta.expand': 'Expand',
   'ta.translate': 'To English',
+  'ta.polishInstr': 'Polish this text so it reads more fluent and professional, keeping the original meaning and language',
+  'ta.shortenInstr': 'Compress this text to less than half its length while keeping the key information',
+  'ta.expandInstr': 'Expand this text while keeping the original meaning, adding detail, to roughly twice its length',
+  'ta.translateInstr': 'Translate this text into natural, idiomatic English',
+  'ta.suggestSystem':
+    'You are a text auto-completion engine. The user is {purpose}. Based on the text entered so far, continue with a short next segment (under 40 characters) that flows naturally. Do not repeat existing text; output only the continuation.',
+  'ta.suggestPurposeFallback': 'writing content',
+  'ta.suggestContext': 'App context:',
 
   'common.confirm': 'Confirm',
   'common.cancel': 'Cancel',

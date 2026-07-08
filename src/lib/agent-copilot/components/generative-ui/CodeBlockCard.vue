@@ -1,9 +1,9 @@
 <template>
-  <div class="ac-card ac-codecard ac-slide-up">
+  <div class="ac-card ac-codecard ac-slide-up" role="region" :aria-label="`${t('gencard.codeRegion')}: ${data.filename || payload.title || data.language}`">
     <div class="ac-codecard__head">
       <span class="ac-codecard__file">{{ data.filename || payload.title || data.language }}</span>
       <span class="ac-codecard__lang">{{ data.language }}</span>
-      <button type="button" class="ac-codecard__copy" @click="copy">{{ copied ? '已复制' : '复制' }}</button>
+      <button type="button" class="ac-codecard__copy" @click="copy">{{ copied ? t('chat.copied') : t('chat.copy') }}</button>
     </div>
     <div class="ac-codecard__body ac-scroll">
       <table class="ac-codecard__table">
@@ -26,9 +26,12 @@
 <script setup lang="ts">
 /** CodeBlockCard — code 载荷：语法高亮 + 行号 + 复制（Code Agent） */
 import { computed, ref } from 'vue'
+import { useI18n } from '../../i18n'
 import type { CodePayload, StructuredPayload } from '../../types'
 import { highlightCode } from './highlight'
 import { copyText } from '../../utils/clipboard'
+
+const { t } = useI18n()
 
 const props = defineProps<{ payload: StructuredPayload }>()
 const data = computed<CodePayload>(() => (props.payload.data ?? { language: 'text', code: '' }) as CodePayload)

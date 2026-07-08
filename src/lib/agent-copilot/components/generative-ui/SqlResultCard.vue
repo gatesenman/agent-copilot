@@ -1,5 +1,5 @@
 <template>
-  <div class="ac-card ac-sqlcard ac-slide-up">
+  <div class="ac-card ac-sqlcard ac-slide-up" role="region" :aria-label="payload.title || t('gencard.sqlRegion')">
     <div class="ac-sqlcard__head">
       <span class="ac-sqlcard__label">SQL</span>
       <span v-if="payload.title" class="ac-sqlcard__title">{{ payload.title }}</span>
@@ -32,7 +32,7 @@ import { useI18n } from '../../i18n'
 import type { SqlResultPayload, StructuredPayload } from '../../types'
 import { highlightCode } from './highlight'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const props = defineProps<{ payload: StructuredPayload }>()
 const data = computed<SqlResultPayload>(() => (props.payload.data ?? { sql: '', columns: [], rows: [] }) as SqlResultPayload)
@@ -41,7 +41,7 @@ const highlightedSql = computed(() => highlightCode(data.value.sql, 'sql'))
 
 function formatCell(v: unknown): string {
   if (v === null || v === undefined) return 'NULL'
-  if (typeof v === 'number') return v.toLocaleString('zh-CN')
+  if (typeof v === 'number') return v.toLocaleString(locale.value)
   if (typeof v === 'object') return JSON.stringify(v)
   return String(v)
 }
