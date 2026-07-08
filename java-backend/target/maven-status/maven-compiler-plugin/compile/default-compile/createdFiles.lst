@@ -15,6 +15,7 @@ com/odagent/copilot/config/AgentProperties.class
 com/odagent/copilot/tools/DemoDataStore$Assessment.class
 com/odagent/copilot/tools/DemoDataStore$ApprovalFlow.class
 com/odagent/copilot/api/RunRegistry.class
+com/odagent/copilot/api/ModelMockController.class
 com/odagent/copilot/protocol/ResumeRequest.class
 com/odagent/copilot/pipeline/ReactAgentEngine$LoopResult.class
 com/odagent/copilot/tools/DemoDataStore$Assignment.class

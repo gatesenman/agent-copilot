@@ -1,5 +1,6 @@
 /vercel/share/v0-project/java-backend/src/main/java/com/odagent/copilot/CopilotBackendApplication.java
 /vercel/share/v0-project/java-backend/src/main/java/com/odagent/copilot/api/AgentController.java
+/vercel/share/v0-project/java-backend/src/main/java/com/odagent/copilot/api/ModelMockController.java
 /vercel/share/v0-project/java-backend/src/main/java/com/odagent/copilot/api/ProtocolMockController.java
 /vercel/share/v0-project/java-backend/src/main/java/com/odagent/copilot/api/RunRegistry.java
 /vercel/share/v0-project/java-backend/src/main/java/com/odagent/copilot/config/AgentProperties.java

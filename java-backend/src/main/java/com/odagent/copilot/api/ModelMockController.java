@@ -2,6 +2,7 @@ package com.odagent.copilot.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -26,44 +27,52 @@ public class ModelMockController {
     try { return om.writeValueAsString(o); } catch (Exception e) { throw new RuntimeException(e); }
   }
 
-  /** SSE 帧（纯 data，无 event 名） */
-  private static String sse(String data) { return "data: " + data + "\n\n"; }
-
-  /** SSE 帧（带 event 名，Anthropic 风格） */
-  private static String sse(String event, String data) {
-    return "event: " + event + "\ndata: " + data + "\n\n";
+  /** SSE 帧（纯 data，无 event 名）——由 Spring 负责 data: 前缀序列化 */
+  private static ServerSentEvent<String> sse(String data) {
+    return ServerSentEvent.builder(data).build();
   }
 
-  private Flux<String> stream(List<String> frames) {
+  /** SSE 帧（带 event 名，Anthropic 风格） */
+  private static ServerSentEvent<String> sse(String event, String data) {
+    return ServerSentEvent.builder(data).event(event).build();
+  }
+
+  private static Flux<ServerSentEvent<String>> stream(List<ServerSentEvent<String>> frames) {
+    return Flux.fromIterable(frames).delayElements(Duration.ofMillis(20));
+  }
+
+  private static Flux<String> streamRaw(List<String> frames) {
     return Flux.fromIterable(frames).delayElements(Duration.ofMillis(20));
   }
 
   // ---------- 1) openai-compatible：/chat/completions SSE ----------
   @PostMapping(value = "/openai/chat/completions", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  public Flux<String> openaiCompatible() {
-    List<String> f = new ArrayList<>();
+  public Flux<ServerSentEvent<String>> openaiCompatible() {
+    List<ServerSentEvent<String>> f = new ArrayList<>();
     f.add(sse(json(Map.of("choices", List.of(Map.of("index", 0,
         "delta", Map.of("role", "assistant", "content", "来自 ")))))));
     f.add(sse(json(Map.of("choices", List.of(Map.of("index", 0,
         "delta", Map.of("content", "OpenAI 兼容协议的回复")))))));
     // 工具调用增量（两帧拼出完整 arguments）
+    Map<String, Object> tcFrame1 = Map.of("index", 0, "id", "call_oc1",
+        "function", Map.of("name", "get_weather", "arguments", "{\"city\":"));
     f.add(sse(json(Map.of("choices", List.of(Map.of("index", 0,
-        "delta", Map.of("tool_calls", List.of(Map.of("index", 0, "id", "call_oc1",
-            "function", Map.of("name", "get_weather", "arguments", "{\"city\":")))))))));
+        "delta", Map.of("tool_calls", List.of(tcFrame1))))))));
+    Map<String, Object> tcFrame2 = Map.of("index", 0,
+        "function", Map.of("arguments", "\"北京\"}"));
     f.add(sse(json(Map.of("choices", List.of(Map.of("index", 0,
-        "delta", Map.of("tool_calls", List.of(Map.of("index", 0,
-            "function", Map.of("arguments", "\"北京\"}")))))))));
+        "delta", Map.of("tool_calls", List.of(tcFrame2))))))));
     f.add(sse(json(Map.of(
         "choices", List.of(Map.of("index", 0, "delta", Map.of(), "finish_reason", "tool_calls")),
         "usage", Map.of("prompt_tokens", 12, "completion_tokens", 8, "total_tokens", 20)))));
-    f.add("data: [DONE]\n\n");
+    f.add(sse("[DONE]"));
     return stream(f);
   }
 
   // ---------- 2) anthropic：/v1/messages SSE（带 event 名） ----------
   @PostMapping(value = "/anthropic/v1/messages", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  public Flux<String> anthropic() {
-    List<String> f = new ArrayList<>();
+  public Flux<ServerSentEvent<String>> anthropic() {
+    List<ServerSentEvent<String>> f = new ArrayList<>();
     f.add(sse("message_start", json(Map.of("type", "message_start",
         "message", Map.of("usage", Map.of("input_tokens", 15))))));
     f.add(sse("content_block_start", json(Map.of("type", "content_block_start", "index", 0,
@@ -83,8 +92,8 @@ public class ModelMockController {
 
   // ---------- 3) gemini：/models/{spec} SSE（spec 含 ":streamGenerateContent"） ----------
   @PostMapping(value = "/gemini/models/{spec}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  public Flux<String> gemini(@PathVariable String spec) {
-    List<String> f = new ArrayList<>();
+  public Flux<ServerSentEvent<String>> gemini(@PathVariable String spec) {
+    List<ServerSentEvent<String>> f = new ArrayList<>();
     f.add(sse(json(Map.of("candidates", List.of(Map.of("content", Map.of(
         "parts", List.of(Map.of("text", "来自 Gemini 协议的回复")))))))));
     f.add(sse(json(Map.of("candidates", List.of(Map.of("content", Map.of(
@@ -100,8 +109,8 @@ public class ModelMockController {
 
   // ---------- 4) cohere：/v2/chat SSE（专有事件类型） ----------
   @PostMapping(value = "/cohere/v2/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  public Flux<String> cohere() {
-    List<String> f = new ArrayList<>();
+  public Flux<ServerSentEvent<String>> cohere() {
+    List<ServerSentEvent<String>> f = new ArrayList<>();
     f.add(sse(json(Map.of("type", "message-start"))));
     f.add(sse(json(Map.of("type", "content-delta",
         "delta", Map.of("message", Map.of("content", Map.of("text", "来自 Cohere 协议的回复")))))));
@@ -129,6 +138,6 @@ public class ModelMockController {
             "name", "get_weather", "arguments", Map.of("city", "北京"))))), "done", false)) + "\n");
     f.add(json(Map.of("message", Map.of("role", "assistant", "content", ""),
         "done", true, "prompt_eval_count", 14, "eval_count", 5)) + "\n");
-    return stream(f);
+    return streamRaw(f);
   }
 }

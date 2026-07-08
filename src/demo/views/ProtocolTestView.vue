@@ -13,7 +13,16 @@
  * 4. 结构化载荷 / 用量：按协议能力断言
  */
 import { computed, ref } from 'vue'
-import { createRuntime } from '../../lib/agent-copilot/protocols'
+import {
+  createRuntime,
+  createOpenAICompatibleAdapter,
+  createAnthropicAdapter,
+  createGeminiAdapter,
+  createCohereAdapter,
+  createOllamaNativeAdapter,
+} from '../../lib/agent-copilot/protocols'
+import type { ModelAdapter, ModelAdapterOptions } from '../../lib/agent-copilot/protocols/types'
+import type { LlmStreamChunk } from '../../lib/agent-copilot/runtime/llm-client'
 import type { AgentEvent, RunInput } from '../../lib/agent-copilot/types'
 
 interface CaseSpec {
@@ -118,6 +127,22 @@ const EDGE_CASES: CaseSpec[] = [
   },
 ]
 
+/** 模型协议用例：直接驱动 ModelAdapter.chatStream，断言统一 LlmStreamChunk 契约 */
+interface ModelCaseSpec {
+  displayName: string
+  factory: (opts: ModelAdapterOptions) => ModelAdapter
+  apiBase: string
+  expectText: string
+}
+
+const MODEL_CASES: ModelCaseSpec[] = [
+  { displayName: 'model: openai-compatible', factory: createOpenAICompatibleAdapter, apiBase: '/api/mock/model/openai', expectText: 'OpenAI 兼容协议' },
+  { displayName: 'model: anthropic', factory: createAnthropicAdapter, apiBase: '/api/mock/model/anthropic', expectText: 'Anthropic 协议' },
+  { displayName: 'model: gemini', factory: createGeminiAdapter, apiBase: '/api/mock/model/gemini', expectText: 'Gemini 协议' },
+  { displayName: 'model: cohere', factory: createCohereAdapter, apiBase: '/api/mock/model/cohere', expectText: 'Cohere 协议' },
+  { displayName: 'model: ollama-native', factory: createOllamaNativeAdapter, apiBase: '/api/mock/model/ollama', expectText: 'Ollama 原生协议' },
+]
+
 interface CheckResult {
   label: string
   pass: boolean
@@ -126,6 +151,8 @@ interface CheckResult {
 
 interface CaseState {
   spec: CaseSpec
+  /** 模型协议用例（与 Agent 用例互斥；提供时走 runModelCase） */
+  modelSpec?: ModelCaseSpec
   status: 'idle' | 'running' | 'pass' | 'fail'
   checks: CheckResult[]
   events: string[]
@@ -133,9 +160,17 @@ interface CaseState {
   durationMs?: number
 }
 
-const cases = ref<CaseState[]>(
-  [...CASES, ...EDGE_CASES].map((spec) => ({ spec, status: 'idle', checks: [], events: [] })),
-)
+const cases = ref<CaseState[]>([
+  ...[...CASES, ...EDGE_CASES].map((spec): CaseState => ({ spec, status: 'idle', checks: [], events: [] })),
+  ...MODEL_CASES.map((m): CaseState => ({
+    spec: {
+      protocol: 'model', displayName: m.displayName, endpoint: m.apiBase,
+      expectText: m.expectText, expectTool: true, expectPayload: false, expectUsage: true,
+    },
+    modelSpec: m,
+    status: 'idle', checks: [], events: [],
+  })),
+])
 
 /** 用例唯一键（边界用例 protocol 重复，需用展示名区分） */
 function caseKey(spec: CaseSpec): string {
@@ -172,7 +207,68 @@ async function checkBackend(): Promise<boolean> {
   return backendOk.value === true
 }
 
+/** 模型协议用例：chatStream 收集 LlmStreamChunk，断言文本 / 工具增量聚合 / usage / 结束原因 */
+async function runModelCase(state: CaseState): Promise<void> {
+  const m = state.modelSpec!
+  state.status = 'running'
+  state.checks = []
+  state.events = []
+  state.error = undefined
+  const start = performance.now()
+
+  const adapter = m.factory({ apiBase: m.apiBase, apiKey: 'test-key', model: 'mock-model' })
+  let text = ''
+  /** index → 聚合中的工具调用 */
+  const tools = new Map<number, { id?: string; name?: string; args: string }>()
+  let usage: LlmStreamChunk['usage'] | undefined
+  let finish: string | undefined
+
+  try {
+    for await (const chunk of adapter.chatStream({
+      messages: [
+        { role: 'system', content: '你是测试助手' },
+        { role: 'user', content: '协议测试' },
+      ],
+      tools: [{
+        type: 'function',
+        function: { name: 'get_weather', description: '查询天气', parameters: { type: 'object', properties: { city: { type: 'string' } } } },
+      }],
+    })) {
+      if (chunk.delta) { text += chunk.delta; state.events.push('delta') }
+      if (chunk.toolCallDelta) {
+        const t = chunk.toolCallDelta
+        const agg = tools.get(t.index) ?? { args: '' }
+        if (t.id) agg.id = t.id
+        if (t.name) agg.name = t.name
+        if (t.argumentsDelta) agg.args += t.argumentsDelta
+        tools.set(t.index, agg)
+        state.events.push('tool')
+      }
+      if (chunk.usage) { usage = chunk.usage; state.events.push('usage') }
+      if (chunk.finishReason) { finish = chunk.finishReason; state.events.push(`finish:${chunk.finishReason}`) }
+    }
+  } catch (err) {
+    state.error = err instanceof Error ? err.message : String(err)
+  }
+  state.durationMs = Math.round(performance.now() - start)
+
+  const tool = tools.get(0)
+  let argsOk = false
+  try { argsOk = (JSON.parse(tool?.args || '{}') as { city?: string }).city === '北京' } catch { argsOk = false }
+
+  state.checks = [
+    { label: '不抛异常', pass: !state.error, detail: state.error },
+    { label: `文本包含「${m.expectText}」`, pass: text.includes(m.expectText), detail: `实际: ${text.slice(0, 50) || '(空)'}` },
+    { label: '工具调用有 id 与 name', pass: !!tool?.id && tool?.name === 'get_weather', detail: `id=${tool?.id ?? '无'} name=${tool?.name ?? '无'}` },
+    { label: '工具参数增量拼合完整（city=北京）', pass: argsOk, detail: `args=${tool?.args ?? '无'}` },
+    { label: '产出 usage 统计', pass: !!usage && usage.total_tokens > 0, detail: usage ? `total=${usage.total_tokens}` : '无' },
+    { label: '结束原因为 tool_calls', pass: finish === 'tool_calls', detail: `实际: ${finish ?? '无'}` },
+  ]
+  state.status = state.checks.every((c) => c.pass) ? 'pass' : 'fail'
+}
+
 async function runCase(state: CaseState): Promise<void> {
+  if (state.modelSpec) return runModelCase(state)
   state.status = 'running'
   state.checks = []
   state.events = []
@@ -298,8 +394,8 @@ function toggle(protocol: string): void {
       <div>
         <h1 class="pt-title">协议一致性测试</h1>
         <p class="pt-sub">
-          11 种 Agent 协议适配器 + 4 个边界用例（HTTP 错误 / 错误帧 / 畸形帧 / 中断取消）
-          × Java 最小 Mock 后端（Spring WebFlux SSE）端到端验证：
+          11 种 Agent 协议 + 5 种模型协议适配器 + 4 个边界用例（HTTP 错误 / 错误帧 / 畸形帧 / 中断取消）
+          × Java 最小 Mock 后端（Spring WebFlux SSE / NDJSON）端到端验证：
           请求构造 → 官方帧格式回放 → 适配器解析 → 统一事件流断言。
         </p>
       </div>
