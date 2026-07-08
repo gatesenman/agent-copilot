@@ -1,4 +1,13 @@
 <script setup lang="ts">
+defineOptions({ name: 'CopilotShell' })
+
+defineSlots<{
+  /** 顶栏右侧操作区（模型切换与设置按钮之间） */
+  'header-actions'(): unknown
+  /** 会话边栏底部扩展区 */
+  'sidebar-footer'(): unknown
+}>()
+
 /**
  * CopilotShell —— AgentCopilot 的内层 Shell（必须在 CopilotProvider 内）。
  *

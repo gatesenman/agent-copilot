@@ -382,7 +382,7 @@ const store = useCopilot() // 在 <CopilotProvider> 内调用
   </aside>
 
   <SettingsDialog v-model:open="settingsOpen" :sections="sections" v-model:values="values" />
-  <FeedbackDialog :open="feedbackOpen" @submit="onSubmit" @close="feedbackOpen = false" />
+  <FeedbackDialog v-model:open="feedbackOpen" @submit="onSubmit" />
 </CopilotProvider>`
 </script>
 
@@ -611,10 +611,9 @@ const store = useCopilot() // 在 <CopilotProvider> 内调用
       @update:values="(v) => (settingsValues = v)"
     />
     <FeedbackDialog
-      :open="feedbackOpen"
+      v-model:open="feedbackOpen"
       :reasons="['回答不准确', '引用来源错误', '格式混乱', '其他']"
       @submit="() => (feedbackOpen = false)"
-      @close="feedbackOpen = false"
     />
   </section>
 </template>

@@ -50,6 +50,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'DataTableCard' })
+
 /** DataTableCard — table 载荷增强版：排序/筛选/分页/导出 CSV（Data Agent） */
 import { computed, ref, watch } from 'vue'
 import { useI18n } from '../../i18n'

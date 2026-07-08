@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'ToolActionCard' })
+
 /**
  * ToolActionCard —— 按工具种类特化的执行卡。
  *

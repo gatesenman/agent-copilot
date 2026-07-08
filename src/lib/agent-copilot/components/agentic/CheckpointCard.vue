@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'CheckpointCard' })
+
 /**
  * CheckpointCard — 版本快照卡
  *

@@ -17,6 +17,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'ChatSuggestions' })
+
 /**
  * ChatSuggestions — 建议问题按钮组（对齐 CopilotKit useCopilotChatSuggestions）
  */

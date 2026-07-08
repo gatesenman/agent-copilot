@@ -1,4 +1,11 @@
 <script setup lang="ts">
+defineOptions({ name: 'BrowserPanel' })
+
+defineSlots<{
+  /** 默认插槽：完全自定义内容区（优先级高于 screenshot / src 模式） */
+  default(): unknown
+}>()
+
 /**
  * BrowserPanel —— 浏览器预览面板：地址栏 + iframe / 截图 / 自定义内容。
  *

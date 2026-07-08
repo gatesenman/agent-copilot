@@ -3,6 +3,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'MarkdownText' })
+
 /**
  * MarkdownText — 企业级 Markdown 渲染
  *

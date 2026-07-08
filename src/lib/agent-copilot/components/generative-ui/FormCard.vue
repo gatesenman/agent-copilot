@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'FormCard' })
+
 /**
  * FormCard —— form 载荷渲染器：包装 AgentFormCard 并接入 store 的 submitForm。
  */

@@ -1,4 +1,11 @@
 <script setup lang="ts">
+defineOptions({ name: 'PanelContainer' })
+
+defineSlots<{
+  /** 动态具名插槽：slot 名 = panel.id，对应页签的内容区 */
+  [panelId: string]: (() => unknown) | undefined
+}>()
+
 /**
  * PanelContainer —— 右侧面板多页签容器。
  *
@@ -42,6 +49,11 @@ function activate(id: string) {
   inner.value = id
   emit('update:activeId', id)
 }
+
+defineExpose({
+  /** 程序化切换激活页签（id 不存在时静默忽略） */
+  activate,
+})
 </script>
 
 <template>

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'ImageCard' })
+
 import { computed } from 'vue'
 import { useI18n } from '../../i18n'
 import type { ImagePayload, StructuredPayload } from '../../types'

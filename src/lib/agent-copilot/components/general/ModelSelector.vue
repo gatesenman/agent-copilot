@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'ModelSelector' })
+
 /**
  * ModelSelector — 模型/厂商切换下拉（两级分组）
  *

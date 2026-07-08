@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'ModeSelector' })
+
 /**
  * ModeSelector —— Agent 运行模式选择器。
  * 对齐 Cursor/Claude Code 权限模型：变更前确认 / 自动编辑 / 计划模式 / 完全访问。

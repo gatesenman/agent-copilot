@@ -14,6 +14,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'ContextChips' })
+
 /**
  * ContextChips — 输入框上方的上下文附着条
  * 展示 @提及 / #引用 / 手动附着 / 文件 的上下文项，可删除

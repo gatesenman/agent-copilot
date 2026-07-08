@@ -11,6 +11,13 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'CopilotProvider' })
+
+defineSlots<{
+  /** 默认插槽：被 Provider 包裹的应用内容（其中可使用全部 copilot 组件与 useCopilot） */
+  default(): unknown
+}>()
+
 /**
  * CopilotProvider — 根组件
  * 创建 Copilot 上下文（runtime、会话、注册表），并注入主题变量。

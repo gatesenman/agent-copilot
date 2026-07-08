@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'ThinkingBlock' })
+
 /**
  * ThinkingBlock —— 思考内容折叠块。
  * 流式追加时呈现波动指示；结束后显示耗时并默认折叠。

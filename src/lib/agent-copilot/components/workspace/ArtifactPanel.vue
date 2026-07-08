@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'ArtifactPanel' })
+
 /**
  * ArtifactPanel —— 会话产物面板。
  *

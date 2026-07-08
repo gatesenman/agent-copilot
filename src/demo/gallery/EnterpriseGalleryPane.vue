@@ -204,8 +204,7 @@ function onUpload(list: File[]) {
           <p v-if="feedbackResult" class="ent-result">上报内容：{{ feedbackResult }}</p>
         </div>
         <FeedbackDialog
-          :open="feedbackOpen"
-          @close="feedbackOpen = false"
+          v-model:open="feedbackOpen"
           @submit="onFeedbackSubmit"
         />
       </section>

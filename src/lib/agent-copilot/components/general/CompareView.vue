@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'CompareView' })
+
 /**
  * CompareView —— 双模型对比视图
  * 同一问题在两个模型/配置下的回答并排对比，支持投票选优。

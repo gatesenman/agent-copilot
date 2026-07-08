@@ -71,6 +71,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'ApprovalCard' })
+
 /**
  * ApprovalCard — HITL 审批/输入/选择卡片
  * 对应 CopilotKit renderAndWait 与 AgentScope 中断-恢复。

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'AgentCardView' })
+
 /**
  * AgentCardView — A2A Agent Card 展示组件
  *

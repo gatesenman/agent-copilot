@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'PlanCard' })
+
 import { computed } from 'vue'
 import { useI18n } from '../../i18n'
 import type { PlanPayload, StructuredPayload } from '../../types'

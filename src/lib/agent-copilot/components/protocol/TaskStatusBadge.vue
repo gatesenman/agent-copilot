@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'TaskStatusBadge' })
+
 /**
  * TaskStatusBadge — A2A / ACP 任务状态机可视化
  *

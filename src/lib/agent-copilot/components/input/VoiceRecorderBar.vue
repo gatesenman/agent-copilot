@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'VoiceRecorderBar' })
+
 /**
  * VoiceRecorderBar — 录音中状态条
  *

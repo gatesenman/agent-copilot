@@ -1,4 +1,13 @@
 <script setup lang="ts">
+defineOptions({ name: 'AgentCopilot' })
+
+defineSlots<{
+  /** 顶栏右侧操作区（模型切换与设置按钮之间，透传给 CopilotShell） */
+  'header-actions'(): unknown
+  /** 会话边栏底部扩展区（透传给 CopilotShell） */
+  'sidebar-footer'(): unknown
+}>()
+
 /**
  * AgentCopilot —— 一体化聚合大组件（开箱即用）。
  *

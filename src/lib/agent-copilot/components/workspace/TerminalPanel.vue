@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'TerminalPanel' })
+
 /**
  * TerminalPanel —— 终端面板（真实终端能力，非仅样式）：
  *

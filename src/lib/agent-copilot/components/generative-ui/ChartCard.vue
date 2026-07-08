@@ -96,6 +96,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'ChartCard' })
+
 /** ChartCard — chart 载荷：零依赖 SVG 柱状/折线/饼图（Data Agent） */
 import { computed } from 'vue'
 import { useI18n } from '../../i18n'

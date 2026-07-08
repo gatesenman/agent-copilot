@@ -151,6 +151,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'CopilotChat' })
+
 /**
  * CopilotChat — 内嵌式对话组件（CopilotKit <CopilotChat> 对齐）
  * 组合消息流、流水线状态、HITL 审批卡、建议问题与输入框。
@@ -201,9 +203,29 @@ const props = withDefaults(
   },
 )
 
+defineSlots<{
+  /** 头部右侧操作区（token 徽标与清空按钮之间，如导出/设置按钮） */
+  'header-actions'(): unknown
+  /** 输入框工具栏左侧扩展区（透传给 ChatInput） */
+  'toolbar-start'(): unknown
+  /** 输入框工具栏右侧扩展区（透传给 ChatInput，发送按钮左侧） */
+  'toolbar-end'(): unknown
+}>()
+
 const store = useCopilot()
 const { t, locale } = useI18n()
 const scrollRef = ref<HTMLElement | null>(null)
+
+/** 程序化控制：滚动到底部 */
+function scrollToBottom() {
+  const el = scrollRef.value
+  if (el) el.scrollTop = el.scrollHeight
+}
+
+defineExpose({
+  /** 滚动消息区到底部 */
+  scrollToBottom,
+})
 
 const isRunning = computed(() => store.status.value === 'running')
 const welcome = computed(() => store.config.welcomeScreen)

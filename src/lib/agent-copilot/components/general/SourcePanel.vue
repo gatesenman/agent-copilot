@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'SourcePanel' })
+
 /**
  * SourcePanel —— RAG 引用溯源面板
  * 展示回答引用的知识来源：文档片段、置信分、原文定位。

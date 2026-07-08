@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'McpServerPanel' })
+
 /**
  * McpServerPanel — MCP 服务器浏览器
  *

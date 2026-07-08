@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'TaskTracker' })
+
 /**
  * TaskTracker —— Agent 任务清单追踪（TodoList 式）。
  * 六态图标 / 子任务层级 / activeForm 进行时文案 / 耗时统计 / 错误重试跳过 /

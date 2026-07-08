@@ -1,4 +1,13 @@
 <script setup lang="ts">
+defineOptions({ name: 'ErrorBoundary' })
+
+defineSlots<{
+  /** 默认插槽：被保护的子树（渲染异常时切换到降级 UI） */
+  default(): unknown
+  /** 自定义降级 UI：完全替换内置错误卡片，载荷为捕获的错误对象 */
+  fallback(props: { error: Error | null }): unknown
+}>()
+
 /**
  * ErrorBoundary — 渲染错误边界（企业级降级基础设施）
  *

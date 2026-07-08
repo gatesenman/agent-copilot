@@ -26,6 +26,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'SqlResultCard' })
+
 /** SqlResultCard — sql_result 载荷：SQL 语句 + 结果表（Data Agent） */
 import { computed } from 'vue'
 import { useI18n } from '../../i18n'

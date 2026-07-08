@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'FileDropzone' })
+
 /**
  * FileDropzone —— 文件拖拽上传
  * 支持拖入/点击选择、类型与大小校验、上传进度展示（进度由外部驱动）。

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'SessionList' })
+
 /**
  * SessionList —— 会话列表（企业级多会话管理）
  * 纯展示组件：数据与操作由外部传入，支持置顶、重命名、删除、搜索。

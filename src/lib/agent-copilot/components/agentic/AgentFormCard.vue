@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'AgentFormCard' })
+
 /**
  * AgentFormCard —— Agent 请求用户填写的消息内嵌表单（全控件集）。
  * 16 种控件：text/textarea/select/multiselect/radio/checkbox/date/time/number/

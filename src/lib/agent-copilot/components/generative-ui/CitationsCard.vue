@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'CitationsCard' })
+
 import { computed } from 'vue'
 import { useI18n } from '../../i18n'
 import type { CitationsPayload, StructuredPayload } from '../../types'

@@ -37,6 +37,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'CopilotPopup' })
+
 /**
  * CopilotPopup — 悬浮气泡形态（CopilotKit <CopilotPopup> 对齐）
  */

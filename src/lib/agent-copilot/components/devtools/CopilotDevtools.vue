@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'CopilotDevtools' })
+
 /**
  * CopilotDevtools — 开发者事件检查器（对标 CopilotKit Dev Console）
  *

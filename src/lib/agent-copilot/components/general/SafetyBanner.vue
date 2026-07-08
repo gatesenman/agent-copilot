@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'SafetyBanner' })
+
 /**
  * SafetyBanner —— 安全拦截/合规提示横幅
  * 内容审核命中、敏感数据检测、权限不足等企业安全场景的统一提示。

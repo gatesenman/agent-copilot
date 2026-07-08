@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'VideoCard' })
+
 /**
  * VideoCard — 视频播放卡（payload type: 'video'）
  *

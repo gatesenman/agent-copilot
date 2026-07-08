@@ -23,6 +23,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'DiffCard' })
+
 /** DiffCard — diff 载荷：行级增删视图（Code Agent） */
 import { computed } from 'vue'
 import { useI18n } from '../../i18n'

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'AgentStepList' })
+
 /**
  * AgentStepList — Agent 执行步骤时间流
  *
@@ -34,7 +36,15 @@ const props = withDefaults(
   { compact: false },
 )
 
-const emit = defineEmits<{ (e: 'toggle', step: AgentStep, expanded: boolean): void }>()
+const emit = defineEmits<{
+  /** 步骤展开/折叠时触发，载荷为步骤对象与展开后的状态 */
+  (e: 'toggle', step: AgentStep, expanded: boolean): void
+}>()
+
+defineSlots<{
+  /** 步骤详情区：步骤展开时渲染，默认渲染 step.detail 等宽文本；载荷为当前步骤 */
+  detail(props: { step: AgentStep }): unknown
+}>()
 
 const { t } = useI18n()
 

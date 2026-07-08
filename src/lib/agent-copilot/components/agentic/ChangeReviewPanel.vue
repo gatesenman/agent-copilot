@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'ChangeReviewPanel' })
+
 /**
  * ChangeReviewPanel —— 文件变更审查面板。
  * 变更列表 + 展开 diff + 单文件/全部 接受/拒绝；统计增删行数。

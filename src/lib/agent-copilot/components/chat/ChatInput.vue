@@ -136,6 +136,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'ChatInput' })
+
 /**
  * ChatInput — 增强输入框
  * - 自适应高度、Enter 发送（CJK 输入法安全）
@@ -192,14 +194,29 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
+  /** 用户发送消息（Enter 或点击发送按钮），载荷为去除首尾空白的文本 */
   (e: 'send', text: string): void
+  /** 用户点击停止按钮（生成中） */
   (e: 'stop'): void
+  /** 经 @ 提及 / # 引用选中并附着一个上下文项 */
   (e: 'addContext', item: ContextItem): void
+  /** 用户移除上下文附着条中的某项，载荷为该项 id */
   (e: 'removeContext', id: string): void
+  /** 斜杠命令被选中执行 */
   (e: 'command', cmd: SlashCommand): void
+  /** 用户通过附件按钮选择了文件 */
   (e: 'attach', files: File[]): void
+  /** 用户点击语音输入按钮 */
   (e: 'voice'): void
+  /** 思考开关切换（v-model:thinkingOn） */
   (e: 'update:thinkingOn', on: boolean): void
+}>()
+
+defineSlots<{
+  /** 工具栏左侧扩展区（附件/语音按钮同排，如访问模式选择器） */
+  'toolbar-start'(): unknown
+  /** 工具栏右侧扩展区（发送按钮左侧，如模型选择器） */
+  'toolbar-end'(): unknown
 }>()
 
 const fileInputRef = ref<HTMLInputElement | null>(null)

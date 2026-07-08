@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'PayloadCard' })
+
 /**
  * PayloadCard — 结构化载荷分发器（AG-UI 生成式 UI）
  *

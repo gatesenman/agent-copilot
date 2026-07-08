@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'PlanPanel' })
+
 /**
  * PlanPanel —— 统一计划审查组件（结构化步骤 + Markdown 长文双形态）。
  *

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'ProtocolBadge' })
+
 /**
  * ProtocolBadge — 协议标识徽章 + 能力提示
  *

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'ThemeToggle' })
+
 /**
  * ThemeToggle —— 亮 / 暗 / 跟随系统 三态切换按钮组。
  * 配合 useTheme() 使用；也可通过 v-model:mode 完全受控。

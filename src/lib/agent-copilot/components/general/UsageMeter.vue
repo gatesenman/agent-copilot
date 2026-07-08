@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'UsageMeter' })
+
 /**
  * UsageMeter —— Token 用量与配额仪表
  * 企业级成本可观测：会话累计 token、预算占比、费用估算。

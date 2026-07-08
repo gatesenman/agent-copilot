@@ -1,4 +1,13 @@
 <script setup lang="ts">
+defineOptions({ name: 'FilePanel' })
+
+defineSlots<{
+  /** 自定义文件预览区：替换内置代码预览，载荷为当前选中文件 */
+  preview(props: { file: import('../../types').WorkspaceFile | null }): unknown
+  /** 未选中文件时的占位内容 */
+  placeholder(): unknown
+}>()
+
 /**
  * FilePanel —— 工作区文件面板：左侧文件树 + 右侧内容预览。
  *

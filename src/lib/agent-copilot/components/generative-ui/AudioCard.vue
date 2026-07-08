@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'AudioCard' })
+
 /**
  * AudioCard — 音频/语音消息播放卡（payload type: 'audio'）
  *

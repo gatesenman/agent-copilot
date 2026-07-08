@@ -145,6 +145,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'MessageBubble' })
+
 /**
  * MessageBubble — 单条消息渲染
  * 文本 + 工具卡片 + 16 种结构化载荷 + 操作栏（复制/重新生成/反馈）

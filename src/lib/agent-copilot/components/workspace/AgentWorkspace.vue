@@ -1,4 +1,13 @@
 <script setup lang="ts">
+defineOptions({ name: 'AgentWorkspace' })
+
+defineSlots<{
+  /** 左侧边栏区（如会话列表、导航） */
+  sidebar(): unknown
+  /** 中栏对话上方的工具条区 */
+  toolbar(): unknown
+}>()
+
 /**
  * AgentWorkspace —— Agentic Coding 工作台组合 Shell。
  *

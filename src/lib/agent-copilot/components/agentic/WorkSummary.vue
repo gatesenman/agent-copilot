@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'WorkSummary' })
+
 /**
  * WorkSummary —— Agent 回合工作耗时摘要行。
  * 运行中实时走秒（"已工作 X 分 X 秒"），结束后定格显示总耗时。

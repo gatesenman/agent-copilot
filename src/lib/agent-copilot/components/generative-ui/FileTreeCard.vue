@@ -17,6 +17,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'FileTreeCard' })
+
 /** FileTreeCard — file_tree 载荷：可折叠目录树（Code Agent），VS Code 风格图标与缩进参考线 */
 import { computed, defineComponent, h, ref, type PropType, type VNode } from 'vue'
 import { useI18n } from '../../i18n'

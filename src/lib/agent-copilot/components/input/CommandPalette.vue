@@ -25,6 +25,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'CommandPalette' })
+
 /**
  * CommandPalette — / @ # 三类触发共用的浮层命令面板
  * 由 ChatInput 控制显隐、过滤与键盘导航（↑↓ Enter Esc）

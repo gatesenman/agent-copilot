@@ -18,6 +18,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'MetricsCard' })
+
 /** MetricsCard — metrics 载荷：KPI 指标格（Data Agent） */
 import { computed } from 'vue'
 import type { MetricsPayload, StructuredPayload } from '../../types'

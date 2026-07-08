@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'ClarifyCard' })
+
 /**
  * ClarifyCard —— Agent 澄清选择题（单选/多选 + 自定义"其他"输入）。
  * 对齐 AskUserQuestions 交互：选项带描述，可多题组合。

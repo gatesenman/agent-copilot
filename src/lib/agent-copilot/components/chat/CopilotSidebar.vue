@@ -29,6 +29,13 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'CopilotSidebar' })
+
+defineSlots<{
+  /** 头部右侧操作区（透传给内部 CopilotChat） */
+  'header-actions'(): unknown
+}>()
+
 /**
  * CopilotSidebar — 固定于视口右侧的抽屉形态（CopilotKit <CopilotSidebar> 对齐）。
  * 默认收起，仅显示边缘开关；展开后覆盖在页面内容之上，不参与文档流。

@@ -24,6 +24,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'CodeBlockCard' })
+
 /** CodeBlockCard — code 载荷：语法高亮 + 行号 + 复制（Code Agent） */
 import { computed, ref } from 'vue'
 import { useI18n } from '../../i18n'

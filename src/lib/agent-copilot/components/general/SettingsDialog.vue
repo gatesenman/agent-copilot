@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'SettingsDialog' })
+
 /**
  * SettingsDialog —— 常规设置弹框。
  *
@@ -68,6 +70,11 @@ function setValue(key: string, value: unknown) {
 function close() {
   emit('update:open', false)
 }
+
+defineExpose({
+  /** 程序化关闭设置弹窗 */
+  close,
+})
 
 const panelRef = ref<HTMLElement | null>(null)
 

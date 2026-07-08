@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'FeedbackDialog' })
+
 /**
  * FeedbackDialog —— 结构化反馈弹窗
  * 点踩后收集细化原因（企业质量回流）：分类多选 + 自由文本。
@@ -46,18 +48,25 @@ const reasonList = computed(
 )
 
 const emit = defineEmits<{
+  /** 用户提交反馈（选中原因 + 自由文本）；提交后自动关闭 */
   (e: 'submit', data: { reasons: string[]; comment: string }): void
-  (e: 'close'): void
+  /** 关闭请求（v-model:open）：点击遮罩/关闭/取消按钮、Escape、提交后触发 */
+  (e: 'update:open', open: boolean): void
 }>()
 
 const selected = ref<Set<string>>(new Set())
 const comment = ref('')
 const dialogRef = ref<HTMLElement | null>(null)
 
+/** 统一关闭出口（v-model:open 协议） */
+function close() {
+  emit('update:open', false)
+}
+
 // 焦点圈定 + Escape 关闭 + 关闭后焦点还原
 useFocusTrap(dialogRef, {
   active: () => props.open,
-  onEscape: () => emit('close'),
+  onEscape: close,
 })
 
 watch(
@@ -79,17 +88,22 @@ function toggle(r: string) {
 
 function submit() {
   emit('submit', { reasons: [...selected.value], comment: comment.value.trim() })
-  emit('close')
+  close()
 }
+
+defineExpose({
+  /** 程序化关闭对话框 */
+  close,
+})
 </script>
 
 <template>
   <Teleport to="body">
-    <div v-if="open" class="ac-fbd__overlay" role="presentation" @click.self="emit('close')">
+    <div v-if="open" class="ac-fbd__overlay" role="presentation" @click.self="close()">
       <div ref="dialogRef" class="ac-fbd" role="dialog" aria-modal="true" :aria-label="titleText">
         <header class="ac-fbd__head">
           <h3 class="ac-fbd__title">{{ titleText }}</h3>
-          <button type="button" class="ac-fbd__close" :aria-label="t('common.close')" @click="emit('close')">
+          <button type="button" class="ac-fbd__close" :aria-label="t('common.close')" @click="close()">
             <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
               <path d="m4 4 8 8M12 4l-8 8" stroke-linecap="round" />
             </svg>
@@ -120,7 +134,7 @@ function submit() {
         />
 
         <footer class="ac-fbd__foot">
-          <button type="button" class="ac-fbd__btn" @click="emit('close')">{{ labels.cancel ?? t('common.cancel') }}</button>
+          <button type="button" class="ac-fbd__btn" @click="close()">{{ labels.cancel ?? t('common.cancel') }}</button>
           <button
             type="button"
             class="ac-fbd__btn ac-fbd__btn--primary"

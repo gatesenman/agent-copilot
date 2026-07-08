@@ -14,6 +14,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'TimelineCard' })
+
 /** timeline_events 载荷 → 垂直事件时间线 */
 import { computed } from 'vue'
 import { useI18n } from '../../i18n'

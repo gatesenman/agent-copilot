@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'TaskTrackerItem' })
+
 /**
  * TaskTrackerItem —— TaskTracker 的递归任务项。
  * 支持子任务层级、activeForm 进行时文案、耗时、错误原因、重试/跳过操作、产物链接。

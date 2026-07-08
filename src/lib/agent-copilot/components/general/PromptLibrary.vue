@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'PromptLibrary' })
+
 /**
  * PromptLibrary —— 提示模板库
  * 企业内沉淀的高频提示词模板，支持分类筛选与变量占位（{变量}）。

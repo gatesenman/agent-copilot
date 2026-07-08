@@ -21,6 +21,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'TerminalCard' })
+
 /** TerminalCard — terminal 载荷：命令行输出（Code Agent） */
 import { computed } from 'vue'
 import type { StructuredPayload, TerminalPayload } from '../../types'

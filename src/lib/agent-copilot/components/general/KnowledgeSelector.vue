@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ name: 'KnowledgeSelector' })
+
 /**
  * KnowledgeSelector —— 知识库选择器。
  *

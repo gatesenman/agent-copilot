@@ -101,6 +101,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'CopilotTextarea' })
+
 /**
  * CopilotTextarea — AI 辅助文本域（CopilotKit <CopilotTextarea> 对齐并扩展）
  *
