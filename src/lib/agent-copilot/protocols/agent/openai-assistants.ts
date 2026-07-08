@@ -120,6 +120,20 @@ export const openaiAssistantsAdapter: AgentStreamAdapter = {
           break
         }
 
+        case 'thread.run.step.completed': {
+          // 工具步骤完成：function.output 即工具结果（code_interpreter / 已提交输出的 function）
+          const doneCalls = data.step_details?.tool_calls ?? []
+          for (const tc of doneCalls) {
+            if (!tc.id) continue
+            if (tc.type === 'function' && tc.function?.output != null) {
+              yield* tools.result(tc.id, safeJson(tc.function.output) ?? tc.function.output)
+            } else if (tc.type === 'code_interpreter' && tc.code_interpreter?.outputs) {
+              yield* tools.result(tc.id, tc.code_interpreter.outputs)
+            }
+          }
+          break
+        }
+
         case 'thread.run.requires_action': {
           yield* text.end()
           const calls = data.required_action?.submit_tool_outputs?.tool_calls ?? []

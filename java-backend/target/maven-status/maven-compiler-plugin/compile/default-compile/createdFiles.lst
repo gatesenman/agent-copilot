@@ -3,8 +3,8 @@ com/odagent/copilot/protocol/RunRequest.class
 com/odagent/copilot/pipeline/ReactAgentEngine.class
 com/odagent/copilot/pipeline/RunContext.class
 com/odagent/copilot/api/ProtocolMockController.class
-com/odagent/copilot/CopilotBackendApplication.class
 com/odagent/copilot/protocol/AgentEvent.class
+com/odagent/copilot/CopilotBackendApplication.class
 com/odagent/copilot/tools/ToolRegistry.class
 com/odagent/copilot/llm/SiliconFlowClient.class
 com/odagent/copilot/config/WebConfig.class

@@ -11,6 +11,7 @@ import SolutionsView from './demo/views/SolutionsView.vue'
 import GalleryView from './demo/views/GalleryView.vue'
 import DocsView from './demo/views/DocsView.vue'
 import PlaygroundView from './demo/views/PlaygroundView.vue'
+import ProtocolTestView from './demo/views/ProtocolTestView.vue'
 import LlmsView from './demo/views/LlmsView.vue'
 
 /**
@@ -30,19 +31,20 @@ const copilotConfig: CopilotConfig = {
   showTokenUsage: true,
 }
 
-type Tab = 'home' | 'gallery' | 'solutions' | 'playground' | 'llms' | 'docs'
+type Tab = 'home' | 'gallery' | 'solutions' | 'playground' | 'protocol-test' | 'llms' | 'docs'
 const tab = ref<Tab>('home')
 const tabs: { key: Tab; label: string }[] = [
   { key: 'home', label: '首页' },
   { key: 'gallery', label: '组件' },
   { key: 'solutions', label: '解决方案' },
   { key: 'playground', label: '演练场' },
+  { key: 'protocol-test', label: '协议测试' },
   { key: 'llms', label: 'AI 文档' },
   { key: 'docs', label: '帮助中心' },
 ]
 
 function onNavigate(target: string) {
-  if (['home', 'gallery', 'solutions', 'playground', 'llms', 'docs'].includes(target)) {
+  if (['home', 'gallery', 'solutions', 'playground', 'protocol-test', 'llms', 'docs'].includes(target)) {
     tab.value = target as Tab
   }
 }
@@ -83,11 +85,12 @@ const { mode: themeMode } = useTheme({ initial: 'light' })
         </div>
       </header>
 
-      <main class="app-main" :class="{ 'app-main--scroll': tab === 'home' }">
+      <main class="app-main" :class="{ 'app-main--scroll': tab === 'home' || tab === 'protocol-test' }">
         <HomeView v-if="tab === 'home'" @navigate="onNavigate" />
         <GalleryView v-else-if="tab === 'gallery'" />
         <SolutionsView v-else-if="tab === 'solutions'" />
         <PlaygroundView v-else-if="tab === 'playground'" />
+        <ProtocolTestView v-else-if="tab === 'protocol-test'" />
         <LlmsView v-else-if="tab === 'llms'" />
         <DocsView v-else />
       </main>

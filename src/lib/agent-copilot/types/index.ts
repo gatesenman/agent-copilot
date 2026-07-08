@@ -654,7 +654,7 @@ export interface AgentRuntime {
   readonly kind: 'http' | 'browser'
   /** 发起一次运行，返回事件流 */
   run(input: RunInput): AsyncIterable<AgentEvent>
-  /** 恢复被 HITL 中断的��行 */
+  /** 恢复被 HITL 中断的运行 */
   resume(sessionId: string, runId: string, response: InterruptResponse, signal?: AbortSignal): AsyncIterable<AgentEvent>
   /** 取消运行 */
   cancel(sessionId: string, runId: string): Promise<void>

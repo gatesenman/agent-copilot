@@ -15,7 +15,7 @@ import { ev, parseSse, safeJson, TextMessageEmitter, ToolCallAggregator } from '
 
 export const cozeAdapter: AgentStreamAdapter = {
   id: 'coze',
-  capabilities: { streaming: true, tools: false, hitl: false, sharedState: false, pipeline: false },
+  capabilities: { streaming: true, tools: true, hitl: false, sharedState: false, pipeline: false },
 
   buildRunRequest(input: RunInput, options: AgentAdapterOptions): AgentRequestSpec {
     return {
@@ -45,6 +45,8 @@ export const cozeAdapter: AgentStreamAdapter = {
     const text = new TextMessageEmitter(runId)
     const tools = new ToolCallAggregator(runId)
     let toolSeq = 0
+    /** Coze 的 tool_response 不带调用 ID，按顺序关联最近一次 function_call */
+    let lastToolId: string | null = null
 
     for await (const frame of parseSse(body)) {
       if (frame.data === '[DONE]' || frame.data === '"[DONE]"') break
@@ -59,11 +61,18 @@ export const cozeAdapter: AgentStreamAdapter = {
           if (e.type === 'function_call') {
             const call = safeJson<any>(e.content) ?? {}
             const id = `coze_tool_${Date.now()}_${toolSeq++}`
+            lastToolId = id
             yield tools.start(id, call.name ?? 'plugin')
             tools.appendArgs(id, JSON.stringify(call.arguments ?? {}))
             yield* tools.flushArgs(id)
           } else if (e.type === 'tool_response') {
-            yield ev('REACT_STEP', runId, { type: 'observation', content: String(e.content ?? '').slice(0, 500) })
+            // 关闭最近一次工具调用（否则 UI 永远停留在"执行中"）
+            if (lastToolId != null) {
+              yield* tools.result(lastToolId, safeJson(String(e.content ?? '')) ?? String(e.content ?? ''))
+              lastToolId = null
+            } else {
+              yield ev('REACT_STEP', runId, { type: 'observation', content: String(e.content ?? '').slice(0, 500) })
+            }
           } else if (e.type === 'knowledge') {
             yield ev('REACT_STEP', runId, { type: 'observation', content: `知识召回: ${String(e.content ?? '').slice(0, 300)}` })
           }
