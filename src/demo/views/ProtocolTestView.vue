@@ -28,6 +28,12 @@ interface CaseSpec {
   expectPayload: boolean
   /** 预期出现用量事件 */
   expectUsage: boolean
+  /** 展示名（边界用例用；默认取 protocol） */
+  displayName?: string
+  /** 自定义断言：提供则替代默认断言集 */
+  assert?: (ctx: { types: string[]; events: AgentEvent[]; text: string; error?: string; durationMs: number }) => CheckResult[]
+  /** 运行前配置：返回传给 run 的 AbortSignal（用于中断用例） */
+  setup?: () => AbortSignal | undefined
 }
 
 const CASES: CaseSpec[] = [
@@ -42,6 +48,74 @@ const CASES: CaseSpec[] = [
   { protocol: 'a2a', endpoint: '/api/mock/a2a', expectText: 'A2A', expectTool: false, expectPayload: true, expectUsage: false },
   { protocol: 'acp', endpoint: '/api/mock/acp', expectText: 'ACP', expectTool: false, expectPayload: true, expectUsage: false },
   { protocol: 'openai-assistants', endpoint: '/api/mock/openai-assistants', expectText: 'Assistants', expectTool: true, expectPayload: false, expectUsage: true },
+]
+
+/** 边界用例：统一走 ag-ui 适配器，验证运行时容错三大路径（错误传播 / 畸形帧 / 中断） */
+const EDGE_CASES: CaseSpec[] = [
+  {
+    protocol: 'ag-ui',
+    displayName: 'edge: HTTP 500',
+    endpoint: '/api/mock/edge/http-error',
+    expectText: '', expectTool: false, expectPayload: false, expectUsage: false,
+    assert: ({ types, events, error }) => [
+      { label: '不抛异常（错误转事件）', pass: !error, detail: error },
+      { label: '以 RUN_STARTED 开始', pass: types[0] === 'RUN_STARTED', detail: `首事件: ${types[0] ?? '无'}` },
+      { label: '以 RUN_ERROR 终止', pass: types[types.length - 1] === 'RUN_ERROR', detail: `末事件: ${types[types.length - 1] ?? '无'}` },
+      {
+        label: '错误信息含状态码 500',
+        pass: String((events.find((e) => e.type === 'RUN_ERROR')?.data as { message?: string })?.message ?? '').includes('500'),
+      },
+    ],
+  },
+  {
+    protocol: 'ag-ui',
+    displayName: 'edge: 协议错误帧',
+    endpoint: '/api/mock/edge/error-frame',
+    expectText: '', expectTool: false, expectPayload: false, expectUsage: false,
+    assert: ({ types, events, text, error }) => [
+      { label: '不抛异常', pass: !error, detail: error },
+      { label: '出错前文本已到达', pass: text.includes('出错前的部分输出'), detail: `实际: ${text.slice(0, 40) || '(空)'}` },
+      { label: 'RUN_ERROR 透传', pass: types.includes('RUN_ERROR') },
+      {
+        label: '错误信息保留原文',
+        pass: String((events.find((e) => e.type === 'RUN_ERROR')?.data as { message?: string })?.message ?? '').includes('超时'),
+      },
+      { label: '错误后不再补 RUN_FINISHED', pass: types[types.length - 1] === 'RUN_ERROR', detail: `末事件: ${types[types.length - 1] ?? '无'}` },
+    ],
+  },
+  {
+    protocol: 'ag-ui',
+    displayName: 'edge: 畸形帧容错',
+    endpoint: '/api/mock/edge/malformed',
+    expectText: '', expectTool: false, expectPayload: false, expectUsage: false,
+    assert: ({ types, text, error }) => [
+      { label: '不抛异常（跳过坏帧）', pass: !error, detail: error },
+      { label: '无 RUN_ERROR', pass: !types.includes('RUN_ERROR') },
+      { label: '坏帧之后仍继续解析', pass: text.includes('畸形帧之后仍然存活'), detail: `实际: ${text.slice(0, 40) || '(空)'}` },
+      { label: '以 RUN_FINISHED 结束', pass: types[types.length - 1] === 'RUN_FINISHED', detail: `末事件: ${types[types.length - 1] ?? '无'}` },
+    ],
+  },
+  {
+    protocol: 'ag-ui',
+    displayName: 'edge: 中断取消',
+    endpoint: '/api/mock/edge/slow',
+    expectText: '', expectTool: false, expectPayload: false, expectUsage: false,
+    setup: () => {
+      const controller = new AbortController()
+      // 慢速流全程约 10s；600ms 后中断，收到部分文本即取消
+      setTimeout(() => controller.abort(), 600)
+      return controller.signal
+    },
+    assert: ({ types, events, durationMs, error }) => [
+      { label: '不抛异常（中断转事件）', pass: !error, detail: error },
+      { label: '流被提前终止（< 3s）', pass: durationMs < 3000, detail: `耗时 ${durationMs}ms（完整流约 10s）` },
+      { label: '以 RUN_FINISHED 收尾', pass: types[types.length - 1] === 'RUN_FINISHED', detail: `末事件: ${types[types.length - 1] ?? '无'}` },
+      {
+        label: '结束事件标记 cancelled',
+        pass: (events[events.length - 1]?.data as { cancelled?: boolean })?.cancelled === true,
+      },
+    ],
+  },
 ]
 
 interface CheckResult {
@@ -59,7 +133,14 @@ interface CaseState {
   durationMs?: number
 }
 
-const cases = ref<CaseState[]>(CASES.map((spec) => ({ spec, status: 'idle', checks: [], events: [] })))
+const cases = ref<CaseState[]>(
+  [...CASES, ...EDGE_CASES].map((spec) => ({ spec, status: 'idle', checks: [], events: [] })),
+)
+
+/** 用例唯一键（边界用例 protocol 重复，需用展示名区分） */
+function caseKey(spec: CaseSpec): string {
+  return spec.displayName ?? spec.protocol
+}
 const running = ref(false)
 const backendOk = ref<boolean | null>(null)
 
@@ -105,8 +186,10 @@ async function runCase(state: CaseState): Promise<void> {
 
   const events: AgentEvent[] = []
   let text = ''
+  const signal = state.spec.setup?.()
   try {
-    for await (const ev of runtime.run(makeInput(`run_${state.spec.protocol}`))) {
+    const input = { ...makeInput(`run_${caseKey(state.spec)}`), signal }
+    for await (const ev of runtime.run(input)) {
       events.push(ev)
       state.events.push(ev.type)
       if (ev.type === 'TEXT_DELTA') {
@@ -120,6 +203,14 @@ async function runCase(state: CaseState): Promise<void> {
   state.durationMs = Math.round(performance.now() - start)
 
   const types = events.map((e) => e.type)
+
+  // 边界用例：自定义断言集
+  if (state.spec.assert) {
+    state.checks = state.spec.assert({ types, events, text, error: state.error, durationMs: state.durationMs })
+    state.status = state.checks.every((c) => c.pass) ? 'pass' : 'fail'
+    return
+  }
+
   const checks: CheckResult[] = []
 
   checks.push({
@@ -207,7 +298,8 @@ function toggle(protocol: string): void {
       <div>
         <h1 class="pt-title">协议一致性测试</h1>
         <p class="pt-sub">
-          11 种 Agent 协议适配器 × Java 最小 Mock 后端（Spring WebFlux SSE）端到端验证：
+          11 种 Agent 协议适配器 + 4 个边界用例（HTTP 错误 / 错误帧 / 畸形帧 / 中断取消）
+          × Java 最小 Mock 后端（Spring WebFlux SSE）端到端验证：
           请求构造 → 官方帧格式回放 → 适配器解析 → 统一事件流断言。
         </p>
       </div>
@@ -228,17 +320,17 @@ function toggle(protocol: string): void {
     </div>
 
     <ul class="pt-list">
-      <li v-for="c in cases" :key="c.spec.protocol" class="pt-case" :data-status="c.status">
-        <button type="button" class="pt-case__head" @click="toggle(c.spec.protocol)">
+      <li v-for="c in cases" :key="caseKey(c.spec)" class="pt-case" :data-status="c.status">
+        <button type="button" class="pt-case__head" @click="toggle(caseKey(c.spec))">
           <span class="pt-case__badge" :data-status="c.status" aria-hidden="true" />
-          <span class="pt-case__name">{{ c.spec.protocol }}</span>
+          <span class="pt-case__name">{{ caseKey(c.spec) }}</span>
           <code class="pt-case__ep">{{ c.spec.endpoint }}</code>
           <span v-if="c.durationMs != null" class="pt-case__dur">{{ c.durationMs }}ms</span>
           <span class="pt-case__status">
             {{ c.status === 'idle' ? '待运行' : c.status === 'running' ? '运行中' : c.status === 'pass' ? '通过' : '失败' }}
           </span>
         </button>
-        <div v-if="expanded.has(c.spec.protocol) || c.status === 'fail'" class="pt-case__body">
+        <div v-if="expanded.has(caseKey(c.spec)) || c.status === 'fail'" class="pt-case__body">
           <p v-if="c.error" class="pt-case__err">异常：{{ c.error }}</p>
           <ul class="pt-checks">
             <li v-for="(chk, i) in c.checks" :key="i" class="pt-check" :data-pass="chk.pass">

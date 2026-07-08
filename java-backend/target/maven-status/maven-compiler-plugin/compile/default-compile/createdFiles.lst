@@ -6,13 +6,13 @@ com/odagent/copilot/api/ProtocolMockController.class
 com/odagent/copilot/protocol/AgentEvent.class
 com/odagent/copilot/CopilotBackendApplication.class
 com/odagent/copilot/tools/ToolRegistry.class
-com/odagent/copilot/llm/SiliconFlowClient.class
 com/odagent/copilot/config/WebConfig.class
+com/odagent/copilot/llm/SiliconFlowClient.class
 com/odagent/copilot/protocol/RunRequest$ReadableContext.class
 com/odagent/copilot/protocol/CancelRequest.class
 com/odagent/copilot/protocol/RunRequest$ChatMessage.class
-com/odagent/copilot/tools/DemoDataStore$Assessment.class
 com/odagent/copilot/config/AgentProperties.class
+com/odagent/copilot/tools/DemoDataStore$Assessment.class
 com/odagent/copilot/tools/DemoDataStore$ApprovalFlow.class
 com/odagent/copilot/api/RunRegistry.class
 com/odagent/copilot/protocol/ResumeRequest.class

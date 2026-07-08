@@ -270,7 +270,7 @@ public class ProtocolMockController {
     Map<String, Object> dataPart = Map.of(
         "kind", "data",
         "data", Map.of("type", "table", "title", "结果表", "data", tableData));
-    Map<String, Object> artifact = Map.of("name", "分析��告", "parts", List.of(dataPart));
+    Map<String, Object> artifact = Map.of("name", "分析���告", "parts", List.of(dataPart));
     f.add(sse(json(Map.of("jsonrpc", "2.0", "id", rpcId, "result", Map.of(
         "kind", "artifact-update", "taskId", "task_1", "artifact", artifact)))));
     f.add(sse(json(Map.of("jsonrpc", "2.0", "id", rpcId, "result", Map.of(
@@ -329,5 +329,54 @@ public class ProtocolMockController {
         "usage", Map.of("prompt_tokens", 18, "completion_tokens", 11, "total_tokens", 29)))));
     f.add(sse("done", "[DONE]"));
     return stream(f);
+  }
+
+  // ---------- 边界用例（容错与中断验证，统一走 AG-UI 帧格式） ----------
+
+  /** HTTP 500：验证运行时把非 2xx 转成 RUN_ERROR 且流正常终止 */
+  @PostMapping("/edge/http-error")
+  public org.springframework.http.ResponseEntity<Map<String, Object>> edgeHttpError(
+      @RequestBody Map<String, Object> body) {
+    return org.springframework.http.ResponseEntity.status(500)
+        .body(Map.of("error", "mock internal failure", "code", "E_MOCK_500"));
+  }
+
+  /** 协议级错误帧：流中途发 RUN_ERROR，验证错误事件透传且不再补 RUN_FINISHED */
+  @PostMapping(value = "/edge/error-frame", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public Flux<ServerSentEvent<String>> edgeErrorFrame(@RequestBody Map<String, Object> body) {
+    List<ServerSentEvent<String>> f = new ArrayList<>();
+    f.add(sse(json(Map.of("type", "RUN_STARTED", "threadId", "t1", "runId", "edge_run"))));
+    f.add(sse(json(Map.of("type", "TEXT_MESSAGE_START", "messageId", "m1"))));
+    f.add(sse(json(Map.of("type", "TEXT_MESSAGE_CONTENT", "messageId", "m1", "delta", "出错前的部分输出"))));
+    f.add(sse(json(Map.of("type", "RUN_ERROR", "message", "mock 工具执行超时", "code", "E_TOOL_TIMEOUT"))));
+    return stream(f);
+  }
+
+  /** 畸形帧容错：正常帧中夹杂非法 JSON 与未知类型，验证解析器跳过而非崩溃 */
+  @PostMapping(value = "/edge/malformed", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public Flux<ServerSentEvent<String>> edgeMalformed(@RequestBody Map<String, Object> body) {
+    List<ServerSentEvent<String>> f = new ArrayList<>();
+    f.add(sse(json(Map.of("type", "RUN_STARTED", "threadId", "t1", "runId", "edge_run"))));
+    f.add(sse(json(Map.of("type", "TEXT_MESSAGE_START", "messageId", "m1"))));
+    f.add(sse("{\"type\":\"TEXT_MESSAGE_CONTENT\",\"messageId\":\"m1\",\"delta\":")); // 截断的 JSON
+    f.add(sse("not-json-at-all")); // 完全非 JSON
+    f.add(sse(json(Map.of("type", "UNKNOWN_FUTURE_EVENT", "foo", "bar")))); // 未知事件类型
+    f.add(sse(json(Map.of("type", "TEXT_MESSAGE_CONTENT", "messageId", "m1", "delta", "畸形帧之后仍然存活"))));
+    f.add(sse(json(Map.of("type", "TEXT_MESSAGE_END", "messageId", "m1"))));
+    f.add(sse(json(Map.of("type", "RUN_FINISHED"))));
+    return stream(f);
+  }
+
+  /** 慢速流：帧间 400ms、共 25 帧，供前端验证 AbortSignal 中断（cancelled 收尾） */
+  @PostMapping(value = "/edge/slow", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public Flux<ServerSentEvent<String>> edgeSlow(@RequestBody Map<String, Object> body) {
+    List<ServerSentEvent<String>> f = new ArrayList<>();
+    f.add(sse(json(Map.of("type", "RUN_STARTED", "threadId", "t1", "runId", "edge_run"))));
+    f.add(sse(json(Map.of("type", "TEXT_MESSAGE_START", "messageId", "m1"))));
+    for (int i = 0; i < 22; i++) {
+      f.add(sse(json(Map.of("type", "TEXT_MESSAGE_CONTENT", "messageId", "m1", "delta", "块" + i + " "))));
+    }
+    f.add(sse(json(Map.of("type", "RUN_FINISHED"))));
+    return Flux.fromIterable(f).delayElements(Duration.ofMillis(400));
   }
 }
