@@ -16,7 +16,7 @@
  * 创建 Copilot 上下文（runtime、会话、注册表），并注入主题变量。
  * 全部配置项见 CopilotConfig 类型。
  */
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { CopilotConfig, StructuredPayload } from '../types'
 import { provideCopilot } from '../composables/useCopilot'
 import { labelsFromLocale, normalizeLocale, provideI18n } from '../i18n'
@@ -26,6 +26,24 @@ import '../theme/copilot-theme.css'
 const props = defineProps<{ config: CopilotConfig }>()
 
 const store = provideCopilot(props.config)
+
+// ============ config prop 响应式（第 4 层变更 → 第 5 层 updateConfig） ============
+// 深监听 config prop：宿主变更（如切换 model/theme/locale）自动经 updateConfig 分流 ——
+// 响应式键即时生效，结构键（endpoint/provider 等）重建 runtime 对新会话生效。
+// 仅同步实际变化的键，避免整对象重合并引发无关重建。
+watch(
+  () => props.config,
+  (next, prev) => {
+    const patch: Partial<CopilotConfig> = {}
+    const keys = new Set([...Object.keys(next ?? {}), ...Object.keys(prev ?? {})]) as Set<keyof CopilotConfig>
+    for (const key of keys) {
+      const nv = next?.[key]
+      if (nv !== prev?.[key] && nv !== undefined) (patch as Record<string, unknown>)[key] = nv
+    }
+    if (Object.keys(patch).length > 0) store.updateConfig(patch)
+  },
+  { deep: true },
+)
 
 // ============ 多语言 ============
 // locale 归一化：'zh' → 'zh-CN'，'en' → 'en-US'；默认中文

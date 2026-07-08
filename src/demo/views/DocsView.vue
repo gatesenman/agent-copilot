@@ -13,6 +13,7 @@ import protocolsDoc from '../../../docs/guide/protocols.md?raw'
 import enterpriseDoc from '../../../docs/guide/enterprise.md?raw'
 import agenticDoc from '../../../docs/guide/agentic.md?raw'
 import integrationDoc from '../../../docs/guide/integration.md?raw'
+import configurationDoc from '../../../docs/guide/configuration.md?raw'
 import themingDoc from '../../../docs/guide/theming.md?raw'
 import i18nDoc from '../../../docs/guide/i18n.md?raw'
 
@@ -31,6 +32,7 @@ const SECTIONS: DocSection[] = [
   { id: 'theming', label: '主题定制（Tokens / 预设）', group: '核心能力', content: themingDoc },
   { id: 'i18n', label: '多语言（中英内置）', group: '核心能力', content: i18nDoc },
   { id: 'integration', label: '集成方式（SDK / 嵌入 / WC）', group: '集成', content: integrationDoc },
+  { id: 'configuration', label: '标准传参（五层配置模型）', group: '集成', content: configurationDoc },
   { id: 'protocols', label: 'AI 协议接入（32 种）', group: '集成', content: protocolsDoc },
   { id: 'enterprise', label: '企业组件', group: '集成', content: enterpriseDoc },
 ]

@@ -20,6 +20,11 @@
  *  - useCopilotChatSuggestions / useLangGraphInterrupt
  */
 
+// ============ 应用级插件（标准集成入口） ============
+// app.use(createCopilot({...})) 提供全局默认配置层，实例 config prop 深合并覆盖
+export { createCopilot, defineCopilotConfig, COPILOT_GLOBAL_DEFAULTS_KEY } from './plugin'
+export { mergeCopilotConfig, validateCopilotConfig, REACTIVE_CONFIG_KEYS, STRUCTURAL_CONFIG_KEYS } from './utils/config-merge'
+
 // ============ 组件 ============
 // ---- 一体化聚合大组件（推荐入口：一个标签开箱即用） ----
 export { default as AgentCopilot } from './components/shell/AgentCopilot.vue'

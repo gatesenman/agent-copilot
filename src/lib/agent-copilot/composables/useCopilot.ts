@@ -11,6 +11,8 @@ import type {
 } from '../types'
 import { AGENT_TYPE_PRESETS, createEmptyAgentState, DEFAULT_CONFIG, DEFAULT_LABELS, genId, STAGE_LABELS } from '../types'
 import { createRuntime } from '../protocols'
+import { COPILOT_GLOBAL_DEFAULTS_KEY } from '../plugin'
+import { mergeCopilotConfig, splitConfigPatch, validateAndWarn } from '../utils/config-merge'
 
 export type ChatStatus = 'idle' | 'running' | 'awaiting_interrupt' | 'error'
 
@@ -19,6 +21,12 @@ export interface CopilotStore {
   /** 合并默认值后的 UI 文案 */
   labels: Required<LabelsConfig>
   runtime: AgentRuntime
+  /**
+   * 运行时配置微调（第 5 层）：
+   * - 响应式键（model/theme/locale/temperature 等）即时生效；
+   * - 结构键（runtime/provider/protocol/endpoint 等）重建 runtime，对新会话生效。
+   */
+  updateConfig: (patch: Partial<CopilotConfig>) => void
 
   // 会话
   sessionId: Ref<string>
@@ -99,15 +107,43 @@ export interface CopilotStore {
  */
 export const COPILOT_KEY: InjectionKey<CopilotStore> = Symbol.for('agent-copilot:store')
 
-export function createCopilotStore(userConfig: CopilotConfig): CopilotStore {
-  // 合并顺序：默认值 < agentType 预设 < 用户配置
-  const preset = AGENT_TYPE_PRESETS[userConfig.agentType ?? 'custom'] ?? {}
-  const config: CopilotConfig = { ...DEFAULT_CONFIG, ...preset, ...userConfig }
+export function createCopilotStore(
+  userConfig: CopilotConfig,
+  globalDefaults?: Partial<CopilotConfig>,
+): CopilotStore {
+  // 分层深合并（优先级从低到高）：内置默认 < agentType 预设 < 插件全局默认 < config prop
+  // agentType 取实例层优先，其次全局默认层
+  const agentType = userConfig.agentType ?? globalDefaults?.agentType ?? 'custom'
+  const preset = AGENT_TYPE_PRESETS[agentType] ?? {}
+  const config: CopilotConfig = reactive(
+    mergeCopilotConfig(DEFAULT_CONFIG, preset, globalDefaults, userConfig),
+  ) as CopilotConfig
+  validateAndWarn(config)
   const labels: Required<LabelsConfig> = { ...DEFAULT_LABELS, ...config.labels }
   const callbacks = config.callbacks ?? {}
 
   // 协议工厂：runtimeInstance 直接注入优先，其次根据 provider / protocol / runtime 推断（32 种接入方式）
-  const runtime: AgentRuntime = config.runtimeInstance ?? createRuntime(config)
+  // let 绑定：updateConfig 传入结构键（endpoint/provider 等）时重建，对新会话生效
+  let runtime: AgentRuntime = config.runtimeInstance ?? createRuntime(config)
+
+  /** 运行时配置微调（第 5 层）：响应式键即时生效；结构键重建 runtime */
+  function updateConfig(patch: Partial<CopilotConfig>) {
+    const { reactive: reactivePatch, structural } = splitConfigPatch(patch)
+    // 响应式键：深合并进 reactive config，读取方（computed/模板）自动更新
+    if (Object.keys(reactivePatch).length > 0) {
+      Object.assign(config, mergeCopilotConfig(config, reactivePatch))
+    }
+    if (Object.keys(structural).length > 0) {
+      Object.assign(config, structural)
+      runtime = config.runtimeInstance ?? createRuntime(config)
+      if (import.meta.env?.DEV) {
+        console.warn(
+          `[agent-copilot] 结构配置变更（${Object.keys(structural).join(', ')}）已重建 runtime，对新会话生效`,
+        )
+      }
+    }
+    validateAndWarn(config)
+  }
 
   // ---- 会话持久化 ----
   const persistence = config.persistence ?? { mode: 'none' as const }
@@ -760,7 +796,10 @@ export function createCopilotStore(userConfig: CopilotConfig): CopilotStore {
   }
 
   return {
-    config, labels, runtime,
+    config, labels,
+    // getter：结构配置变更重建 runtime 后，store.runtime 始终指向最新实例
+    get runtime() { return runtime },
+    updateConfig,
     sessionId, messages, status, currentRunId, lastError,
     agentState, interrupt, totalUsage,
     readables, actions, additionalInstructions, suggestions, suggestionsLoading,
@@ -778,7 +817,9 @@ export function createCopilotStore(userConfig: CopilotConfig): CopilotStore {
 }
 
 export function provideCopilot(config: CopilotConfig): CopilotStore {
-  const store = createCopilotStore(config)
+  // 第 3 层：app.use(createCopilot({...})) 提供的应用级默认（未装插件时为 undefined，行为不变）
+  const globalDefaults = inject(COPILOT_GLOBAL_DEFAULTS_KEY, undefined)
+  const store = createCopilotStore(config, globalDefaults)
   provide(COPILOT_KEY, store)
   return store
 }
