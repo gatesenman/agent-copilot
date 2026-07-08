@@ -14,6 +14,9 @@ import FeedbackDialog from '../../lib/agent-copilot/components/general/FeedbackD
 import SafetyBanner from '../../lib/agent-copilot/components/general/SafetyBanner.vue'
 import FileDropzone from '../../lib/agent-copilot/components/general/FileDropzone.vue'
 import SourcePanel from '../../lib/agent-copilot/components/general/SourcePanel.vue'
+import PayloadCard from '../../lib/agent-copilot/components/generative-ui/PayloadCard.vue'
+import VoiceRecorderBar from '../../lib/agent-copilot/components/input/VoiceRecorderBar.vue'
+import { sampleAudio, sampleVideo } from './payload-samples'
 import type { SessionItem } from '../../lib/agent-copilot/components/general/SessionList.vue'
 import type { PromptTemplate } from '../../lib/agent-copilot/components/general/PromptLibrary.vue'
 import type { UploadingFile } from '../../lib/agent-copilot/components/general/FileDropzone.vue'
@@ -28,6 +31,7 @@ const K = reactive({
   dropzone: { disabled: false, maxFiles: 6, maxSizeMb: 20 },
   prompts: { emptyText: '没有匹配的模板' },
   sources: { title: '引用来源' },
+  recorder: { paused: false },
 })
 
 const C: Record<keyof typeof K, KnobDef[]> = {
@@ -51,7 +55,11 @@ const C: Record<keyof typeof K, KnobDef[]> = {
   ],
   prompts: [{ key: 'emptyText', label: 'emptyText', type: 'text' }],
   sources: [{ key: 'title', label: 'title', type: 'text' }],
+  recorder: [{ key: 'paused', label: 'paused', type: 'boolean' }],
 }
+
+// ---- 录音条 ----
+const recMsg = ref('等待操作')
 
 // ---- 会话列表 ----
 const now = Date.now()
@@ -224,6 +232,33 @@ function onUpload(list: File[]) {
       <DemoKnobs :controls="C.sources" :state="K.sources" />
       <SourcePanel :sources="sources" :title="K.sources.title" />
     </section>
+
+    <section class="g-section">
+      <h2>多模态交互 — AudioCard / VideoCard / VoiceRecorderBar</h2>
+      <p class="g-desc">
+        语音消息播放卡（波形进度 / 倍速 / 转写折叠 / 下载）、视频回复卡（原生控件 / 下载）、录音中状态条（波形跳动 / 计时 / 取消 / 停止发送）。
+        音视频经 PayloadCard 按 payload type 'audio' / 'video' 自动分发；录音条由 ChatInput 语音按钮触发后替换输入区展示。
+      </p>
+      <div class="ent-grid">
+        <div class="ent-stack">
+          <h3 class="ent-sub">AudioCard — 语音消息 / TTS 回复</h3>
+          <PayloadCard :payload="sampleAudio" />
+        </div>
+        <div class="ent-stack">
+          <h3 class="ent-sub">VideoCard — 视频回复</h3>
+          <PayloadCard :payload="sampleVideo" />
+        </div>
+      </div>
+      <div class="ent-stack" style="margin-top: 16px">
+        <h3 class="ent-sub">VoiceRecorderBar — 录音中状态条（{{ recMsg }}）</h3>
+        <DemoKnobs :controls="C.recorder" :state="K.recorder" />
+        <VoiceRecorderBar
+          :paused="K.recorder.paused"
+          @cancel="recMsg = '已取消'"
+          @stop="recMsg = '已停止并发送'"
+        />
+      </div>
+    </section>
   </div>
 </template>
 
@@ -277,6 +312,12 @@ function onUpload(list: File[]) {
   color: var(--ac-muted);
 }
 .g-section h2 { font-size: 17px; margin: 0 0 6px; }
+.ent-sub {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ac-fg);
+  margin: 0 0 8px;
+}
 .g-desc {
   color: var(--ac-muted);
   font-size: 13px;

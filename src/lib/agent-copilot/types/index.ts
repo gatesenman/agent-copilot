@@ -126,6 +126,8 @@ export type StructuredPayloadType =
   | 'code' | 'diff' | 'file_tree' | 'terminal'
   | 'metrics' | 'sql_result'
   | 'image'
+  | 'audio'
+  | 'video'
   | 'citations'
   | 'timeline_events'
   // Agent↔人双向交互
@@ -237,6 +239,28 @@ export interface ImagePayload {
   width?: number
   height?: number
   caption?: string
+}
+
+/** 音频载荷（payload type: 'audio'）：语音消息 / TTS 回复 */
+export interface AudioPayload {
+  src: string
+  /** 时长（秒），未知时播放器加载后自取 */
+  duration?: number
+  /** 语音转写文本（可折叠展示） */
+  transcript?: string
+  caption?: string
+  mimeType?: string
+}
+
+/** 视频载荷（payload type: 'video'） */
+export interface VideoPayload {
+  src: string
+  poster?: string
+  duration?: number
+  caption?: string
+  mimeType?: string
+  width?: number
+  height?: number
 }
 
 export interface CitationsPayload {
@@ -568,7 +592,7 @@ export interface CopilotActionDef {
   parameters?: ActionParameter[]
   /** 直接执行 */
   handler?: (args: Record<string, unknown>) => Promise<unknown> | unknown
-  /** HITL：渲染并等待����户确认后再执行（renderAndWait 语义） */
+  /** HITL：渲染并等待�����户确认后再执行（renderAndWait 语义） */
   requiresApproval?: boolean
   /** 自定义渲染组件名（generative UI 注册表 key） */
   render?: string

@@ -442,6 +442,18 @@ export const COMPONENT_API_GROUPS: ApiGroup[] = [
         props: [{ name: 'payload', type: 'StructuredPayload', desc: '对应 type 的数据结构' }],
       },
       {
+        name: 'AudioCard',
+        brief: '媒体域：语音消息 / TTS 回复播放卡（波形进度点击跳转、倍速、转写文本折叠、下载）',
+        when: "type 为 audio。data: { src, duration?, transcript?, caption?, mimeType? }（AudioPayload）。",
+        props: [{ name: 'payload', type: 'StructuredPayload', desc: '对应 type 的数据结构' }],
+      },
+      {
+        name: 'VideoCard',
+        brief: '媒体域：视频回复卡（原生控件、海报帧、说明、下载）',
+        when: "type 为 video。data: { src, poster?, caption?, mimeType? }（VideoPayload）。",
+        props: [{ name: 'payload', type: 'StructuredPayload', desc: '对应 type 的数据结构' }],
+      },
+      {
         name: 'TimelineCard',
         brief: '通用域：事件时间线',
         when: 'type 为 timeline_events。',
@@ -532,6 +544,19 @@ export const COMPONENT_API_GROUPS: ApiGroup[] = [
         ],
       },
       {
+        name: 'VoiceRecorderBar',
+        brief: '录音中状态条（波形跳动 / 计时 / 取消 / 停止发送），多模态语音输入的展示层',
+        props: [
+          { name: 'levels', type: 'number[]', desc: '实时电平 0-1（如 AnalyserNode 输出）；不传用内置动画' },
+          { name: 'elapsed', type: 'number', desc: '已录秒数；不传则内部自计时' },
+          { name: 'paused', type: 'boolean', desc: '暂停态（停止计时与波形）' },
+        ],
+        when: '点击 ChatInput 语音按钮后替换输入区展示；宿主负责 MediaRecorder 实际采集。',
+        events: [
+          { name: 'cancel / stop', payload: '—', desc: '取消录音 / 停止并发送' },
+        ],
+      },
+      {
         name: 'SafetyBanner / FeedbackDialog / SettingsDialog',
         brief: '安全横幅 / 反馈弹窗 / 设置弹窗',
         props: [
@@ -569,7 +594,7 @@ export const COMPONENT_API_GROUPS: ApiGroup[] = [
         brief: '协议能力徽标（流式 / 工具 / HITL / 共享状态 / 流水线）',
         props: [
           { name: 'protocol', type: 'string', desc: '协议 ID（如 a2a / ag-ui / langgraph）' },
-          { name: 'capabilities', type: '{ streaming?, tools?, hitl?, ... }', desc: '能力覆盖（缺省查预设���' },
+          { name: 'capabilities', type: '{ streaming?, tools?, hitl?, ... }', desc: '能力��盖（缺省查预设���' },
         ],
         when: '标注当前接入协议及其能力矩阵。',
       },

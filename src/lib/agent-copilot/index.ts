@@ -48,6 +48,8 @@ export { default as DiffCard } from './components/generative-ui/DiffCard.vue'
 export { default as FileTreeCard } from './components/generative-ui/FileTreeCard.vue'
 export { default as TerminalCard } from './components/generative-ui/TerminalCard.vue'
 export { default as ImageCard } from './components/generative-ui/ImageCard.vue'
+export { default as AudioCard } from './components/generative-ui/AudioCard.vue'
+export { default as VideoCard } from './components/generative-ui/VideoCard.vue'
 export { default as CitationsCard } from './components/generative-ui/CitationsCard.vue'
 export { default as PlanCard } from './components/generative-ui/PlanCard.vue'
 export { default as TimelineCard } from './components/generative-ui/TimelineCard.vue'
@@ -87,6 +89,7 @@ export type { ExportFormat, ExportOptions } from './utils/session-export'
 // ---- 输入增强组件 ----
 export { default as CommandPalette } from './components/input/CommandPalette.vue'
 export { default as ContextChips } from './components/input/ContextChips.vue'
+export { default as VoiceRecorderBar } from './components/input/VoiceRecorderBar.vue'
 export { useCommands } from './composables/useCommands'
 
 // ---- 协议专属组件（A2A / ACP / MCP） ----

@@ -208,7 +208,7 @@ export const sampleMetrics: StructuredPayload = {
       { label: '销售总额 (GMV)', value: '2,847', unit: '万元', delta: 12.4, hint: '同比 +9.1%，环比 +12.4%' },
       { label: '毛利率', value: '34.8', unit: '%', delta: 2.1, hint: '产品结构优化贡献 1.4pct' },
       { label: '库存周转天数', value: 38.5, unit: '天', delta: -11.3, invertDelta: true, hint: '环比缩短 4.9 天' },
-      { label: '订单履约率', value: '96.2', unit: '%', delta: 1.8, hint: '目标 95%，已达标' },
+      { label: '订单履约率', value: '96.2', unit: '%', delta: 1.8, hint: '目标 95%，���达标' },
       { label: '客单价', value: '1,286', unit: '元', delta: 4.6 },
       { label: '复购率', value: '41.3', unit: '%', delta: 3.2, hint: '会员运营拉动' },
       { label: '获客成本 (CAC)', value: '218', unit: '元', delta: -6.5, invertDelta: true, hint: '投放渠道调优' },
@@ -346,9 +346,30 @@ export const sampleImage: StructuredPayload = {
   title: '生成的横幅示意',
   data: {
     src: '/images/demo-banner.png',
-    alt: '蓝色调企业工作台横幅设计示意图',
+    alt: '蓝色调企业工��台横幅设计示意图',
     prompt: '现代企业工作台横幅，深蓝主色，简洁几何图形',
     caption: '方案 A：深蓝渐变 + 几何切面',
+  },
+}
+
+export const sampleAudio: StructuredPayload = {
+  type: 'audio',
+  title: '语音回复（TTS）',
+  data: {
+    // 公开 CC0 测试音频
+    src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3',
+    transcript: '本季度营收环比增长 12%，主要来自华东区新客户；建议下一步重点跟进续约率下滑的三个大客户。',
+    caption: 'TTS 语音摘要',
+  },
+}
+
+export const sampleVideo: StructuredPayload = {
+  type: 'video',
+  title: '操作演示视频',
+  data: {
+    // 公开 CC0 测试视频
+    src: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    caption: 'Agent 录制的报表配置操作回放',
   },
 }
 
@@ -385,5 +406,5 @@ export const SAMPLES_BY_AGENT = {
   chat: [samplePlan, sampleCitations, sampleCard, sampleDocument],
   code: [sampleCode, sampleDiff, sampleFileTree, sampleTerminal],
   data: [sampleMetrics, sampleChart, sampleLineChart, samplePieChart, sampleSqlResult, sampleTable],
-  general: [sampleImage, sampleComparison],
+  general: [sampleImage, sampleAudio, sampleVideo, sampleComparison],
 } as const

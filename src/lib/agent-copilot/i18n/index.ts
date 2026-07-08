@@ -126,6 +126,20 @@ export const zhCN: LocaleMessages = {
   'tool.exitCode': '退出码 {n}',
   'tool.openLink': '打开链接',
 
+  // ---- 多模态媒体 ----
+  'media.play': '播放',
+  'media.pause': '暂停',
+  'media.audioMessage': '语音消息',
+  'media.video': '视频',
+  'media.transcript': '查看转写文本',
+  'media.transcriptHide': '收起转写文本',
+  'media.download': '下载',
+  'media.rateAria': '播放速度',
+  'media.recording': '正在录音',
+  'media.recCancel': '取消录音',
+  'media.recStop': '停止并发送',
+  'media.recPaused': '已暂停',
+
   // ---- 计划审查 ----
   'plan.title': '执行计划',
   'plan.confirm': '确认计划',
@@ -284,6 +298,19 @@ export const enUS: LocaleMessages = {
   'tool.output': 'Output',
   'tool.exitCode': 'Exit code {n}',
   'tool.openLink': 'Open link',
+
+  'media.play': 'Play',
+  'media.pause': 'Pause',
+  'media.audioMessage': 'Voice message',
+  'media.video': 'Video',
+  'media.transcript': 'Show transcript',
+  'media.transcriptHide': 'Hide transcript',
+  'media.download': 'Download',
+  'media.rateAria': 'Playback speed',
+  'media.recording': 'Recording',
+  'media.recCancel': 'Cancel recording',
+  'media.recStop': 'Stop & send',
+  'media.recPaused': 'Paused',
 
   'plan.title': 'Execution plan',
   'plan.confirm': 'Confirm plan',

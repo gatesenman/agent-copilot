@@ -21,6 +21,8 @@ import DiffCard from './DiffCard.vue'
 import FileTreeCard from './FileTreeCard.vue'
 import TerminalCard from './TerminalCard.vue'
 import ImageCard from './ImageCard.vue'
+import AudioCard from './AudioCard.vue'
+import VideoCard from './VideoCard.vue'
 import CitationsCard from './CitationsCard.vue'
 import PlanCard from './PlanCard.vue'
 import TimelineCard from './TimelineCard.vue'
@@ -40,6 +42,8 @@ const BUILTIN: Record<string, Component> = {
   file_tree: FileTreeCard,
   terminal: TerminalCard,
   image: ImageCard,
+  audio: AudioCard,
+  video: VideoCard,
   citations: CitationsCard,
   plan: PlanCard,
   timeline_events: TimelineCard,
