@@ -33,8 +33,8 @@ const FILES: WorkspaceFile[] = [
 const selectedPath = ref('src/utils/debounce.ts')
 
 const MCP_TOOLS = [
-  { name: 'search_knowledge', description: '检索企业知识库', inputSchema: { type: 'object', properties: { query: { type: 'string', description: '检索词' } }, required: ['query'] } },
-  { name: 'run_sql', description: '执行只读 SQL 查询', inputSchema: { type: 'object', properties: { sql: { type: 'string', description: 'SELECT 语句' } }, required: ['sql'] } },
+  { name: 'search_knowledge', description: '检索企业知识库', inputSchema: { type: 'object' as const, properties: { query: { type: 'string', description: '检索词' } }, required: ['query'] } },
+  { name: 'run_sql', description: '执行只读 SQL 查询', inputSchema: { type: 'object' as const, properties: { sql: { type: 'string', description: 'SELECT 语句' } }, required: ['sql'] } },
 ]
 const MCP_RESOURCES = [
   { uri: 'kb://policies/travel', name: '差旅制度', mimeType: 'application/pdf' },

@@ -208,10 +208,10 @@ const draftText = ref('')
 const paletteOpen = ref(false)
 const paletteIndex = ref(0)
 const paletteItems: PaletteItem[] = [
-  { id: 'pl1', label: '总结当前会话', description: '/summarize', icon: '§', type: 'command' },
-  { id: 'pl2', label: '生成 SQL 查询', description: '/sql <需求>', icon: '数', type: 'command' },
-  { id: 'pl3', label: '打开设置', description: '偏好与模型参数', icon: '⚙', type: 'action' },
-  { id: 'pl4', label: '清空会话', description: '重置消息流', icon: '×', type: 'action' },
+  { id: 'pl1', label: '总结当前会话', description: '/summarize', icon: '§', type: 'command', raw: null },
+  { id: 'pl2', label: '生成 SQL 查询', description: '/sql <需求>', icon: '数', type: 'command', raw: null },
+  { id: 'pl3', label: '打开设置', description: '偏好与模型参数', icon: '⚙', type: 'action', raw: null },
+  { id: 'pl4', label: '清空会话', description: '重置消息流', icon: '×', type: 'action', raw: null },
 ]
 function onPaletteSelect(item: PaletteItem) {
   paletteOpen.value = false
@@ -478,7 +478,7 @@ const store = useCopilot() // 在 <CopilotProvider> 内调用
       <SafetyBanner
         level="info"
         title="演示环境"
-        detail="本演示在浏览器内模拟运行，工具调用与审批均为演示数据，不会产生真实副作用。"
+        detail="本演示��浏览器内模拟运行，工具调用与审批均为演示数据，不会产生真实副作用。"
         policy="演示策略"
         @dismiss="bannerVisible = false"
       />

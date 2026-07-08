@@ -23,9 +23,9 @@ const STEPS: AgentStep[] = [
 ]
 
 const TOOL_CALL: ToolCallState = {
-  id: 'tc1', name: 'run_tests', label: '运行测试',
+  id: 'tc1', name: 'run_tests', label: '运行测试', origin: 'backend',
   args: { pattern: 'debounce.test.ts' },
-  status: 'success',
+  status: 'succeeded',
   result: { passed: 2, failed: 0, duration: '20ms' },
 }
 
@@ -38,9 +38,10 @@ const clarifySubmitted = ref(false)
 const clarifyAnswers = ref<Record<string, string[]>>()
 
 const AGENT_FORM: FormPayload = {
+  formId: 'release_form',
   fields: [
-    { key: 'env', label: '部署环境', type: 'select', required: true, options: [{ label: '预发', value: 'staging' }, { label: '生产', value: 'prod' }] },
-    { key: 'note', label: '发布说明', type: 'textarea', placeholder: '本次变更要点…' },
+    { name: 'env', label: '部署环境', type: 'select', required: true, options: [{ label: '预发', value: 'staging' }, { label: '生产', value: 'prod' }] },
+    { name: 'note', label: '发布说明', type: 'textarea', placeholder: '本次变更要点…' },
   ],
   submitLabel: '确认发布',
 }
@@ -49,7 +50,7 @@ const formValues = ref<Record<string, unknown>>()
 
 const TRACKER_TASK: AgentTask = {
   id: 'tt1', title: '重构工具函数并补测试', status: 'active', detail: '子任务 2/3 已完成',
-  children: [
+  subtasks: [
     { id: 'tt1a', title: '实现 debounce', status: 'done' },
     { id: 'tt1b', title: '补单元测试', status: 'done' },
     { id: 'tt1c', title: '接入 dashboard', status: 'active' },
@@ -75,7 +76,7 @@ const TRACKER_TASK: AgentTask = {
     </section>
 
     <section class="oagentic__sec" data-comp="ToolActionCard（工具调用卡）">
-      <ToolActionCard :tool-call="TOOL_CALL" kind="terminal" default-expanded />
+      <ToolActionCard :tool-call="TOOL_CALL" kind="run_command" default-expanded />
     </section>
 
     <section class="oagentic__sec" data-comp="CheckpointCard（检查点 / 一键回滚）">
