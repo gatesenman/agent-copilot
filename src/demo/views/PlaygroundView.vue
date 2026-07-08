@@ -89,6 +89,43 @@
                 <input v-model="cfg.wbProtocol" type="checkbox" :disabled="!cfg.wbRightRail" />
                 <span>协议组件（A2A / MCP）</span>
               </label>
+              <label class="pg__field pg__field--row">
+                <input v-model="cfg.wbAgentic" type="checkbox" :disabled="!cfg.wbRightRail" />
+                <span>步骤页签（AgentStepList / ToolActionCard / Checkpoint…）</span>
+              </label>
+              <label class="pg__field pg__field--row">
+                <input v-model="cfg.wbCards" type="checkbox" :disabled="!cfg.wbRightRail" />
+                <span>卡片页签（全部 21 种生成式 UI 卡片）</span>
+              </label>
+              <label class="pg__field pg__field--row">
+                <input v-model="cfg.wbWorkbenchPlus" type="checkbox" :disabled="!cfg.wbRightRail" />
+                <span>工作台+页签（FilePanel / Browser / MCP / 聚合大组件）</span>
+              </label>
+              <p class="pg__hint">输入增强与悬浮</p>
+              <label class="pg__field pg__field--row">
+                <input v-model="cfg.wbVoice" type="checkbox" />
+                <span>语音输入（VoiceRecorderBar）</span>
+              </label>
+              <label class="pg__field pg__field--row">
+                <input v-model="cfg.wbWritingAide" type="checkbox" />
+                <span>写作辅助（CopilotTextarea）</span>
+              </label>
+              <label class="pg__field pg__field--row">
+                <input v-model="cfg.wbPalette" type="checkbox" />
+                <span>命令面板（CommandPalette）</span>
+              </label>
+              <label class="pg__field pg__field--row">
+                <input v-model="cfg.wbPopup" type="checkbox" />
+                <span>悬浮球助手（CopilotPopup）</span>
+              </label>
+              <label class="pg__field pg__field--row">
+                <input v-model="cfg.wbSidebar" type="checkbox" />
+                <span>侧边抽屉（CopilotSidebar）</span>
+              </label>
+              <label class="pg__field pg__field--row">
+                <input v-model="cfg.wbDevtools" type="checkbox" />
+                <span>调试面板（CopilotDevtools）</span>
+              </label>
               <p class="pg__hint">辅助</p>
               <label class="pg__field pg__field--row">
                 <input v-model="cfg.wbCompLabels" type="checkbox" />
@@ -568,6 +605,15 @@ interface PlaygroundState {
   wbArtifacts: boolean
   wbSources: boolean
   wbProtocol: boolean
+  wbAgentic: boolean
+  wbCards: boolean
+  wbWorkbenchPlus: boolean
+  wbVoice: boolean
+  wbWritingAide: boolean
+  wbPalette: boolean
+  wbPopup: boolean
+  wbSidebar: boolean
+  wbDevtools: boolean
   wbCompLabels: boolean
   wbAssemblyCode: boolean
   // 接入协议
@@ -661,6 +707,15 @@ const DEFAULTS: PlaygroundState = {
   wbArtifacts: true,
   wbSources: true,
   wbProtocol: true,
+  wbAgentic: true,
+  wbCards: true,
+  wbWorkbenchPlus: true,
+  wbVoice: true,
+  wbWritingAide: true,
+  wbPalette: true,
+  wbPopup: true,
+  wbSidebar: true,
+  wbDevtools: true,
   wbCompLabels: false,
   wbAssemblyCode: false,
   connectionMode: 'protocol',
@@ -765,6 +820,15 @@ const wbFeatures = computed(() => ({
   artifacts: cfg.wbArtifacts,
   sources: cfg.wbSources,
   protocol: cfg.wbProtocol,
+  agentic: cfg.wbAgentic,
+  cards: cfg.wbCards,
+  workbench: cfg.wbWorkbenchPlus,
+  voice: cfg.wbVoice,
+  writingAide: cfg.wbWritingAide,
+  palette: cfg.wbPalette,
+  popup: cfg.wbPopup,
+  sidebar: cfg.wbSidebar,
+  devtools: cfg.wbDevtools,
   compLabels: cfg.wbCompLabels,
   assemblyCode: cfg.wbAssemblyCode,
 }))

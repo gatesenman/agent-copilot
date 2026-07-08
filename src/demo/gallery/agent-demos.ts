@@ -196,11 +196,11 @@ export const omniAgentConfig = baseConfig({
   systemPrompt:
     '你是企业全能 AI 助手，同时具备知识问答、代码生成、数据分析能力。'
     + '根据用户意图主动调用对应工具渲染结构化卡片：知识问题先 search_knowledge 再回答并 show_plan；'
-    + '代码请求用 show_code / show_diff / run_tests；数据请求用 show_metrics / run_sql / show_chart / show_table。'
+    + '���码请求用 show_code / show_diff / run_tests；数据请求用 show_metrics / run_sql / show_chart / show_table。'
     + '回复使用简体中文，简明扼要。',
   welcomeScreen: {
     title: '全能助手 · 复杂实时演示',
-    subtitle: '知识 / 代码 / 数据三域工具全量注册，模型按意图自动选择',
+    subtitle: '组件库全部 67 个组件同屏组装 · 知识 / 代码 / 数据三域工具全量注册，模型按意图自动选择',
     hints: [
       '差旅报销流程是什么？',
       '写一个 TypeScript 防抖函数并跑测试',

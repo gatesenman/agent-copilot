@@ -171,11 +171,13 @@ const demoToolCall: ToolCallState = {
 
         <!-- ============ 复杂实时演示（一个例子覆盖全部能力） ============ -->
         <section id="live" class="g-block">
-          <h2 class="g-block__title">复杂实时演示 — 全能助手（显式组装 · 真实调用）</h2>
+          <h2 class="g-block__title">复杂实时演示 — 全能助手（全部 67 个组件 · 显式组装 · 真实调用）</h2>
           <p class="g-desc">
-            这个对话面<strong>没有使用封装好的 CopilotChat 整件</strong>，而是用库中的原子组件逐块拼装：
-            MessageBubble、ApprovalCard、ChatSuggestions、ChatInput、UsageMeter，
-            全部通过 useCopilot() 共享同一会话状态（每个块右上角标注了所用组件，底部可查看约 25 行的组装代码）。
+            这个工作台<strong>同屏组装了组件库全部 67 个组件</strong>，且没有使用封装好的 CopilotChat 整件，
+            而是用原子组件逐块拼装（每个块右上角标注了所用组件，底部可查看组装代码）：
+            对话流、输入增强（斜杠命令 / @提及 / 语音 / 写作辅助 / 命令面板）、
+            右轨 9 个页签（任务、变更、终端、产物、来源、步骤、卡片、工作台+、协议）、
+            悬浮球与侧边抽屉、DevTools 调试面板，全部通过 useCopilot() 共享同一会话状态。
             Agent 同时注册知识检索、代码生成、数据分析等多域工具，模型按意图自动选卡渲染。试试下面任意一句：
           </p>
           <ul class="g-tips">
