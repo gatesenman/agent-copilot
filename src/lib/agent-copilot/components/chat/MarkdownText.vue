@@ -169,12 +169,13 @@ function transformToc(src: string): string {
 }
 
 // ---------- 2. 预处理：GitHub 警告块 ----------
-const ADMONITION_META: Record<string, { label: string; cls: string }> = {
-  NOTE: { label: '说明', cls: 'note' },
-  TIP: { label: '提示', cls: 'tip' },
-  IMPORTANT: { label: '重要', cls: 'important' },
-  WARNING: { label: '���告', cls: 'warning' },
-  CAUTION: { label: '注意', cls: 'caution' },
+/** 警告块种类 → CSS 类名 + 词条 key（标题文案在渲染时经 activeT 翻译） */
+const ADMONITION_META: Record<string, { i18nKey: string; cls: string }> = {
+  NOTE: { i18nKey: 'md.note', cls: 'note' },
+  TIP: { i18nKey: 'md.tip', cls: 'tip' },
+  IMPORTANT: { i18nKey: 'md.important', cls: 'important' },
+  WARNING: { i18nKey: 'md.warning', cls: 'warning' },
+  CAUTION: { i18nKey: 'md.caution', cls: 'caution' },
 }
 
 /** 把 > [!NOTE]\n> 内容 转换为带类名的 div（在 marked 之前处理成 HTML 块） */
@@ -185,7 +186,7 @@ function transformAdmonitions(src: string): string {
       const meta = ADMONITION_META[kind]
       const inner = (body as string).split('\n').map((l) => l.replace(/^>\s?/, '')).join('\n').trim()
       const innerHtml = marked.parse(inner, { async: false }) as string
-      return `${lead}<div class="ac-md__adm ac-md__adm--${meta.cls}"><p class="ac-md__adm-title">${meta.label}</p>${innerHtml}</div>\n`
+      return `${lead}<div class="ac-md__adm ac-md__adm--${meta.cls}"><p class="ac-md__adm-title">${escapeHtml(activeT(meta.i18nKey))}</p>${innerHtml}</div>\n`
     },
   )
 }
@@ -231,7 +232,7 @@ function renderCodeBlock(code: string, info: string, streaming: boolean): string
   // Mermaid：流式中显示源码，结束后由 DOM 阶段异步渲染
   if (lang === 'mermaid') {
     if (streaming) {
-      return `<div class="ac-md__code"><div class="ac-md__code-head"><span>mermaid（生成中…）</span></div><pre><code>${escapeHtml(code)}</code></pre></div>`
+      return `<div class="ac-md__code"><div class="ac-md__code-head"><span>${escapeHtml(activeT('md.mermaidLoading'))}</span></div><pre><code>${escapeHtml(code)}</code></pre></div>`
     }
     return `<div class="ac-md__mermaid" data-mermaid="${escapeHtml(code)}"><pre><code>${escapeHtml(code)}</code></pre></div>`
   }
@@ -318,7 +319,7 @@ const html = computed(() => {
     const inner = this.parser.parseInline(token.tokens)
     const plain = inner.replace(/<[^>]+>/g, '')
     const id = 'h-' + plain.trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').slice(0, 48)
-    return `<h${token.depth} id="${id}" class="ac-md__heading">${inner}<a class="ac-md__anchor" href="#${id}" aria-label="锚点">#</a></h${token.depth}>\n`
+    return `<h${token.depth} id="${id}" class="ac-md__heading">${inner}<a class="ac-md__anchor" href="#${id}" aria-label="${escapeHtml(activeT('md.anchor'))}">#</a></h${token.depth}>\n`
   }
   // 链接：外链加 target/rel + 图标；锚点/相对链接原样
   renderer.link = function (token: any) {

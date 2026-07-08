@@ -12,6 +12,7 @@
  */
 import { computed, ref, watch } from 'vue'
 import { useCopilot } from '../../composables/useCopilot'
+import { useI18n } from '../../i18n'
 import { useTheme } from '../../composables/useTheme'
 import type { ChatMessage } from '../../types'
 import type { WorkspaceFile } from '../../types'
@@ -56,7 +57,7 @@ const props = withDefaults(
     sidebarWidth?: string
   }>(),
   {
-    title: 'AI 助手',
+    title: undefined,
     subtitle: undefined,
     showHeader: true,
     showSessions: true,
@@ -88,17 +89,22 @@ const emit = defineEmits<{
 
 const store = useCopilot()
 const theme = useTheme()
+const { t } = useI18n()
+
+const titleText = computed(() => props.title ?? t('shell.defaultTitle'))
 
 // ================= 会话管理（内置消息快照切换） =================
 
 interface InternalSession extends SessionItem {
   snapshot: ChatMessage[]
+  /** 标记为默认标题（未被用户消息或手动重命名覆盖），展示时实时翻译 */
+  untitled?: boolean
 }
 
 let seq = 0
-function newSession(title = '新会话'): InternalSession {
+function newSession(): InternalSession {
   seq += 1
-  return { id: `s-${Date.now()}-${seq}`, title, snapshot: [], updatedAt: Date.now() }
+  return { id: `s-${Date.now()}-${seq}`, title: '', untitled: true, snapshot: [], updatedAt: Date.now() }
 }
 
 const sessions = ref<InternalSession[]>([newSession()])
@@ -106,7 +112,10 @@ const activeSessionId = ref(sessions.value[0].id)
 const sidebarCollapsed = ref(false)
 
 const sessionItems = computed<SessionItem[]>(() =>
-  sessions.value.map(({ snapshot: _s, ...item }) => item),
+  sessions.value.map(({ snapshot: _s, untitled, ...item }) => ({
+    ...item,
+    title: untitled ? t('shell.newSession') : item.title,
+  })),
 )
 
 function activeSession(): InternalSession | undefined {
@@ -122,7 +131,10 @@ function snapshotCurrent() {
   s.preview = lastText.slice(0, 60)
   s.updatedAt = Date.now()
   const firstUser = store.messages.value.find((m) => m.role === 'user')
-  if (firstUser && s.title === '新会话') s.title = firstUser.content.slice(0, 24)
+  if (firstUser && s.untitled) {
+    s.title = firstUser.content.slice(0, 24)
+    s.untitled = false
+  }
 }
 
 // 消息变化时实时回写快照（标题/摘要跟随）
@@ -157,7 +169,10 @@ function createSession() {
 
 function renameSession(id: string, title: string) {
   const s = sessions.value.find((x) => x.id === id)
-  if (s) s.title = title
+  if (s) {
+    s.title = title
+    s.untitled = false
+  }
 }
 
 function deleteSession(id: string) {
@@ -196,30 +211,30 @@ function onProviderChange(preset: ProviderPreset) {
 
 const settingsOpen = ref(false)
 
-const settingsSections: SettingSection[] = [
+const settingsSections = computed<SettingSection[]>(() => [
   {
     id: 'appearance',
-    title: '外观',
+    title: t('shell.appearance'),
     fields: [
       {
-        key: 'theme', label: '主题', type: 'radio',
+        key: 'theme', label: t('shell.theme'), type: 'radio',
         options: [
-          { label: '亮色', value: 'light' },
-          { label: '暗色', value: 'dark' },
-          { label: '跟随系统', value: 'system' },
+          { label: t('theme.light'), value: 'light' },
+          { label: t('theme.dark'), value: 'dark' },
+          { label: t('shell.followSystem'), value: 'system' },
         ],
       },
     ],
   },
   {
     id: 'generation',
-    title: '生成',
+    title: t('shell.generation'),
     fields: [
-      { key: 'temperature', label: '温度', type: 'slider', min: 0, max: 2, step: 0.1, description: '越高越发散，越低越确定' },
-      { key: 'systemPrompt', label: '系统提示', type: 'text', placeholder: '自定义系统提示（下一轮对话生效）' },
+      { key: 'temperature', label: t('shell.temperature'), type: 'slider', min: 0, max: 2, step: 0.1, description: t('shell.temperatureDesc') },
+      { key: 'systemPrompt', label: t('shell.systemPrompt'), type: 'text', placeholder: t('shell.systemPromptPlaceholder') },
     ],
   },
-]
+])
 
 const settingsValues = ref<Record<string, unknown>>({
   theme: theme.mode.value,
@@ -245,7 +260,7 @@ function onSettingsUpdate(values: Record<string, unknown>) {
           v-if="showSessions"
           type="button"
           class="ac-shell__icon-btn"
-          :aria-label="sidebarCollapsed ? '展开会话边栏' : '折叠会话边栏'"
+          :aria-label="sidebarCollapsed ? t('shell.expandSidebar') : t('shell.collapseSidebar')"
           :aria-expanded="!sidebarCollapsed"
           @click="sidebarCollapsed = !sidebarCollapsed"
         >
@@ -255,7 +270,7 @@ function onSettingsUpdate(values: Record<string, unknown>) {
           </svg>
         </button>
         <div class="ac-shell__titles">
-          <span class="ac-shell__title">{{ title }}</span>
+          <span class="ac-shell__title">{{ titleText }}</span>
           <span v-if="subtitle" class="ac-shell__subtitle">{{ subtitle }}</span>
         </div>
       </div>
@@ -286,7 +301,7 @@ function onSettingsUpdate(values: Record<string, unknown>) {
           v-if="showSettings"
           type="button"
           class="ac-shell__icon-btn"
-          aria-label="打开设置"
+          :aria-label="t('shell.openSettings')"
           aria-haspopup="dialog"
           @click="settingsOpen = true"
         >
@@ -305,7 +320,7 @@ function onSettingsUpdate(values: Record<string, unknown>) {
         v-if="showSessions && !sidebarCollapsed"
         class="ac-shell__sidebar"
         :style="{ width: sidebarWidth }"
-        aria-label="会话列表"
+        :aria-label="t('shell.sessionsAria')"
       >
         <SessionList
           :sessions="sessionItems"

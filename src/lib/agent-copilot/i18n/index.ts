@@ -366,7 +366,9 @@ export const zhCN: LocaleMessages = {
   'term.inputPlaceholder': '输入命令，回车执行（↑/↓ 历史，Ctrl+L 清屏）',
   'term.busyPlaceholder': '命令执行中… Ctrl+C 中断',
   'term.copyAll': '复制全部输出',
+  'term.clear': '清空',
   'term.clearAria': '清空终端',
+  'term.exitCode': '退出码 {n}',
   'term.backToBottom': '回到底部',
   'term.backToBottomAria': '回到底部并恢复跟随',
   'term.running': '命令执行中',
@@ -395,6 +397,110 @@ export const zhCN: LocaleMessages = {
   'shell.collapseSidebar': '折叠会话边栏',
   'shell.openSettings': '打开设置',
   'shell.sessionsAria': '会话列表',
+
+  // ---- 数据表卡片 ----
+  'dtable.count': '{n} 条',
+  'dtable.filterPlaceholder': '筛选…',
+  'dtable.filterAria': '筛选表格数据',
+  'dtable.exportCsv': '导出 CSV',
+  'dtable.noMatch': '无匹配数据',
+  'dtable.prevPage': '上一页',
+  'dtable.nextPage': '下一页',
+
+  // ---- 计划卡片（载荷） ----
+  'planCard.todo': '待办',
+  'planCard.doing': '进行中',
+  'planCard.done': '完成',
+  'planCard.skipped': '跳过',
+
+  // ---- 图表卡片 ----
+  'chart.fallbackTitle': '图表',
+  'chart.pie': '饼图',
+
+  // ---- 其余生成式 UI 卡片 ----
+  'gencard.dirsFiles': '{dirs} 目录 · {files} 文件',
+  'gencard.badgeNew': '新增',
+  'gencard.badgeModified': '修改',
+  'gencard.badgeDeleted': '删除',
+  'gencard.generatedImage': '生成图像',
+  'gencard.citations': '参考来源',
+  'gencard.sqlRows': '{n} 行',
+  'gencard.payloadError': '载荷渲染失败（{type}）',
+
+  // ---- 审批卡片 ----
+  'approval.paramsLabel': '待执行动作参数',
+  'approval.notePlaceholder': '备注（可选）',
+  'approval.noteAria': '审批备注',
+  'approval.inputPlaceholder': '请输入补充信息',
+  'approval.inputAria': '补充信息',
+
+  // ---- 输入辅助 ----
+  'palette.aria': '命令面板',
+  'ctx.aria': '附着的上下文',
+  'ctx.removeAria': '移除上下文 {label}',
+
+  // ---- Agent 卡片 / 任务状态 ----
+  'agent.capStreaming': '流式输出',
+  'agent.capPush': '推送通知',
+  'agent.capHistory': '状态历史',
+  'agent.online': '在线',
+  'agent.offline': '离线',
+  'agent.unknown': '未知',
+  'agent.capsAria': 'Agent 能力',
+  'agent.inputModes': '输入：{modes}',
+  'agent.outputModes': '输出：{modes}',
+  'status.submitted': '已提交',
+  'status.working': '处理中',
+  'status.inputRequired': '等待输入',
+  'status.completed': '已完成',
+  'status.failed': '已失败',
+  'status.canceled': '已取消',
+  'status.rejected': '已拒绝',
+  'status.authRequired': '需要认证',
+  'status.aria': '任务状态：{status}',
+
+  // ---- 浏览器面板 ----
+  'browser.empty': '暂无预览内容',
+  'browser.refresh': '刷新',
+  'browser.urlAria': '页面地址',
+  'browser.screenshotAlt': '页面截图',
+  'browser.previewTitle': '页面预览',
+  'browser.planEmpty': '暂无计划',
+
+  // ---- 文件面板补充 ----
+  'files.noContent': '（无内容）',
+
+  // ---- 浮窗 / 侧栏 ----
+  'popup.dialogAria': 'AI 助手对话框',
+  'popup.closeAria': '关闭对话框',
+  'popup.open': '打开 AI 助手',
+  'popup.close': '关闭 AI 助手',
+  'sidebar.expand': '展开助手侧栏',
+  'sidebar.collapse': '收起助手侧栏',
+
+  // ---- 建议问题 ----
+  'suggest.aria': '建议问题',
+  'suggest.loading': '正在生成建议…',
+
+  // ---- AI 文本域 ----
+  'ta.aria': 'AI 辅助文本域',
+  'ta.selectionAria': '选中文本 AI 操作',
+  'ta.customTitle': '自定义指令（Ctrl+K）',
+  'ta.custom': '指令…',
+  'ta.customPlaceholder': '如：改成正式邮件语气',
+  'ta.apply': '应用',
+  'ta.transforming': 'AI 处理选中内容…',
+  'ta.ghostHint': '接受全部',
+  'ta.ghostWord': '逐词接受',
+  'ta.ghostDismiss': '忽略',
+  'ta.suggesting': 'AI 补全中…',
+  'ta.defaultHint': '选中文本可唤起 AI 改写工具条',
+  'ta.undo': '撤销 AI 修改',
+  'ta.generate': 'AI 生成',
+  'ta.polish': '润色',
+  'ta.shorten': '精简',
+  'ta.expand': '扩写',
+  'ta.translate': '译英',
 
   // ---- 通用 ----
   'common.confirm': '确认',
@@ -740,7 +846,9 @@ export const enUS: LocaleMessages = {
   'term.inputPlaceholder': 'Type a command, Enter to run (↑/↓ history, Ctrl+L clear)',
   'term.busyPlaceholder': 'Command running… Ctrl+C to interrupt',
   'term.copyAll': 'Copy all output',
+  'term.clear': 'Clear',
   'term.clearAria': 'Clear terminal',
+  'term.exitCode': 'Exit code {n}',
   'term.backToBottom': 'Back to bottom',
   'term.backToBottomAria': 'Back to bottom and resume following',
   'term.running': 'Command running',

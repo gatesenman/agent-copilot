@@ -251,7 +251,7 @@ async function copyAll() {
       <button type="button" class="ac-term__tool" :aria-label="copied ? t('common.copied') : t('term.copyAll')" @click="copyAll">
         {{ copied ? t('common.copied') : t('common.copy') }}
       </button>
-      <button type="button" class="ac-term__tool" :aria-label="t('term.clearAria')" @click="emit('clear')">{{ clearLabel ?? t('chat.clear') }}</button>
+      <button type="button" class="ac-term__tool" :aria-label="t('term.clearAria')" @click="emit('clear')">{{ clearLabel ?? t('term.clear') }}</button>
     </div>
     <div ref="bodyRef" class="ac-term__body" @scroll.passive="onBodyScroll">
       <div v-if="entries.length === 0" class="ac-term__empty">{{ emptyTextResolved }}</div>
@@ -271,7 +271,7 @@ async function copyAll() {
         <span
           v-if="entry.kind === 'cmd' && entry.exitCode !== undefined && entry.exitCode !== 0"
           class="ac-term__exit"
-          :title="`退出码 ${entry.exitCode}`"
+          :title="t('term.exitCode', { n: entry.exitCode ?? 0 })"
         >✕ {{ entry.exitCode }}</span>
       </div>
     </div>
@@ -279,19 +279,19 @@ async function copyAll() {
       v-if="scrolledUp"
       type="button"
       class="ac-term__resume"
-      aria-label="回到底部并恢复跟随"
+      :aria-label="t('term.backToBottomAria')"
       @click="scrollToBottom(true)"
     >
-      ↓ 回到底部
+      ↓ {{ t('term.backToBottom') }}
     </button>
     <form v-if="interactive" class="ac-term__input-row" @submit.prevent="submit">
       <span v-if="!busy" class="ac-term__prompt">{{ prompt }}</span>
-      <span v-else class="ac-term__spinner" aria-label="命令执行中" />
+      <span v-else class="ac-term__spinner" :aria-label="t('term.running')" />
       <input
         v-model="input"
         class="ac-term__input"
-        :placeholder="busy ? '命令执行中… Ctrl+C 中断' : inputPlaceholder"
-        :aria-label="inputPlaceholder"
+        :placeholder="busy ? t('term.busyPlaceholder') : inputPlaceholderResolved"
+        :aria-label="inputPlaceholderResolved"
         spellcheck="false"
         autocomplete="off"
         @keydown="onKeydown"
