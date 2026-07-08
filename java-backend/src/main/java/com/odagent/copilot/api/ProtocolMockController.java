@@ -270,7 +270,7 @@ public class ProtocolMockController {
     Map<String, Object> dataPart = Map.of(
         "kind", "data",
         "data", Map.of("type", "table", "title", "结果表", "data", tableData));
-    Map<String, Object> artifact = Map.of("name", "分析报告", "parts", List.of(dataPart));
+    Map<String, Object> artifact = Map.of("name", "分析��告", "parts", List.of(dataPart));
     f.add(sse(json(Map.of("jsonrpc", "2.0", "id", rpcId, "result", Map.of(
         "kind", "artifact-update", "taskId", "task_1", "artifact", artifact)))));
     f.add(sse(json(Map.of("jsonrpc", "2.0", "id", rpcId, "result", Map.of(
@@ -315,6 +315,11 @@ public class ProtocolMockController {
     f.add(sse("thread.run.step.delta", json(Map.of("delta", Map.of("step_details", Map.of(
         "tool_calls", List.of(Map.of("type", "function", "id", "oa_tc1",
             "function", Map.of("name", "lookup_crm", "arguments", "{\"id\":7}")))))))));
+    // 工具步骤完成：function.output 携带工具结果（对应真实 Assistants v2 行为）
+    f.add(sse("thread.run.step.completed", json(Map.of("step_details", Map.of(
+        "tool_calls", List.of(Map.of("type", "function", "id", "oa_tc1",
+            "function", Map.of("name", "lookup_crm", "arguments", "{\"id\":7}",
+                "output", "{\"customer\":\"Acme\",\"tier\":\"VIP\"}"))))))));
     f.add(sse("thread.message.delta", json(Map.of("delta", Map.of("content",
         List.of(Map.of("type", "text", "text", Map.of("value", "Assistants "))))))));
     f.add(sse("thread.message.delta", json(Map.of("delta", Map.of("content",
