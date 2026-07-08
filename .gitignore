@@ -8,3 +8,9 @@ node_modules
 .next/
 .env*.local
 .DS_Store
+
+# Build & runtime artifacts
+dist/
+logs/
+java-backend/target/
+.v0/
