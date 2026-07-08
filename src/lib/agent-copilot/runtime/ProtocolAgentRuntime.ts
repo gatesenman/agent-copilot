@@ -7,8 +7,9 @@
  * - 保证事件流以 RUN_STARTED 开始、RUN_FINISHED/RUN_ERROR 结束
  *   （适配器可以只产出内容事件，边界事件由本运行时兜底）
  */
-import type { AgentEvent, AgentRuntime, InterruptResponse, RunInput } from '../types'
+import type { AgentEvent, AgentRuntime, InterruptResponse, ReconnectConfig, RunInput } from '../types'
 import type { AgentAdapterOptions, AgentStreamAdapter } from '../protocols/types'
+import { backoffDelay, isRetryableError, isRetryableStatus, resolveReconnect, sleep } from './reconnect'
 
 export class ProtocolAgentRuntime implements AgentRuntime {
   readonly kind = 'http' as const
@@ -16,7 +17,7 @@ export class ProtocolAgentRuntime implements AgentRuntime {
 
   constructor(
     private adapter: AgentStreamAdapter,
-    private options: AgentAdapterOptions,
+    private options: AgentAdapterOptions & { reconnect?: ReconnectConfig },
   ) {}
 
   async *run(input: RunInput): AsyncIterable<AgentEvent> {
@@ -65,25 +66,42 @@ export class ProtocolAgentRuntime implements AgentRuntime {
 
     let sawStart = false
     let sawEnd = false
+    const reconnect = resolveReconnect(this.options.reconnect)
 
     try {
-      const res = await fetch(url, {
-        method: spec.method ?? 'POST',
-        headers: spec.headers,
-        body: spec.body != null ? JSON.stringify(spec.body) : undefined,
-        signal: controller.signal,
-      })
-
-      if (!res.ok) {
-        const text = await res.text().catch(() => '')
-        yield this.boundary('RUN_STARTED', runId, { sessionId })
-        yield this.boundary('RUN_ERROR', runId, {
-          message: `${this.adapter.id} 请求失败 (${res.status}): ${text.slice(0, 300)}`,
+      // ============ 连接建立（含指数退避自动重连） ============
+      // 安全边界：仅在内容事件产出前重试。可重试条件：网络错误 / 5xx / 429。
+      let res: Response | undefined
+      for (let attempt = 0; ; attempt++) {
+        let failReason: string | undefined
+        try {
+          res = await fetch(url, {
+            method: spec.method ?? 'POST',
+            headers: spec.headers,
+            body: spec.body != null ? JSON.stringify(spec.body) : undefined,
+            signal: controller.signal,
+          })
+          if (res.ok) break
+          const text = await res.text().catch(() => '')
+          failReason = `${this.adapter.id} 请求失败 (${res.status}): ${text.slice(0, 300)}`
+          if (!reconnect.enabled || attempt >= reconnect.retries || !isRetryableStatus(res.status)) {
+            yield this.boundary('RUN_STARTED', runId, { sessionId })
+            yield this.boundary('RUN_ERROR', runId, { message: failReason })
+            return
+          }
+        } catch (err) {
+          if (!reconnect.enabled || attempt >= reconnect.retries || !isRetryableError(err)) throw err
+          failReason = (err as Error)?.message ?? String(err)
+        }
+        // 进入重试：广播 CONNECTION_RETRY 事件（UI 可提示"重连中"）
+        const delayMs = backoffDelay(attempt + 1, reconnect.baseDelayMs)
+        yield this.boundary('CONNECTION_RETRY', runId, {
+          attempt: attempt + 1, maxRetries: reconnect.retries, delayMs, reason: failReason,
         })
-        return
+        await sleep(delayMs, controller.signal)
       }
 
-      if (!res.body) {
+      if (!res?.body) {
         yield this.boundary('RUN_STARTED', runId, { sessionId })
         yield this.boundary('RUN_ERROR', runId, { message: '响应无内容流' })
         return

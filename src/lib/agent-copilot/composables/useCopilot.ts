@@ -28,6 +28,8 @@ export interface CopilotStore {
    * - 结构键（runtime/provider/protocol/endpoint 等）重建 runtime，对新会话生效。
    */
   updateConfig: (patch: Partial<CopilotConfig>) => void
+  /** DevTools：事件环形缓冲（debug 或 DEV 时记录，上限 200 条） */
+  eventLog: Ref<{ seq: number; type: string; runId: string; timestamp: number; data: unknown }[]>
 
   // 会话
   sessionId: Ref<string>
@@ -174,6 +176,19 @@ export function createCopilotStore(
   const lastError = ref<string | null>(null)
   const interrupt = ref<InterruptRequest | null>(null)
   const feedbacks = ref<Record<string, 'up' | 'down'>>({})
+
+  // ---- DevTools：事件环形缓冲（仅 debug 或 DEV 时记录，上限 200 条） ----
+  const eventLog = ref<{ seq: number; type: string; runId: string; timestamp: number; data: unknown }[]>([])
+  let eventSeq = 0
+  const EVENT_LOG_LIMIT = 200
+  function recordEvent(event: AgentEvent) {
+    if (!config.debug && !import.meta.env?.DEV) return
+    const next = [...eventLog.value, {
+      seq: ++eventSeq, type: event.type, runId: event.runId,
+      timestamp: event.timestamp, data: event.data,
+    }]
+    eventLog.value = next.length > EVENT_LOG_LIMIT ? next.slice(-EVENT_LOG_LIMIT) : next
+  }
 
   // ---- 输入增强：上下文附着 + 消息队列 ----
   const contextItems = ref<ContextItem[]>([])
@@ -324,6 +339,7 @@ export function createCopilotStore(
       if (event.type === 'USAGE') usage = event.data as TokenUsage
 
       log('event', event.type, event.data)
+      recordEvent(event)
       handleEvent(event)
 
       if (event.type === 'RUN_FINISHED' || event.type === 'RUN_ERROR') {
@@ -377,6 +393,12 @@ export function createCopilotStore(
     switch (event.type) {
       case 'RUN_STARTED': {
         agentState.runId = event.runId
+        break
+      }
+      case 'CONNECTION_RETRY': {
+        // 断线重连中：更新状态提示，不视为错误（重连成功后正常继续）
+        lastError.value = null
+        log('reconnect', `第 ${data.attempt}/${data.maxRetries} 次重连（${data.delayMs}ms 后）：${data.reason ?? ''}`)
         break
       }
       case 'STAGE_STARTED': {
@@ -841,6 +863,7 @@ export function createCopilotStore(
     // getter：结构配置变更重建 runtime 后，store.runtime 始终指向最新实例
     get runtime() { return runtime },
     updateConfig,
+    eventLog,
     sessionId, messages, status, currentRunId, lastError,
     agentState, interrupt, totalUsage,
     readables, actions, additionalInstructions, suggestions, suggestionsLoading,

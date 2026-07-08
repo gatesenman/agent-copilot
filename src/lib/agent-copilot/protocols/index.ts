@@ -95,6 +95,7 @@ export function createRuntime(config: CopilotConfig): AgentRuntime {
       apiKey: config.apiKey,
       headers: config.headers,
       extra: config.protocolOptions,
+      reconnect: config.network?.reconnect,
     })
   }
 

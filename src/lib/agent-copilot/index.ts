@@ -92,9 +92,12 @@ export { default as ArtifactPanel } from './components/workspace/ArtifactPanel.v
 export type { PanelTab } from './components/workspace/PanelContainer.vue'
 export type { ArtifactItem } from './components/workspace/ArtifactPanel.vue'
 
-// ---- 会话导出工具 ----
-export { exportSession, sessionToMarkdown, sessionToJson, downloadText } from './utils/session-export'
-export type { ExportFormat, ExportOptions } from './utils/session-export'
+// ---- 会话导出/导入工具 ----
+export { exportSession, sessionToMarkdown, sessionToJson, downloadText, importSessionJson } from './utils/session-export'
+export type { ExportFormat, ExportOptions, ImportResult } from './utils/session-export'
+
+// ---- DevTools 事件检查器（debug 或 DEV 构建下渲染，放在 CopilotProvider 内任意位置） ----
+export { default as CopilotDevtools } from './components/devtools/CopilotDevtools.vue'
 
 // ---- 输入增强组件 ----
 export { default as CommandPalette } from './components/input/CommandPalette.vue'

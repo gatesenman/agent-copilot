@@ -270,7 +270,7 @@ public class ProtocolMockController {
     Map<String, Object> dataPart = Map.of(
         "kind", "data",
         "data", Map.of("type", "table", "title", "结果表", "data", tableData));
-    Map<String, Object> artifact = Map.of("name", "分析���告", "parts", List.of(dataPart));
+    Map<String, Object> artifact = Map.of("name", "分析����告", "parts", List.of(dataPart));
     f.add(sse(json(Map.of("jsonrpc", "2.0", "id", rpcId, "result", Map.of(
         "kind", "artifact-update", "taskId", "task_1", "artifact", artifact)))));
     f.add(sse(json(Map.of("jsonrpc", "2.0", "id", rpcId, "result", Map.of(
@@ -332,6 +332,34 @@ public class ProtocolMockController {
   }
 
   // ---------- 边界用例（容错与中断验证，统一走 AG-UI 帧格式） ----------
+
+  /** flaky 计数器：每个 key 独立计数，前 N 次返回 503，之后成功（验证自动重连） */
+  private final Map<String, java.util.concurrent.atomic.AtomicInteger> flakyCounters =
+      new java.util.concurrent.ConcurrentHashMap<>();
+
+  /**
+   * 前 2 次请求返回 503，第 3 次起正常回放 AG-UI 流。
+   * 用 body.key 区分测试会话，避免多次运行相互污染。
+   */
+  @PostMapping(value = "/edge/flaky", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public org.springframework.http.ResponseEntity<Flux<ServerSentEvent<String>>> edgeFlaky(
+      @RequestBody Map<String, Object> body) {
+    String key = String.valueOf(body.getOrDefault("threadId", "default"));
+    int n = flakyCounters
+        .computeIfAbsent(key, (k) -> new java.util.concurrent.atomic.AtomicInteger())
+        .incrementAndGet();
+    if (n <= 2) {
+      return org.springframework.http.ResponseEntity.status(503).build();
+    }
+    flakyCounters.remove(key);
+    List<ServerSentEvent<String>> f = new ArrayList<>();
+    f.add(sse(json(Map.of("type", "RUN_STARTED", "threadId", "t1", "runId", "flaky_run"))));
+    f.add(sse(json(Map.of("type", "TEXT_MESSAGE_START", "messageId", "m1"))));
+    f.add(sse(json(Map.of("type", "TEXT_MESSAGE_CONTENT", "messageId", "m1", "delta", "重连成功后的完整输出"))));
+    f.add(sse(json(Map.of("type", "TEXT_MESSAGE_END", "messageId", "m1"))));
+    f.add(sse(json(Map.of("type", "RUN_FINISHED"))));
+    return org.springframework.http.ResponseEntity.ok(stream(f));
+  }
 
   /** HTTP 500：验证运行时把非 2xx 转成 RUN_ERROR 且流正常终止 */
   @PostMapping("/edge/http-error")

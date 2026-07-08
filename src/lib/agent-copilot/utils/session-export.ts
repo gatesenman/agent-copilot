@@ -95,6 +95,54 @@ export function downloadText(text: string, filename: string, mime = 'text/plain'
   URL.revokeObjectURL(url)
 }
 
+// ============ 会话导入 ============
+
+export interface ImportResult {
+  ok: boolean
+  messages: ChatMessage[]
+  title?: string
+  /** 校验失败原因（ok=false 时） */
+  error?: string
+}
+
+/**
+ * 从导出的 JSON 文本恢复会话消息。
+ * 逐条校验必备字段（id/role/content/createdAt），坏条目跳过并计入 error 提示。
+ */
+export function importSessionJson(text: string): ImportResult {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(text)
+  } catch {
+    return { ok: false, messages: [], error: '不是合法的 JSON 文本' }
+  }
+  const root = parsed as { title?: string; messages?: unknown }
+  if (!Array.isArray(root?.messages)) {
+    return { ok: false, messages: [], error: '缺少 messages 数组（需要 exportSession 的 JSON 格式）' }
+  }
+  const valid: ChatMessage[] = []
+  let skipped = 0
+  for (const raw of root.messages) {
+    const m = raw as Partial<ChatMessage>
+    if (typeof m?.id === 'string' && typeof m?.role === 'string' && typeof m?.content === 'string'
+      && typeof m?.createdAt === 'number') {
+      // 清除瞬态字段，防止导入后 UI 卡在流式态
+      valid.push({ ...(m as ChatMessage), streaming: undefined, queued: undefined, error: undefined })
+    } else {
+      skipped++
+    }
+  }
+  if (valid.length === 0) {
+    return { ok: false, messages: [], error: `没有可恢复的消息（${skipped} 条格式不合法）` }
+  }
+  return {
+    ok: true,
+    messages: valid,
+    title: typeof root.title === 'string' ? root.title : undefined,
+    error: skipped > 0 ? `已跳过 ${skipped} 条格式不合法的消息` : undefined,
+  }
+}
+
 /** 一步导出：序列化 + 下载 */
 export function exportSession(
   messages: ChatMessage[],

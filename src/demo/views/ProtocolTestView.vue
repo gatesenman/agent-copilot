@@ -43,6 +43,8 @@ interface CaseSpec {
   assert?: (ctx: { types: string[]; events: AgentEvent[]; text: string; error?: string; durationMs: number }) => CheckResult[]
   /** 运行前配置：返回传给 run 的 AbortSignal（用于中断用例） */
   setup?: () => AbortSignal | undefined
+  /** 网络韧性配置（重连用例） */
+  network?: { reconnect?: { enabled: boolean; retries: number; baseDelayMs: number } }
 }
 
 const CASES: CaseSpec[] = [
@@ -101,6 +103,25 @@ const EDGE_CASES: CaseSpec[] = [
       { label: '不抛异常（跳过坏帧）', pass: !error, detail: error },
       { label: '无 RUN_ERROR', pass: !types.includes('RUN_ERROR') },
       { label: '坏帧之后仍继续解析', pass: text.includes('畸形帧之后仍然存活'), detail: `实际: ${text.slice(0, 40) || '(空)'}` },
+      { label: '以 RUN_FINISHED 结束', pass: types[types.length - 1] === 'RUN_FINISHED', detail: `末事件: ${types[types.length - 1] ?? '无'}` },
+    ],
+  },
+  {
+    protocol: 'ag-ui',
+    displayName: 'edge: 自动重连',
+    endpoint: '/api/mock/edge/flaky',
+    expectText: '', expectTool: false, expectPayload: false, expectUsage: false,
+    // 前 2 次 503，第 3 次成功；开启重连（baseDelay 200ms 加速测试）
+    network: { reconnect: { enabled: true, retries: 3, baseDelayMs: 200 } },
+    assert: ({ types, text, error }) => [
+      { label: '不抛异常', pass: !error, detail: error },
+      {
+        label: '产出 CONNECTION_RETRY 事件（2 次）',
+        pass: types.filter((t) => t === 'CONNECTION_RETRY').length === 2,
+        detail: `实际 ${types.filter((t) => t === 'CONNECTION_RETRY').length} 次`,
+      },
+      { label: '重连成功后文本完整到达', pass: text.includes('重连成功后的完整输出'), detail: `实际: ${text.slice(0, 40) || '(空)'}` },
+      { label: '无 RUN_ERROR', pass: !types.includes('RUN_ERROR') },
       { label: '以 RUN_FINISHED 结束', pass: types[types.length - 1] === 'RUN_FINISHED', detail: `末事件: ${types[types.length - 1] ?? '无'}` },
     ],
   },
@@ -278,6 +299,7 @@ async function runCase(state: CaseState): Promise<void> {
   const runtime = createRuntime({
     protocol: state.spec.protocol as never,
     endpoint: state.spec.endpoint,
+    network: state.spec.network,
   } as never)
 
   const events: AgentEvent[] = []
