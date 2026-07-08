@@ -37,6 +37,18 @@ import SettingsDialog, { type SettingSection } from '../../lib/agent-copilot/com
 import ProtocolBadge from '../../lib/agent-copilot/components/protocol/ProtocolBadge.vue'
 import TaskStatusBadge from '../../lib/agent-copilot/components/protocol/TaskStatusBadge.vue'
 import AgentCardView, { type A2AAgentCard } from '../../lib/agent-copilot/components/protocol/AgentCardView.vue'
+// ---- 全组件补齐：输入增强 / 悬浮 / 聚合 / 守护 ----
+import ContextChips from '../../lib/agent-copilot/components/input/ContextChips.vue'
+import VoiceRecorderBar from '../../lib/agent-copilot/components/input/VoiceRecorderBar.vue'
+import CommandPalette, { type PaletteItem } from '../../lib/agent-copilot/components/input/CommandPalette.vue'
+import CopilotTextarea from '../../lib/agent-copilot/components/textarea/CopilotTextarea.vue'
+import CopilotPopup from '../../lib/agent-copilot/components/chat/CopilotPopup.vue'
+import CopilotSidebar from '../../lib/agent-copilot/components/chat/CopilotSidebar.vue'
+import CopilotDevtools from '../../lib/agent-copilot/components/devtools/CopilotDevtools.vue'
+import ErrorBoundary from '../../lib/agent-copilot/components/general/ErrorBoundary.vue'
+import OmniAgenticPanel from './OmniAgenticPanel.vue'
+import OmniCardsPanel from './OmniCardsPanel.vue'
+import OmniWorkbenchPanel from './OmniWorkbenchPanel.vue'
 import type { ThemeMode } from '../../lib/agent-copilot/composables/useTheme'
 import type {
   AgentTask, ChatMessage, FileChange, PlanSpec, SlashCommand, TerminalEntry,
@@ -65,6 +77,15 @@ interface OmniFeatures {
   artifacts: boolean
   sources: boolean
   protocol: boolean
+  agentic: boolean
+  cards: boolean
+  workbench: boolean
+  voice: boolean
+  writingAide: boolean
+  palette: boolean
+  popup: boolean
+  sidebar: boolean
+  devtools: boolean
   assemblyCode: boolean
   compLabels: boolean
 }
@@ -76,6 +97,9 @@ const ALL_ON: OmniFeatures = {
   thinkingToggle: true, attachments: true, commands: true, mentions: true,
   rightRail: true, tasks: true, changes: true, terminal: true,
   artifacts: true, sources: true, protocol: true,
+  agentic: true, cards: true, workbench: true,
+  voice: true, writingAide: true, palette: true,
+  popup: true, sidebar: true, devtools: true,
   assemblyCode: true, compLabels: true,
 }
 const props = defineProps<{ features?: Partial<OmniFeatures> }>()
@@ -177,6 +201,27 @@ async function mentionProvider(query: string) {
 const isRunning = computed(() => store.status.value === 'running')
 const welcome = computed(() => store.config.welcomeScreen)
 
+// ---- 输入增强：语音条 / 写作辅助 / 命令面板 / 悬浮聚合 ----
+const voiceActive = ref(false)
+const showWritingAide = ref(false)
+const draftText = ref('')
+const paletteOpen = ref(false)
+const paletteIndex = ref(0)
+const paletteItems: PaletteItem[] = [
+  { id: 'pl1', label: '总结当前会话', description: '/summarize', icon: '§', type: 'command' },
+  { id: 'pl2', label: '生成 SQL 查询', description: '/sql <需求>', icon: '数', type: 'command' },
+  { id: 'pl3', label: '打开设置', description: '偏好与模型参数', icon: '⚙', type: 'action' },
+  { id: 'pl4', label: '清空会话', description: '重置消息流', icon: '×', type: 'action' },
+]
+function onPaletteSelect(item: PaletteItem) {
+  paletteOpen.value = false
+  if (item.id === 'pl1') store.sendMessage('/summarize')
+  else if (item.id === 'pl2') store.sendMessage('/sql 查询近四周订单量')
+  else if (item.id === 'pl3') settingsOpen.value = true
+  else if (item.id === 'pl4') store.clearChat()
+}
+const sidebarMounted = ref(false)
+
 const visibleMessages = computed(() =>
   store.messages.value.filter((m) => m.role === 'user' || m.role === 'assistant'),
 )
@@ -263,6 +308,9 @@ const rightPanels = computed<PanelTab[]>(() => [
   ...(f.value.terminal ? [{ id: 'terminal', label: '终端' }] : []),
   ...(f.value.artifacts ? [{ id: 'artifacts', label: '产物' }] : []),
   ...(f.value.sources ? [{ id: 'sources', label: '来源' }] : []),
+  ...(f.value.agentic ? [{ id: 'agentic', label: '步骤' }] : []),
+  ...(f.value.cards ? [{ id: 'cards', label: '卡片' }] : []),
+  ...(f.value.workbench ? [{ id: 'workbench', label: '工作台+' }] : []),
   ...(f.value.protocol ? [{ id: 'protocol', label: '协议' }] : []),
 ])
 watch(rightPanels, (panels) => {
@@ -405,6 +453,12 @@ const store = useCopilot() // 在 <CopilotProvider> 内调用
         <button type="button" class="oc__hbtn" aria-label="打开设置" @click="settingsOpen = true">设置</button>
         <button type="button" class="oc__hbtn" aria-label="清空会话" @click="store.clearChat()">清空</button>
         <button
+          v-if="f.sidebar"
+          type="button" class="oc__hbtn"
+          aria-label="打开侧边助手抽屉"
+          @click="sidebarMounted = false; nextTick(() => (sidebarMounted = true))"
+        >侧边助手</button>
+        <button
           v-if="f.leftRail"
           type="button" class="oc__hbtn"
           :aria-pressed="showLeft" aria-label="切换左侧栏"
@@ -430,7 +484,8 @@ const store = useCopilot() // 在 <CopilotProvider> 内调用
       />
     </div>
 
-    <!-- 三栏主体 -->
+    <!-- 三栏主体（ErrorBoundary 守护：子树渲染异常时降级而非白屏） -->
+    <ErrorBoundary>
     <div class="oc__body" :data-left="leftVisible" :data-right="rightVisible">
       <!-- 左轨 -->
       <aside v-if="leftVisible" class="oc__rail oc__part" data-comp="PanelContainer + SessionList + PromptLibrary + KnowledgeSelector + FileDropzone">
@@ -513,7 +568,29 @@ const store = useCopilot() // 在 <CopilotProvider> 内调用
           />
         </div>
 
-        <div class="oc__inputzone oc__part" data-comp="ModeSelector + ModelSelector + ChatInput（斜杠命令 / @提及 / 附件 / 思考开关 / toolbar 插槽 / ContextChips）">
+        <div class="oc__inputzone oc__part" data-comp="ContextChips + VoiceRecorderBar + CopilotTextarea + ModeSelector + ModelSelector + ChatInput">
+          <div v-if="store.contextItems.value.length" class="oc__chips" data-comp="ContextChips">
+            <ContextChips :items="store.contextItems.value" @remove="(id: string) => store.removeContext(id)" />
+          </div>
+          <VoiceRecorderBar
+            v-if="f.voice && voiceActive"
+            @stop="voiceActive = false"
+            @cancel="voiceActive = false"
+          />
+          <div v-if="f.writingAide && showWritingAide" class="oc__aide" data-comp="CopilotTextarea（AI 写作辅助 / Tab 续写）">
+            <CopilotTextarea
+              v-model="draftText"
+              purpose="草拟要发给助手的复杂指令"
+              placeholder="在这里起草长指令，Tab 接受 AI 续写…"
+              :rows="3"
+              hint="Tab 接受续写 · Esc 忽略"
+            />
+            <button
+              type="button" class="oc__hbtn"
+              :disabled="!draftText.trim()"
+              @click="store.sendMessage(draftText); draftText = ''; showWritingAide = false"
+            >作为消息发送</button>
+          </div>
           <div v-if="f.modeSelector" class="oc__inputbar">
             <ModeSelector
               :mode="store.agentMode.value"
@@ -521,6 +598,18 @@ const store = useCopilot() // 在 <CopilotProvider> 内调用
               :disabled="isRunning"
               @update:mode="(m) => store.setAgentMode(m)"
             />
+            <button
+              v-if="f.writingAide"
+              type="button" class="oc__hbtn"
+              :aria-pressed="showWritingAide"
+              @click="showWritingAide = !showWritingAide"
+            >写作辅助</button>
+            <button
+              v-if="f.palette"
+              type="button" class="oc__hbtn"
+              aria-label="打开命令面板"
+              @click="paletteOpen = true; paletteIndex = 0"
+            >命令面板</button>
           </div>
           <ChatInput
             :generating="isRunning"
@@ -531,11 +620,14 @@ const store = useCopilot() // 在 <CopilotProvider> 内调用
             :mention-provider="f.mentions ? mentionProvider : undefined"
             :context-items="store.contextItems.value"
             :show-attach-button="f.attachments"
+            :show-voice-button="f.voice"
+            :voice-recording="voiceActive"
             attach-accept=".pdf,.docx,.md,image/*"
             :show-thinking-toggle="f.thinkingToggle"
             :thinking-on="store.thinkingEnabled.value"
             @update:thinking-on="(v: boolean) => (store.thinkingEnabled.value = v)"
             @attach="onFilesAdd"
+            @voice="voiceActive = !voiceActive"
             @add-context="(item) => store.attachContext(item)"
             @remove-context="(id) => store.removeContext(id)"
             @send="(t) => store.sendMessage(t)"
@@ -579,6 +671,15 @@ const store = useCopilot() // 在 <CopilotProvider> 内调用
           <template #sources>
             <SourcePanel :sources="DEMO_SOURCES" />
           </template>
+          <template #agentic>
+            <OmniAgenticPanel />
+          </template>
+          <template #cards>
+            <OmniCardsPanel />
+          </template>
+          <template #workbench>
+            <OmniWorkbenchPanel />
+          </template>
           <template #protocol>
             <div class="oc__stack oc__protocol">
               <div class="oc__proto-badges">
@@ -592,6 +693,7 @@ const store = useCopilot() // 在 <CopilotProvider> 内调用
         </PanelContainer>
       </aside>
     </div>
+    </ErrorBoundary>
 
     <!-- 组装代码 -->
     <div v-if="f.assemblyCode" class="oc__codewrap">
@@ -615,6 +717,28 @@ const store = useCopilot() // 在 <CopilotProvider> 内调用
       :reasons="['回答不准确', '引用来源错误', '格式混乱', '其他']"
       @submit="() => (feedbackOpen = false)"
     />
+
+    <!-- 命令面板（Cmd+K 形态,受控浮层） -->
+    <div v-if="f.palette && paletteOpen" class="oc__palette-overlay" role="presentation" @click.self="paletteOpen = false">
+      <div class="oc__palette" data-comp="CommandPalette">
+        <CommandPalette
+          :visible="paletteOpen"
+          :items="paletteItems"
+          :active-index="paletteIndex"
+          heading="快捷命令"
+          aria-label="全局命令面板"
+          @select="onPaletteSelect"
+          @update:active-index="(i: number) => (paletteIndex = i)"
+        />
+      </div>
+    </div>
+
+    <!-- 悬浮聚合：Popup 悬浮球 + Sidebar 抽屉（均共享当前会话） -->
+    <CopilotPopup v-if="f.popup" title="悬浮助手" subtitle="CopilotPopup · 共享会话" />
+    <CopilotSidebar v-if="f.sidebar && sidebarMounted" title="侧边助手" subtitle="CopilotSidebar · 共享会话" default-open />
+
+    <!-- 调试面板（CopilotDevtools,可折叠） -->
+    <CopilotDevtools v-if="f.devtools" />
   </section>
 </template>
 
@@ -679,6 +803,33 @@ const store = useCopilot() // 在 <CopilotProvider> 内调用
   cursor: pointer;
 }
 .oc__hbtn:hover, .oc__hbtn[aria-pressed='true'] { color: var(--ac-fg, #0f172a); border-color: var(--ac-primary, #2563eb); }
+.oc__hbtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* 输入增强 */
+.oc__chips { padding: 0 2px; }
+.oc__aide {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  padding: 8px;
+  border: 1px dashed color-mix(in srgb, var(--ac-primary, #2563eb) 30%, transparent);
+  border-radius: 10px;
+}
+.oc__aide > :first-child { align-self: stretch; }
+
+/* 命令面板浮层 */
+.oc__palette-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+  background: color-mix(in srgb, var(--ac-fg, #0f172a) 32%, transparent);
+}
+.oc__palette { width: min(560px, 92vw); }
 
 /* 三栏 */
 .oc__body {
