@@ -10,6 +10,9 @@
   },
   "scripts": {
     "dev": "vite --host --port 3000",
+    "start:all": "bash scripts/start-all.sh",
+    "stop:all": "bash scripts/start-all.sh --stop",
+    "status:all": "bash scripts/start-all.sh --status",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",

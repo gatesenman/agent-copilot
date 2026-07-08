@@ -1,0 +1,9 @@
+
+> od-agent-copilot-vue@1.0.0 dev /vercel/share/v0-project
+> vite --host --port 3000
+
+
+  VITE v6.4.3  ready in 682 ms
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: http://100.64.31.128:3000/
