@@ -11,7 +11,9 @@
   "scripts": {
     "dev": "vite --host --port 3000",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:backend": "node test-backend/server.mjs",
+    "test:protocols": "tsx test-backend/protocol-tests.ts"
   },
   "dependencies": {
     "katex": "^0.17.0",
@@ -23,6 +25,7 @@
   "devDependencies": {
     "@types/katex": "^0.16.8",
     "@vitejs/plugin-vue": "^5.2.1",
+    "tsx": "^4.23.0",
     "typescript": "^5.7.3",
     "vite": "^6.0.7",
     "vue-tsc": "^2.2.0"

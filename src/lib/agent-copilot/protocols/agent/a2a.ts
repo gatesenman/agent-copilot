@@ -37,7 +37,7 @@ function extractText(message: any): string {
 }
 
 export const a2aAdapter: AgentStreamAdapter = {
-  id: 'a2a' as any,
+  id: 'a2a',
   capabilities: { streaming: true, tools: false, hitl: true, sharedState: true, pipeline: true },
 
   buildRunRequest(input: RunInput, options: AgentAdapterOptions): AgentRequestSpec {
