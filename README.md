@@ -82,6 +82,8 @@ import { AgentCopilot } from '@/lib/agent-copilot'
 
 ![协议测试](docs/screenshots/protocol.png)
 
+> 截图按当前代码重新实拍：Vite 开发服务器（端口 3000）+ 无头 Chromium。协议测试台连接仓库自带的 Java mock 后端（`java-backend`，端口 8080）跑完了全部用例，21 / 21 通过。演示站本身只有中文界面；英文 README 里的演练场截图把组件库 `locale` 设成了 `en`。
+
 ## 目录结构
 
 ```

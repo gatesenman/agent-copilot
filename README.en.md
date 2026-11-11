@@ -77,13 +77,15 @@ All 67 components grouped into 11 domains, with a full API cheat sheet (props / 
 
 40+ options tuned live: preview shape (workbench / chat), per-panel toggles for the top bar / left rail / right rail, input enhancements, floating widgets and agentic behaviour policies, with the configuration code generated alongside.
 
-![Configuration playground](docs/screenshots/playground.png)
+![Configuration playground (component locale set to en)](docs/screenshots/playground-en.png)
 
 ### Protocol tests
 
 A built-in protocol conformance bench covering AG-UI event-stream encoding/decoding, event ordering and interrupt/resume.
 
 ![Protocol tests](docs/screenshots/protocol.png)
+
+> Screenshots were re-captured from the current code: the Vite dev server on port 3000 with headless Chromium. The protocol bench ran against the bundled Java mock backend (`java-backend`, port 8080), and all 21 cases passed. The demo site itself is Chinese only, so the playground shot here has the component library's `locale` set to `en`, which switches the copilot UI text to English.
 
 ## Tech stack
 
