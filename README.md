@@ -2,6 +2,8 @@
 
 企业级 AI Agent Copilot 组件库 · Vue 3 · TypeScript
 
+**简体中文** · [English](README.en.md)
+
 一套面向企业 AI 助手 / Agentic 工作台场景的 Vue 3 组件库：**67 个组件**、**16 种结构化载荷卡**、**30+ 协议预设**（模型协议 / Agent 框架 / 互操作协议），内置 AG-UI 事件流协议、HITL 人机协同中断、生成式 UI、多会话管理与主题系统，并附带 Java 参考后端与完整演示站。
 
 ![首页](docs/screenshots/home.png)
@@ -113,7 +115,7 @@ import { AgentCopilot } from '@/lib/agent-copilot'
 | `browser` | 浏览器直连模型 API（演示 / 轻量场景） |
 | `http` | 对接任意实现 AG-UI 事件流的后端 |
 
-参考实现：`java-backend/`（Spring Boot）与 `server/agent-backend.mjs`（Node，真实文件 / 终端工具沙箱）。事件协议契约见 `java-backend/README.md`。
+参考实现：`java-backend/`（Spring Boot）与 `server/agent-backend.mjs`（Node，真实文件 / 终端工具沙箱）。事件协议契约见 `java-backend/src/` 中的实现与 `src/lib/agent-copilot/protocols/`。
 
 ## 开发
 
@@ -122,6 +124,30 @@ pnpm exec vue-tsc --noEmit     # 类型检查
 pnpm exec vitest run           # 单元测试
 pnpm build                     # 构建
 ```
+
+## 技术栈
+
+- **Vue 3.5** + **TypeScript** + **Vite 6**，`vue-router`
+- 渲染：`marked`（Markdown）、`katex`（公式）、`mermaid`（图表）
+- 测试与类型：**Vitest**、**vue-tsc**
+- 参考后端：`java-backend/`（Spring Boot / WebFlux，Maven）、`server/agent-backend.mjs`（Node，作为 Vite 中间件挂载）
+- 包管理：**pnpm 10+**（`pnpm-workspace.yaml` 只声明了 `onlyBuiltDependencies`，pnpm 9 会报 `packages field missing or empty`）
+
+## 配置
+
+| 配置项 | 说明 |
+| --- | --- |
+| `config.runtime` | `browser`（浏览器直连模型 API）或 `http`（对接 AG-UI 事件流后端） |
+| `config.model` | 模型名，例如 `deepseek-chat` |
+| `config.locale` | 界面语言：`zh-CN`（`zh`）/ `en-US`（`en`），可用 `registerLocale` 扩展 |
+| `AI_GATEWAY_API_KEY` | Node Agent 后端（`server/agent-backend.mjs`）调用真实 LLM 所需的环境变量（Vercel AI Gateway，OpenAI 兼容接口）；未设置时返回 `RUN_ERROR` |
+| 端口 | `pnpm dev` 前端 `:3000`；`pnpm start:all` 额外启动 Java 后端 `:8080` |
+
+完整配置项见演示站「演练场」页与 `docs/COMPONENT_GUIDE.md`。
+
+## 参与贡献
+
+欢迎提交 Issue 和 Pull Request。提交前请运行 `pnpm exec vue-tsc --noEmit` 与 `pnpm exec vitest run`；新组件需遵循上面的「组件 API 约定」（由 `api-conventions.test.ts` 自动检查）。
 
 ## License
 
