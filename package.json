@@ -17,6 +17,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "typecheck": "vue-tsc --noEmit",
+    "test:gate": "vitest run && vue-tsc --noEmit && vite build",
     "test:backend": "node test-backend/server.mjs",
     "test:protocols": "tsx test-backend/protocol-tests.ts"
   },
