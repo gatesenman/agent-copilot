@@ -1,0 +1,12 @@
+data: {"type":"RUN_STARTED","runId":"fixture-1"}
+
+data: {"type":"TEXT_MESSAGE_START","messageId":"m1"}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"m1","delta":"Hello from the offline fixture."}
+
+data: {"type":"TEXT_MESSAGE_END","messageId":"m1"}
+
+data: {"type":"CUSTOM","name":"structured_payload","value":{"type":"card","title":"Briefing card","body":"Recorded AG-UI session"}}
+
+data: {"type":"RUN_FINISHED","runId":"fixture-1"}
+
