@@ -6,6 +6,14 @@
 
 ![首页](docs/screenshots/home.png)
 
+## Offline fixture demo
+
+Replay a recorded AG-UI session without a live `:9200` backend. The bundled fixture is parsed by the same protocol adapter used in the demo.
+
+```bash
+npm test
+```
+
 ## 功能特性
 
 - **对话核心**：CopilotChat / CopilotSidebar / CopilotPopup / AgentCopilot 四种接入形态，从悬浮球到一体化工作台
