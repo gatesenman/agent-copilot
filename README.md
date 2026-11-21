@@ -31,6 +31,14 @@ pnpm stop:all
 
 脚本会自动检查并安装缺失的依赖（JDK / node_modules / 后端 jar），日志输出到 `logs/`。
 
+### 配置 API 密钥
+
+不要把真实密钥提交到仓库。Java 后端读取环境变量 `SILICONFLOW_API_KEY`；浏览器演示可使用 `VITE_SILICONFLOW_API_KEY`（会被打进前端包，仅适合本地演示，生产请走 `http` 运行时由后端持有密钥）。可复制 `.env.example` 为 `.env` 后填写。
+
+```bash
+export SILICONFLOW_API_KEY=your-key
+```
+
 ### 仅前端
 
 ```bash
