@@ -153,6 +153,13 @@ pnpm build                     # build
 
 Issues and pull requests are welcome. Please run `pnpm exec vue-tsc --noEmit` and `pnpm exec vitest run` before submitting; new components must follow the component API conventions above (checked automatically by `api-conventions.test.ts`).
 
+
+## Contributing
+
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md). Please report vulnerabilities privately via [SECURITY.md](SECURITY.md). This project follows [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
+
 ## License
 
-MIT
+No LICENSE file is included in this repository; the license is unspecified.
+

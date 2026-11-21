@@ -133,6 +133,11 @@ pnpm exec vitest run           # 单元测试
 pnpm build                     # 构建
 ```
 
-## License
+## 贡献
 
-MIT
+欢迎通过 Issue 和 Pull Request 参与，详见 [CONTRIBUTING.md](CONTRIBUTING.md)。安全问题请按 [SECURITY.md](SECURITY.md) 私下报告。参与时请遵守 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。
+
+## 许可证
+
+本仓库尚未附带 LICENSE 文件，许可证未指定。
+
