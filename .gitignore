@@ -21,3 +21,11 @@ logs/
 java-backend/target/
 *.jar
 .v0/
+
+# Additional hygiene
+Thumbs.db
+.env.local
+.env.*.local
+.venv/
+__pycache__/
+coverage/

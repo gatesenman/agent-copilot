@@ -1,5 +1,7 @@
 # agent-copilot
 
+[简体中文](README.md) · [English](README.en.md)
+
 企业级 AI Agent Copilot 组件库 · Vue 3 · TypeScript
 
 一套面向企业 AI 助手 / Agentic 工作台场景的 Vue 3 组件库：**67 个组件**、**16 种结构化载荷卡**、**30+ 协议预设**（模型协议 / Agent 框架 / 互操作协议），内置 AG-UI 事件流协议、HITL 人机协同中断、生成式 UI、多会话管理与主题系统，并附带 Java 参考后端与完整演示站。
